@@ -27,7 +27,7 @@ void test_sched_reopen()
     EQ(sched_close(), SCHED_DONE);
 }
 
-static void create_file(char const *path)
+static void create_file1(char const *path)
 {
     FILE *fp = fopen(path, "wb");
     NOTNULL(fp);
@@ -41,11 +41,32 @@ static void create_file(char const *path)
     EQ(fclose(fp), 0);
 }
 
+static void create_file2(char const *path)
+{
+    FILE *fp = fopen(path, "wb");
+    NOTNULL(fp);
+    char const data[] = {
+        0x64, 0x29, 0x20, 0x4e, 0x4f, 0x0a, 0x20, 0x20, 0x20, 0x20,
+        0x69, 0x74, 0x73, 0x54, 0x20, 0x4e, 0x20, 0x20, 0x68, 0x6d,
+        0x6d, 0x49, 0x4e, 0x4f, 0x54, 0x20, 0x4e, 0x20, 0x20, 0x73,
+        0x74, 0x61, 0x20, 0x43, 0x48, 0x45, 0x43,
+    };
+    EQ(fwrite(data, sizeof data, 1, fp), 1);
+    EQ(fclose(fp), 0);
+}
+
 void test_sched_add_db(void)
 {
     char const sched_path[] = TMPDIR "/file.sched";
-    char const db_path[] = TMPDIR "/file.dcp";
-    create_file(db_path);
+    char const file1a[] = TMPDIR "/file1a.dcp";
+    char const file1b[] = TMPDIR "/file1b.dcp";
+    char const file1a_relative[] = TMPDIR "/dir/../file1a.dcp";
+    char const file2[] = TMPDIR "/file2.dcp";
+    char const file3[] = TMPDIR "/dir/does_not_exist.dcp";
+
+    create_file1(file1a);
+    create_file1(file1b);
+    create_file2(file2);
 
     remove(sched_path);
 
@@ -53,8 +74,20 @@ void test_sched_add_db(void)
     EQ(sched_open(), SCHED_DONE);
 
     int64_t db_id = 0;
-    EQ(sched_add_db(db_path, &db_id), SCHED_DONE);
-    EQ(sched_add_db(db_path, &db_id), SCHED_DONE);
+    EQ(sched_add_db(file1a, &db_id), SCHED_DONE);
+    EQ(db_id, 1);
+    EQ(sched_add_db(file1a, &db_id), SCHED_DONE);
+    EQ(db_id, 1);
+
+    EQ(sched_add_db(file1b, &db_id), SCHED_FAIL);
+
+    EQ(sched_add_db(file1a_relative, &db_id), SCHED_DONE);
+    EQ(db_id, 1);
+
+    EQ(sched_add_db(file2, &db_id), SCHED_DONE);
+    EQ(db_id, 2);
+
+    EQ(sched_add_db(file3, &db_id), SCHED_FAIL);
 
     EQ(sched_close(), SCHED_DONE);
 }

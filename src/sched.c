@@ -13,6 +13,7 @@
 #include "xfile.h"
 #include "xsql.h"
 #include <assert.h>
+#include <limits.h>
 #include <sqlite3.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -80,10 +81,33 @@ int sched_close(void)
     return xsql_close(sched, false);
 }
 
+static int dbs_have_same_filepath(char const *filepath, bool *answer)
+{
+    int rc = SCHED_DONE;
+
+    int64_t xxh64 = 0;
+    if ((rc = db_hash(filepath, &xxh64))) return rc;
+    struct db db = {0};
+    if ((rc = db_get_by_xxh64(&db, xxh64))) return rc;
+
+    char resolved[PATH_MAX] = {0};
+    char *ptr = realpath(filepath, resolved);
+    if (!ptr) return SCHED_FAIL;
+
+    *answer = strcmp(db.filepath, resolved) == 0;
+    return SCHED_DONE;
+}
+
 int sched_add_db(char const *filepath, int64_t *id)
 {
     int rc = db_has(filepath);
-    if (rc == SCHED_FOUND) return SCHED_DONE;
+    if (rc == SCHED_DONE)
+    {
+        bool answer = false;
+        if ((rc = dbs_have_same_filepath(filepath, &answer))) return rc;
+        if (answer) return SCHED_DONE;
+        return SCHED_FAIL;
+    }
     if (rc == SCHED_NOTFOUND) return db_add(filepath, id);
     return SCHED_FAIL;
 }

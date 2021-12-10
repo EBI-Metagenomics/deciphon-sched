@@ -14,6 +14,11 @@ function(dcp_sched_add_test name srcs)
     PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${TMPDIR}
   )
+  add_custom_command(
+    TARGET ${name}
+    PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${TMPDIR}/dir
+  )
   target_compile_definitions(${name} PUBLIC "TMPDIR=\"${TMPDIR}\"")
 endfunction()
 

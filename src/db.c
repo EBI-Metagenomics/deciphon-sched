@@ -39,7 +39,7 @@ static char const *const queries[] = {
 extern struct sqlite3 *sched;
 static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};
 
-static int init_db(struct sched_db *db, char const *filepath)
+static int init_db(struct db *db, char const *filepath)
 {
     FILE *fp = fopen(filepath, "rb");
     if (!fp) return error("failed to open file");
@@ -67,7 +67,7 @@ int db_module_init(void)
 int db_add(char const *filepath, int64_t *id)
 {
     struct sqlite3_stmt *stmt = stmts[INSERT];
-    struct sched_db db = {0};
+    struct db db = {0};
     int rc = init_db(&db, filepath);
     if (rc) return rc;
 
@@ -84,14 +84,22 @@ int db_add(char const *filepath, int64_t *id)
 
 int db_has(char const *filepath)
 {
-    struct sched_db db = {0};
+    struct db db = {0};
     int rc = init_db(&db, filepath);
     if (rc) return rc;
-    return sched_db_get_by_xxh64(&db, db.xxh64);
+    return db_get_by_xxh64(&db, db.xxh64);
 }
 
-static int select_db(struct sched_db *db, int64_t by_value,
-                     enum stmt select_stmt)
+int db_hash(char const *filepath, int64_t *xxh64)
+{
+    struct db db = {0};
+    int rc = init_db(&db, filepath);
+    if (rc) return rc;
+    *xxh64 = db.xxh64;
+    return SCHED_DONE;
+}
+
+static int select_db(struct db *db, int64_t by_value, enum stmt select_stmt)
 {
     struct sqlite3_stmt *stmt = stmts[select_stmt];
     int rc = 0;
@@ -109,15 +117,15 @@ static int select_db(struct sched_db *db, int64_t by_value,
 
     rc = xsql_end_step(stmt);
     if (rc) return SCHED_FAIL;
-    return SCHED_FOUND;
+    return SCHED_DONE;
 }
 
-int sched_db_get_by_id(struct sched_db *db, int64_t id)
+int db_get_by_id(struct db *db, int64_t id)
 {
     return select_db(db, id, SELECT_BY_ID);
 }
 
-int sched_db_get_by_xxh64(struct sched_db *db, int64_t xxh64)
+int db_get_by_xxh64(struct db *db, int64_t xxh64)
 {
     return select_db(db, xxh64, SELECT_BY_XXH64);
 }
