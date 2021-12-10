@@ -80,6 +80,14 @@ int sched_close(void)
     return xsql_close(sched, false);
 }
 
+int sched_add_db(char const *filepath, int64_t *id)
+{
+    int rc = db_has(filepath);
+    if (rc == SCHED_FOUND) return SCHED_DONE;
+    if (rc == SCHED_NOTFOUND) return db_add(filepath, id);
+    return SCHED_FAIL;
+}
+
 int sched_start_job_submission(int64_t db_id, bool multi_hits,
                                bool hmmer3_compat)
 {

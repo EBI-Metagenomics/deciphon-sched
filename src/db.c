@@ -64,7 +64,7 @@ int db_module_init(void)
     return 0;
 }
 
-int sched_db_add(char const *filepath, int64_t *id)
+int db_add(char const *filepath, int64_t *id)
 {
     struct sqlite3_stmt *stmt = stmts[INSERT];
     struct sched_db db = {0};
@@ -80,6 +80,14 @@ int sched_db_add(char const *filepath, int64_t *id)
     if (rc != 2) return rc;
     *id = sqlite3_column_int64(stmt, 0);
     return xsql_end_step(stmt);
+}
+
+int db_has(char const *filepath)
+{
+    struct sched_db db = {0};
+    int rc = init_db(&db, filepath);
+    if (rc) return rc;
+    return sched_db_get_by_xxh64(&db, db.xxh64);
 }
 
 static int select_db(struct sched_db *db, int64_t by_value,
@@ -99,7 +107,9 @@ static int select_db(struct sched_db *db, int64_t by_value,
     db->xxh64 = sqlite3_column_int64(stmt, 1);
     if ((rc = xsql_cpy_txt(stmt, 2, XSQL_TXT_OF(*db, filepath)))) return rc;
 
-    return xsql_end_step(stmt);
+    rc = xsql_end_step(stmt);
+    if (rc) return SCHED_FAIL;
+    return SCHED_FOUND;
 }
 
 int sched_db_get_by_id(struct sched_db *db, int64_t id)

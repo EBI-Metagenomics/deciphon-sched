@@ -12,7 +12,8 @@ struct sched_db
 };
 
 int db_module_init(void);
-int sched_db_add(char const *filepath, int64_t *id);
+int db_add(char const *filepath, int64_t *id);
+int db_has(char const *filepath);
 int sched_db_get_by_id(struct sched_db *db, int64_t id);
 int sched_db_get_by_xxh64(struct sched_db *db, int64_t xxh64);
 void db_module_del(void);
