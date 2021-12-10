@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+
+(
+    cd ~/
+    wget https://www.sqlite.org/2021/sqlite-autoconf-3360000.tar.gz
+    tar xzf sqlite-autoconf-3360000.tar.gz
+    cd sqlite-autoconf-3360000
+    if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
+    ./configure && make && $SUDO make install
+    cd ..
+    /bin/rm -f sqlite-autoconf-3360000.tar.gz
+    /bin/rm -rf sqlite-autoconf-3360000
+)

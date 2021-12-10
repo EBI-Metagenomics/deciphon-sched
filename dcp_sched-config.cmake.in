@@ -1,0 +1,16 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(imm)
+find_dependency(cco)
+find_dependency(log)
+find_dependency(elapsed)
+find_dependency(xxHash)
+find_dependency(SQLite3)
+include("${CMAKE_CURRENT_LIST_DIR}/dcp-targets.cmake")
+check_required_components(SQLite3)
+check_required_components(xxHash)
+check_required_components(elapsed)
+check_required_components(log)
+check_required_components(cco)
+check_required_components(imm)

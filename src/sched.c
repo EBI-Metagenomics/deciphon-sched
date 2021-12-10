@@ -1,0 +1,200 @@
+#include "dcp_sched/sched.h"
+#include "compiler.h"
+#include "db.h"
+#include "job.h"
+#include "logger.h"
+#include "prod.h"
+#include "schema.h"
+#include "seq.h"
+#include "seq_queue.h"
+#include "sqldiff.h"
+#include "utc.h"
+#include "xfile.h"
+#include "xsql.h"
+#include <assert.h>
+#include <sqlite3.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+
+struct sqlite3 *sched = NULL;
+extern struct job job;
+
+static_assert(SQLITE_VERSION_NUMBER >= 3035000, "We need RETURNING statement");
+
+int check_integrity(char const *filepath, bool *ok);
+int create_ground_truth_db(char *filepath);
+int emerge_db(char const *filepath);
+int is_empty(char const *filepath, bool *empty);
+int submit_job(struct sqlite3_stmt *, struct job *, int64_t db_id,
+               int64_t *job_id);
+int touch_db(char const *filepath);
+
+int dcp_sched_setup(char const *filepath)
+{
+    int thread_safe = sqlite3_threadsafe();
+    if (thread_safe == 0)
+        return error("the provided sqlite3 is not thread-safe");
+
+    int rc = touch_db(filepath);
+    if (rc) return rc;
+
+    bool empty = false;
+    if ((rc = is_empty(filepath, &empty))) return rc;
+
+    if (empty && (rc = emerge_db(filepath))) return rc;
+
+    bool ok = false;
+    if ((rc = check_integrity(filepath, &ok))) return rc;
+    if (!ok) return error("damaged sched database");
+
+    return rc;
+}
+
+int dcp_sched_open(char const filepath[DCP_PATH_SIZE])
+{
+    int rc = 0;
+
+    if ((rc = xsql_open(filepath, &sched))) goto cleanup;
+    if ((rc = job_module_init())) goto cleanup;
+    if ((rc = seq_module_init())) goto cleanup;
+    if ((rc = prod_module_init())) goto cleanup;
+    if ((rc = db_module_init())) goto cleanup;
+
+    return rc;
+
+cleanup:
+    xsql_close(sched, true);
+    return rc;
+}
+
+int dcp_sched_close(void)
+{
+    db_module_del();
+    prod_module_del();
+    seq_module_del();
+    job_module_del();
+    return xsql_close(sched, false);
+}
+
+int dcp_sched_start_job_submission(int64_t db_id, bool multi_hits,
+                                   bool hmmer3_compat)
+{
+    int rc = 0;
+    if ((rc = xsql_begin_transaction(sched))) return rc;
+
+    job_init(db_id, multi_hits, hmmer3_compat);
+    seq_queue_init();
+
+#if 0
+    if ((rc = dcp_sched_job_add(&j))) goto cleanup;
+
+    job->id = j.id;
+    struct cco_iter iter = cco_queue_iter(&job->seqs);
+    struct seq *seq = NULL;
+    cco_iter_for_each_entry(seq, &iter, node)
+    {
+        if ((rc = sched_seq_add(j.id, seq->name, seq->str.len, seq->str.data)))
+            goto cleanup;
+    }
+
+cleanup:
+    if (rc) return xsql_rollback_transaction(sched);
+    return xsql_end_transaction(sched);
+#endif
+
+    return 0;
+}
+
+void dcp_sched_add_seq(char const *name, char const *data)
+{
+    seq_queue_add(job.id, name, data);
+}
+
+int dcp_sched_end_job_submission(void)
+{
+    int rc = 0;
+    if ((rc = job_submit())) goto cleanup;
+
+    for (unsigned i = 0; i < seq_queue_size(); ++i)
+    {
+        struct seq *seq = seq_queue_get(i);
+        if ((rc = seq_submit(seq))) goto cleanup;
+    }
+
+cleanup:
+    if (rc) return xsql_rollback_transaction(sched);
+    return xsql_end_transaction(sched);
+}
+
+int check_integrity(char const *filepath, bool *ok)
+{
+    char tmp[] = XFILE_PATH_TEMP_TEMPLATE;
+    int rc = 0;
+
+    if ((rc = create_ground_truth_db(tmp))) return rc;
+    if ((rc = sqldiff_compare(filepath, tmp, ok))) goto cleanup;
+
+cleanup:
+    remove(tmp);
+    return rc;
+}
+
+int create_ground_truth_db(char *filepath)
+{
+    int rc = 0;
+    if ((rc = xfile_mktemp(filepath))) return rc;
+    if ((rc = touch_db(filepath))) return rc;
+    if ((rc = emerge_db(filepath))) return rc;
+    return rc;
+}
+
+int emerge_db(char const *filepath)
+{
+    int rc = 0;
+    struct sqlite3 *db = NULL;
+    if ((rc = xsql_open(filepath, &db))) goto cleanup;
+
+    if ((rc = xsql_exec(db, (char const *)sched_schema, 0, 0))) goto cleanup;
+
+    return xsql_close(db, false);
+
+cleanup:
+    xsql_close(sched, true);
+    return rc;
+}
+
+static int is_empty_cb(void *empty, int argc, char **argv, char **cols)
+{
+    *((bool *)empty) = false;
+    return 0;
+}
+
+int is_empty(char const *filepath, bool *empty)
+{
+    int rc = 0;
+    struct sqlite3 *db = NULL;
+    if ((rc = xsql_open(filepath, &db))) goto cleanup;
+
+    *empty = true;
+    static char const *const sql = "SELECT name FROM sqlite_master;";
+    if ((rc = xsql_exec(db, sql, is_empty_cb, empty))) goto cleanup;
+
+    return xsql_close(db, false);
+
+cleanup:
+    xsql_close(sched, true);
+    return rc;
+}
+
+int touch_db(char const *filepath)
+{
+    int rc = 0;
+    struct sqlite3 *db = NULL;
+    if ((rc = xsql_open(filepath, &db))) goto cleanup;
+    return xsql_close(db, false);
+
+cleanup:
+    xsql_close(sched, true);
+    return rc;
+}
