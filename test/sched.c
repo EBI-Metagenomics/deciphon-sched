@@ -10,7 +10,7 @@ int main(void)
 {
     test_sched_reopen();
     test_sched_add_db();
-    /* test_sched_submit_job(); */
+    test_sched_submit_job();
     /* test_sched_submit_and_fetch_job(1); */
     /* test_sched_submit_and_fetch_job(4); */
     return hope_status();
@@ -92,32 +92,33 @@ void test_sched_add_db(void)
     EQ(sched_close(), SCHED_DONE);
 }
 
-/* void test_sched_submit_job(void) */
-/* { */
-/*     char const sched_path[] = TMPDIR "/submit_job.sched"; */
-/*     char const db_path[] = TMPDIR "/standard_example1.dcp"; */
-/*     remove(sched_path); */
-/*  */
-/*     EQ(server_open(sched_path, 1), SCHED_DONE); */
-/*  */
-/*     standard_db_examples_new_ex1(db_path); */
-/*     int64_t db_id = 0; */
-/*     EQ(server_add_db(db_path, &db_id), SCHED_DONE); */
-/*     EQ(db_id, 1); */
-/*  */
-/*     struct job job = {0}; */
-/*     job_init(&job, db_id); */
-/*     struct seq seq[2] = {0}; */
-/*     seq_init(seq + 0, "seq0", imm_str(imm_example1_seq)); */
-/*     seq_init(seq + 1, "seq1", imm_str(imm_example2_seq)); */
-/*     job_add_seq(&job, seq + 0); */
-/*     job_add_seq(&job, seq + 1); */
-/*  */
-/*     EQ(server_submit_job(&job), SCHED_DONE); */
-/*     EQ(job.id, 1); */
-/*  */
-/*     EQ(server_close(), SCHED_DONE); */
-/* } */
+void test_sched_submit_job(void)
+{
+    char const sched_path[] = TMPDIR "/submit_job.sched";
+    char const db_path[] = TMPDIR "/submit_job.dcp";
+
+    create_file1(db_path);
+    remove(sched_path);
+
+    EQ(sched_setup(sched_path), SCHED_DONE);
+    EQ(sched_open(), SCHED_DONE);
+
+    int64_t db_id = 0;
+    EQ(sched_add_db(db_path, &db_id), SCHED_DONE);
+    EQ(db_id, 1);
+
+    EQ(sched_begin_job_submission(db_id, true, false), SCHED_DONE);
+    sched_add_seq("seq0", "ACAAGCAG");
+    sched_add_seq("seq1", "ACTTGCCG");
+    EQ(sched_end_job_submission(), SCHED_DONE);
+
+    EQ(sched_begin_job_submission(db_id, true, true), SCHED_DONE);
+    sched_add_seq("seq0_2", "XXGG");
+    sched_add_seq("seq1_2", "YXYX");
+    EQ(sched_end_job_submission(), SCHED_DONE);
+
+    EQ(sched_close(), SCHED_DONE);
+}
 /*  */
 /* void test_sched_submit_and_fetch_job(unsigned num_threads) */
 /* { */

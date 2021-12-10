@@ -6,6 +6,7 @@ enum sched_rc
     SCHED_DONE = 0,
     SCHED_FAIL = 1,
     SCHED_NOTFOUND = 2,
+    SCHED_NEXT = 3,
 };
 
 #endif

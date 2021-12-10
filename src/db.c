@@ -68,16 +68,14 @@ int db_add(char const *filepath, int64_t *id)
 {
     struct sqlite3_stmt *stmt = stmts[INSERT];
     struct db db = {0};
-    int rc = init_db(&db, filepath);
-    if (rc) return rc;
+    if (init_db(&db, filepath)) return SCHED_FAIL;
 
-    if ((rc = xsql_reset(stmt))) return rc;
+    if (xsql_reset(stmt)) return SCHED_FAIL;
 
-    if ((rc = xsql_bind_i64(stmt, 0, db.xxh64))) return rc;
-    if ((rc = xsql_bind_txt(stmt, 1, XSQL_TXT_OF(db, filepath)))) return rc;
+    if (xsql_bind_i64(stmt, 0, db.xxh64)) return SCHED_FAIL;
+    if (xsql_bind_txt(stmt, 1, XSQL_TXT_OF(db, filepath))) return SCHED_FAIL;
 
-    rc = xsql_step(stmt);
-    if (rc != 2) return rc;
+    if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
     *id = sqlite3_column_int64(stmt, 0);
     return xsql_end_step(stmt);
 }
@@ -85,16 +83,14 @@ int db_add(char const *filepath, int64_t *id)
 int db_has(char const *filepath)
 {
     struct db db = {0};
-    int rc = init_db(&db, filepath);
-    if (rc) return rc;
+    if (init_db(&db, filepath)) return SCHED_FAIL;
     return db_get_by_xxh64(&db, db.xxh64);
 }
 
 int db_hash(char const *filepath, int64_t *xxh64)
 {
     struct db db = {0};
-    int rc = init_db(&db, filepath);
-    if (rc) return rc;
+    if (init_db(&db, filepath)) return SCHED_FAIL;
     *xxh64 = db.xxh64;
     return SCHED_DONE;
 }
@@ -102,22 +98,19 @@ int db_hash(char const *filepath, int64_t *xxh64)
 static int select_db(struct db *db, int64_t by_value, enum stmt select_stmt)
 {
     struct sqlite3_stmt *stmt = stmts[select_stmt];
-    int rc = 0;
-    if ((rc = xsql_reset(stmt))) return rc;
+    if (xsql_reset(stmt)) return SCHED_DONE;
 
-    if ((rc = xsql_bind_i64(stmt, 0, by_value))) return rc;
+    if (xsql_bind_i64(stmt, 0, by_value)) return SCHED_DONE;
 
-    rc = xsql_step(stmt);
-    if (rc == 0) return SCHED_NOTFOUND;
-    if (rc != 2) return SCHED_FAIL;
+    int rc = xsql_step(stmt);
+    if (rc == SCHED_DONE) return SCHED_NOTFOUND;
+    if (rc != SCHED_NEXT) return SCHED_FAIL;
 
     db->id = sqlite3_column_int64(stmt, 0);
     db->xxh64 = sqlite3_column_int64(stmt, 1);
-    if ((rc = xsql_cpy_txt(stmt, 2, XSQL_TXT_OF(*db, filepath)))) return rc;
+    if (xsql_cpy_txt(stmt, 2, XSQL_TXT_OF(*db, filepath))) return SCHED_DONE;
 
-    rc = xsql_end_step(stmt);
-    if (rc) return SCHED_FAIL;
-    return SCHED_DONE;
+    return xsql_end_step(stmt);
 }
 
 int db_get_by_id(struct db *db, int64_t id)

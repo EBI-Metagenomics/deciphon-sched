@@ -68,7 +68,7 @@ int sched_open(void)
     return rc;
 
 cleanup:
-    xsql_close(sched, true);
+    xsql_close(sched);
     return rc;
 }
 
@@ -78,7 +78,7 @@ int sched_close(void)
     prod_module_del();
     seq_module_del();
     job_module_del();
-    return xsql_close(sched, false);
+    return xsql_close(sched);
 }
 
 static int dbs_have_same_filepath(char const *filepath, bool *answer)
@@ -112,15 +112,13 @@ int sched_add_db(char const *filepath, int64_t *id)
     return SCHED_FAIL;
 }
 
-int sched_start_job_submission(int64_t db_id, bool multi_hits,
+int sched_begin_job_submission(int64_t db_id, bool multi_hits,
                                bool hmmer3_compat)
 {
-    int rc = 0;
-    if ((rc = xsql_begin_transaction(sched))) return rc;
-
+    if (xsql_begin_transaction(sched)) return SCHED_FAIL;
     job_init(db_id, multi_hits, hmmer3_compat);
     seq_queue_init();
-    return 0;
+    return SCHED_DONE;
 }
 
 void sched_add_seq(char const *name, char const *data)
@@ -130,17 +128,14 @@ void sched_add_seq(char const *name, char const *data)
 
 int sched_end_job_submission(void)
 {
-    int rc = 0;
-    if ((rc = job_submit())) goto cleanup;
+    if (job_submit()) return SCHED_FAIL;
 
     for (unsigned i = 0; i < seq_queue_size(); ++i)
     {
         struct seq *seq = seq_queue_get(i);
-        if ((rc = seq_submit(seq))) goto cleanup;
+        if (seq_submit(seq)) return xsql_rollback_transaction(sched);
     }
 
-cleanup:
-    if (rc) return xsql_rollback_transaction(sched);
     return xsql_end_transaction(sched);
 }
 
@@ -174,10 +169,10 @@ int emerge_db(char const *filepath)
 
     if ((rc = xsql_exec(db, (char const *)schema, 0, 0))) goto cleanup;
 
-    return xsql_close(db, false);
+    return xsql_close(db);
 
 cleanup:
-    xsql_close(sched, true);
+    xsql_close(sched);
     return rc;
 }
 
@@ -197,21 +192,20 @@ int is_empty(char const *filepath, bool *empty)
     static char const *const sql = "SELECT name FROM sqlite_master;";
     if ((rc = xsql_exec(db, sql, is_empty_cb, empty))) goto cleanup;
 
-    return xsql_close(db, false);
+    return xsql_close(db);
 
 cleanup:
-    xsql_close(sched, true);
+    xsql_close(sched);
     return rc;
 }
 
 int touch_db(char const *filepath)
 {
-    int rc = 0;
     struct sqlite3 *db = NULL;
-    if ((rc = xsql_open(filepath, &db))) goto cleanup;
-    return xsql_close(db, false);
+    if (xsql_open(filepath, &db)) goto cleanup;
+    return xsql_close(db);
 
 cleanup:
-    xsql_close(sched, true);
-    return rc;
+    xsql_close(sched);
+    return SCHED_FAIL;
 }

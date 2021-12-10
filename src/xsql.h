@@ -31,7 +31,7 @@ int xsql_get_txt(struct sqlite3_stmt *stmt, int col, struct xsql_txt *txt);
 int xsql_cpy_txt(struct sqlite3_stmt *stmt, int col, struct xsql_txt txt);
 
 int xsql_open(char const *filepath, struct sqlite3 **db);
-int xsql_close(struct sqlite3 *db, bool quiet);
+int xsql_close(struct sqlite3 *db);
 int xsql_exec(struct sqlite3 *db, char const *, xsql_callback, void *);
 
 int xsql_begin_transaction(struct sqlite3 *db);

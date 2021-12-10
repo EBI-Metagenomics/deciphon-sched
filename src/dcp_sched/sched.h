@@ -15,7 +15,7 @@ int sched_close(void);
 
 int sched_add_db(char const *filepath, int64_t *id);
 
-int sched_start_job_submission(int64_t db_id, bool multi_hits,
+int sched_begin_job_submission(int64_t db_id, bool multi_hits,
                                bool hmmer3_compat);
 void sched_add_seq(char const *name, char const *data);
 int sched_end_job_submission(void);

@@ -48,12 +48,11 @@ static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};
 
 int seq_module_init(void)
 {
-    int rc = 0;
     for (unsigned i = 0; i < ARRAY_SIZE(queries); ++i)
     {
-        if ((rc = xsql_prepare(sched, queries[i], stmts + i))) return rc;
+        if (xsql_prepare(sched, queries[i], stmts + i)) return SCHED_FAIL;
     }
-    return 0;
+    return SCHED_DONE;
 }
 
 void seq_init(struct seq *s, int64_t job_id, char const *name, char const *data)
@@ -67,12 +66,11 @@ void seq_init(struct seq *s, int64_t job_id, char const *name, char const *data)
 int seq_submit(struct seq *s)
 {
     struct sqlite3_stmt *stmt = stmts[INSERT];
-    int rc = 0;
-    if ((rc = xsql_reset(stmt))) return rc;
+    if (xsql_reset(stmt)) return SCHED_FAIL;
 
-    if ((rc = xsql_bind_i64(stmt, 0, s->job_id))) return rc;
-    if ((rc = xsql_bind_str(stmt, 1, s->name))) return rc;
-    if ((rc = xsql_bind_str(stmt, 2, s->data))) return rc;
+    if (xsql_bind_i64(stmt, 0, s->job_id)) return SCHED_FAIL;
+    if (xsql_bind_str(stmt, 1, s->name)) return SCHED_FAIL;
+    if (xsql_bind_str(stmt, 2, s->data)) return SCHED_FAIL;
 
     return xsql_insert_step(stmt);
 }
@@ -80,15 +78,14 @@ int seq_submit(struct seq *s)
 static int next_seq_id(int64_t job_id, int64_t *seq_id)
 {
     struct sqlite3_stmt *stmt = stmts[SELECT_NEXT];
-    int rc = 0;
-    if ((rc = xsql_reset(stmt))) return rc;
+    if (xsql_reset(stmt)) return SCHED_FAIL;
 
-    if ((rc = xsql_bind_i64(stmt, 0, *seq_id))) return rc;
-    if ((rc = xsql_bind_i64(stmt, 1, job_id))) return rc;
+    if (xsql_bind_i64(stmt, 0, *seq_id)) return SCHED_FAIL;
+    if (xsql_bind_i64(stmt, 1, job_id)) return SCHED_FAIL;
 
-    rc = xsql_step(stmt);
-    if (rc == 0) return SCHED_NOTFOUND;
-    if (rc != 2) return SCHED_FAIL;
+    int rc = xsql_step(stmt);
+    if (rc == SCHED_DONE) return SCHED_NOTFOUND;
+    if (rc != SCHED_NEXT) return SCHED_FAIL;
     *seq_id = sqlite3_column_int64(stmt, 0);
 
     return xsql_end_step(stmt);
@@ -104,19 +101,17 @@ int seq_next(int64_t job_id)
 int seq_get(int64_t id)
 {
     struct sqlite3_stmt *stmt = stmts[SELECT];
-    int rc = 0;
-    if ((rc = xsql_reset(stmt))) return rc;
+    if (xsql_reset(stmt)) return SCHED_FAIL;
 
-    if ((rc = xsql_bind_i64(stmt, 0, id))) return rc;
+    if (xsql_bind_i64(stmt, 0, id)) return SCHED_FAIL;
 
-    rc = xsql_step(stmt);
-    if (rc != 2) return error("failed to get seq");
+    if (xsql_step(stmt) != SCHED_NEXT) return error("failed to get seq");
 
     seq.id = sqlite3_column_int64(stmt, 0);
     seq.job_id = sqlite3_column_int64(stmt, 1);
 
-    if ((rc = xsql_cpy_txt(stmt, 2, XSQL_TXT_OF(seq, name)))) return rc;
-    if ((rc = xsql_cpy_txt(stmt, 3, XSQL_TXT_OF(seq, data)))) return rc;
+    if (xsql_cpy_txt(stmt, 2, XSQL_TXT_OF(seq, name))) return SCHED_FAIL;
+    if (xsql_cpy_txt(stmt, 3, XSQL_TXT_OF(seq, data))) return SCHED_FAIL;
 
     return xsql_end_step(stmt);
 }
