@@ -85,24 +85,6 @@ int dcp_sched_start_job_submission(int64_t db_id, bool multi_hits,
 
     job_init(db_id, multi_hits, hmmer3_compat);
     seq_queue_init();
-
-#if 0
-    if ((rc = dcp_sched_job_add(&j))) goto cleanup;
-
-    job->id = j.id;
-    struct cco_iter iter = cco_queue_iter(&job->seqs);
-    struct seq *seq = NULL;
-    cco_iter_for_each_entry(seq, &iter, node)
-    {
-        if ((rc = sched_seq_add(j.id, seq->name, seq->str.len, seq->str.data)))
-            goto cleanup;
-    }
-
-cleanup:
-    if (rc) return xsql_rollback_transaction(sched);
-    return xsql_end_transaction(sched);
-#endif
-
     return 0;
 }
 

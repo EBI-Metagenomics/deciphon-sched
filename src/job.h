@@ -1,7 +1,6 @@
 #ifndef JOB_H
 #define JOB_H
 
-#include "cco/cco.h"
 #include "dcp_sched/job.h"
 #include "dcp_sched/limits.h"
 #include "sched_limits.h"
@@ -20,14 +19,7 @@ struct job
     int64_t submission;
     int64_t exec_started;
     int64_t exec_ended;
-
-    struct cco_queue seqs;
 };
-
-#define SCHED_JOB_INIT(db_id, multi_hits, hmmer3_compat, submission)           \
-    {                                                                          \
-        0, db_id, multi_hits, hmmer3_compat, "pend", "", submission, 0, 0      \
-    }
 
 void job_init(int64_t db_id, bool multi_hits, bool hmmer3_compat);
 int job_submit(void);
