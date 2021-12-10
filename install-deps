@@ -28,8 +28,4 @@ fi
 )
 
 bash -c "$(curl -fsSL https://git.io/Jz7Oa)" -s horta/hope || exit 1
-bash -c "$(curl -fsSL https://git.io/Jz7Oa)" -s horta/logaddexp || exit 1
-bash -c "$(curl -fsSL https://git.io/Jz7Oa)" -s horta/elapsed || exit 1
-bash -c "$(curl -fsSL https://git.io/Jz7Oa)" -s EBI-Metagenomics/c-containers || exit 1
 bash -c "$(curl -fsSL https://git.io/Jz7Oa)" -s EBI-Metagenomics/log || exit 1
-bash -c "$(curl -fsSL https://git.io/Jz7Oa)" -s EBI-Metagenomics/imm || exit 1

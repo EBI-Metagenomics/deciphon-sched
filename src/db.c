@@ -92,8 +92,8 @@ static int select_db(struct sched_db *db, int64_t by_value,
     if ((rc = xsql_bind_i64(stmt, 0, by_value))) return rc;
 
     rc = xsql_step(stmt);
-    if (rc == 0) return DCP_SCHED_NOTFOUND;
-    if (rc != 2) return DCP_SCHED_FAIL;
+    if (rc == 0) return SCHED_NOTFOUND;
+    if (rc != 2) return SCHED_FAIL;
 
     db->id = sqlite3_column_int64(stmt, 0);
     db->xxh64 = sqlite3_column_int64(stmt, 1);

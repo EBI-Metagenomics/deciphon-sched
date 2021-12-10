@@ -4,6 +4,7 @@
 #include "job.h"
 #include "logger.h"
 #include "prod.h"
+#include "safe.h"
 #include "schema.h"
 #include "seq.h"
 #include "seq_queue.h"
@@ -18,6 +19,7 @@
 #include <string.h>
 
 struct sqlite3 *sched = NULL;
+char sched_filepath[DCP_PATH_SIZE] = {0};
 extern struct job job;
 
 static_assert(SQLITE_VERSION_NUMBER >= 3035000, "We need RETURNING statement");
@@ -30,8 +32,9 @@ int submit_job(struct sqlite3_stmt *, struct job *, int64_t db_id,
                int64_t *job_id);
 int touch_db(char const *filepath);
 
-int dcp_sched_setup(char const *filepath)
+int sched_setup(char const *filepath)
 {
+    safe_strcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath));
     int thread_safe = sqlite3_threadsafe();
     if (thread_safe == 0)
         return error("the provided sqlite3 is not thread-safe");
@@ -51,11 +54,11 @@ int dcp_sched_setup(char const *filepath)
     return rc;
 }
 
-int dcp_sched_open(char const filepath[DCP_PATH_SIZE])
+int sched_open(void)
 {
     int rc = 0;
 
-    if ((rc = xsql_open(filepath, &sched))) goto cleanup;
+    if ((rc = xsql_open(sched_filepath, &sched))) goto cleanup;
     if ((rc = job_module_init())) goto cleanup;
     if ((rc = seq_module_init())) goto cleanup;
     if ((rc = prod_module_init())) goto cleanup;
@@ -68,7 +71,7 @@ cleanup:
     return rc;
 }
 
-int dcp_sched_close(void)
+int sched_close(void)
 {
     db_module_del();
     prod_module_del();
@@ -77,8 +80,8 @@ int dcp_sched_close(void)
     return xsql_close(sched, false);
 }
 
-int dcp_sched_start_job_submission(int64_t db_id, bool multi_hits,
-                                   bool hmmer3_compat)
+int sched_start_job_submission(int64_t db_id, bool multi_hits,
+                               bool hmmer3_compat)
 {
     int rc = 0;
     if ((rc = xsql_begin_transaction(sched))) return rc;
@@ -88,12 +91,12 @@ int dcp_sched_start_job_submission(int64_t db_id, bool multi_hits,
     return 0;
 }
 
-void dcp_sched_add_seq(char const *name, char const *data)
+void sched_add_seq(char const *name, char const *data)
 {
     seq_queue_add(job.id, name, data);
 }
 
-int dcp_sched_end_job_submission(void)
+int sched_end_job_submission(void)
 {
     int rc = 0;
     if ((rc = job_submit())) goto cleanup;
@@ -137,7 +140,7 @@ int emerge_db(char const *filepath)
     struct sqlite3 *db = NULL;
     if ((rc = xsql_open(filepath, &db))) goto cleanup;
 
-    if ((rc = xsql_exec(db, (char const *)sched_schema, 0, 0))) goto cleanup;
+    if ((rc = xsql_exec(db, (char const *)schema, 0, 0))) goto cleanup;
 
     return xsql_close(db, false);
 

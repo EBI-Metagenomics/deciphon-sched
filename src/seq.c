@@ -87,8 +87,8 @@ static int next_seq_id(int64_t job_id, int64_t *seq_id)
     if ((rc = xsql_bind_i64(stmt, 1, job_id))) return rc;
 
     rc = xsql_step(stmt);
-    if (rc == 0) return DCP_SCHED_NOTFOUND;
-    if (rc != 2) return DCP_SCHED_FAIL;
+    if (rc == 0) return SCHED_NOTFOUND;
+    if (rc != 2) return SCHED_FAIL;
     *seq_id = sqlite3_column_int64(stmt, 0);
 
     return xsql_end_step(stmt);

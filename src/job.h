@@ -3,7 +3,6 @@
 
 #include "dcp_sched/job.h"
 #include "dcp_sched/limits.h"
-#include "sched_limits.h"
 #include <stdint.h>
 
 struct job

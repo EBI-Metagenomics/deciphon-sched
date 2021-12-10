@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-enum dcp_sched_job_state
+enum sched_job_state
 {
     JOB_PEND,
     JOB_RUN,
@@ -12,6 +12,6 @@ enum dcp_sched_job_state
     JOB_FAIL
 };
 
-int dcp_sched_job_state(int64_t job_id, enum dcp_sched_job_state *state);
+int sched_job_state(int64_t job_id, enum sched_job_state *state);
 
 #endif

@@ -92,5 +92,5 @@ configure_file(
 cbp_install(dcp_sched MERGED)
 install(FILES ${EXPORT_FILE} ${CONFIG_FILE} DESTINATION include/dcp_sched)
 
-# enable_testing()
-# add_subdirectory(test)
+enable_testing()
+add_subdirectory(test)

@@ -1,7 +1,7 @@
 #ifndef DCP_SCHED_LIMITS_H
 #define DCP_SCHED_LIMITS_H
 
-enum dcp_sched_limits
+enum sched_limits
 {
     DCP_PATH_SIZE = 4096,
     DCP_SEQ_NAME_SIZE = 256,

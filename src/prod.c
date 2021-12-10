@@ -121,8 +121,8 @@ int sched_prod_next(int64_t job_id, int64_t *prod_id)
     if ((rc = xsql_bind_i64(stmt, 1, job_id))) return rc;
 
     rc = xsql_step(stmt);
-    if (rc == 0) return DCP_SCHED_NOTFOUND;
-    if (rc != 2) return DCP_SCHED_FAIL;
+    if (rc == 0) return SCHED_NOTFOUND;
+    if (rc != 2) return SCHED_FAIL;
 
     *prod_id = sqlite3_column_int64(stmt, 0);
     if ((rc = xsql_end_step(stmt))) return rc;
@@ -172,40 +172,40 @@ void prod_module_del(void)
         sqlite3_finalize(stmts[i]);
 }
 
-void dcp_sched_prod_set_job_id(int64_t job_id) { prod.job_id = job_id; }
+void sched_prod_set_job_id(int64_t job_id) { prod.job_id = job_id; }
 
-void dcp_sched_prod_set_seq_id(int64_t seq_id) { prod.seq_id = seq_id; }
+void sched_prod_set_seq_id(int64_t seq_id) { prod.seq_id = seq_id; }
 
-void dcp_sched_prod_set_match_id(int64_t match_id) { prod.match_id = match_id; }
+void sched_prod_set_match_id(int64_t match_id) { prod.match_id = match_id; }
 
-void dcp_sched_prod_set_profile_name(char const *name)
+void sched_prod_set_profile_name(char const *name)
 {
     safe_strcpy(prod.prof_name, name, DCP_PROF_NAME_SIZE);
 }
 
-void dcp_sched_prod_set_abc_name(char const *abc_name)
+void sched_prod_set_abc_name(char const *abc_name)
 {
     safe_strcpy(prod.abc_name, abc_name, DCP_ABC_NAME_SIZE);
 }
 
-void dcp_sched_prod_set_alt_loglik(double loglik) { prod.loglik = loglik; }
+void sched_prod_set_alt_loglik(double loglik) { prod.loglik = loglik; }
 
-void dcp_sched_prod_set_null_loglik(double null_loglik)
+void sched_prod_set_null_loglik(double null_loglik)
 {
     prod.null_loglik = null_loglik;
 }
 
-void dcp_sched_prod_set_profile_typeid(char const *model)
+void sched_prod_set_profile_typeid(char const *model)
 {
     safe_strcpy(prod.prof_typeid, model, DCP_PROFILE_TYPEID_SIZE);
 }
 
-void dcp_sched_prod_set_version(char const *version)
+void sched_prod_set_version(char const *version)
 {
     safe_strcpy(prod.version, version, DCP_VERSION_SIZE);
 }
 
-int dcp_sched_prod_write_preamble(void)
+int sched_prod_write_preamble(void)
 {
 #define TAB "\t"
 #define echo(fmt, var) fprintf(prod_file.fp, fmt, prod.var) < 0
@@ -252,19 +252,18 @@ int dcp_sched_prod_write_preamble(void)
  *                      ---------------
  */
 
-int dcp_sched_prod_write_match(dcp_sched_prod_write_match_cb *cb,
-                               void const *match)
+int sched_prod_write_match(sched_prod_write_match_cb *cb, void const *match)
 {
     return cb(prod_file.fp, match);
 }
 
-int dcp_sched_prod_write_match_sep(void)
+int sched_prod_write_match_sep(void)
 {
     if (fputc(';', prod_file.fp) == EOF) return error("failed to write sep");
     return 0;
 }
 
-int dcp_sched_prod_write_nl(void)
+int sched_prod_write_nl(void)
 {
     if (fputc('\n', prod_file.fp) == EOF)
         return error("failed to write newline");

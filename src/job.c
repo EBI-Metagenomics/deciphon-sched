@@ -116,8 +116,8 @@ static int next_pending_job_id(int64_t *job_id)
     if ((rc = xsql_bind_i64(stmt, 0, (int64_t)utc_now()))) return rc;
 
     rc = xsql_step(stmt);
-    if (rc == 0) return DCP_SCHED_NOTFOUND;
-    if (rc != 2) return DCP_SCHED_FAIL;
+    if (rc == 0) return SCHED_NOTFOUND;
+    if (rc != 2) return SCHED_FAIL;
 
     *job_id = sqlite3_column_int64(stmt, 0);
     return xsql_end_step(stmt);
@@ -155,7 +155,7 @@ int job_set_done(int64_t job_id, int64_t exec_ended)
     return xsql_end_step(stmt);
 }
 
-static enum dcp_sched_job_state resolve_job_state(char const *state)
+static enum sched_job_state resolve_job_state(char const *state)
 {
     if (strcmp("pend", state) == 0)
         return JOB_PEND;
@@ -170,7 +170,7 @@ static enum dcp_sched_job_state resolve_job_state(char const *state)
     return 0;
 }
 
-int dcp_sched_job_state(int64_t job_id, enum dcp_sched_job_state *state)
+int sched_job_state(int64_t job_id, enum sched_job_state *state)
 {
     struct sqlite3_stmt *stmt = stmts[GET_STATE];
     int rc = 0;
@@ -179,8 +179,8 @@ int dcp_sched_job_state(int64_t job_id, enum dcp_sched_job_state *state)
     if ((rc = xsql_bind_i64(stmt, 0, job_id))) return rc;
 
     rc = xsql_step(stmt);
-    if (rc == 0) return DCP_SCHED_NOTFOUND;
-    if (rc != 2) return DCP_SCHED_FAIL;
+    if (rc == 0) return SCHED_NOTFOUND;
+    if (rc != 2) return SCHED_FAIL;
 
     char tmp[SCHED_JOB_STATE_SIZE] = {0};
     rc = xsql_cpy_txt(stmt, 0, (struct xsql_txt){SCHED_JOB_STATE_SIZE, tmp});

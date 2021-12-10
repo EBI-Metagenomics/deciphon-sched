@@ -1,9 +1,9 @@
-#ifndef SCHED_SCHEMA_H
-#define SCHED_SCHEMA_H
+#ifndef SCHEMA_H
+#define SCHEMA_H
 
 #include <stdlib.h>
 
-extern unsigned char const sched_schema[];
-extern size_t const sched_schema_size;
+extern unsigned char const schema[];
+extern size_t const schema_size;
 
 #endif
