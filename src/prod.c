@@ -138,7 +138,7 @@ int sched_prod_get(int64_t prod_id)
     if ((rc = xsql_bind_i64(stmt, 0, prod_id))) return rc;
 
     rc = xsql_step(stmt);
-    if (rc != 2) return error("failed to get prod");
+    if (rc != 2) return SCHED_FAIL;
 
     prod.id = sqlite3_column_int64(stmt, 0);
 
@@ -213,21 +213,21 @@ int sched_prod_write_preamble(void)
 #define Fs "%s" TAB
 #define Fg "%.17g" TAB
 
-    if (echo(Fd64, job_id)) return error("failed to write prod");
-    if (echo(Fd64, seq_id)) return error("failed to write prod");
-    if (echo(Fd64, match_id)) return error("failed to write prod");
+    if (echo(Fd64, job_id)) return SCHED_FAIL;
+    if (echo(Fd64, seq_id)) return SCHED_FAIL;
+    if (echo(Fd64, match_id)) return SCHED_FAIL;
 
-    if (echo(Fs, prof_name)) return error("failed to write prod");
-    if (echo(Fs, abc_name)) return error("failed to write prod");
+    if (echo(Fs, prof_name)) return SCHED_FAIL;
+    if (echo(Fs, abc_name)) return SCHED_FAIL;
 
     /* Reference: https://stackoverflow.com/a/21162120 */
-    if (echo(Fg, loglik)) return error("failed to write prod");
-    if (echo(Fg, null_loglik)) return error("failed to write prod");
+    if (echo(Fg, loglik)) return SCHED_FAIL;
+    if (echo(Fg, null_loglik)) return SCHED_FAIL;
 
-    if (echo(Fs, prof_typeid)) return error("failed to write prod");
-    if (echo(Fs, version)) return error("failed to write prod");
+    if (echo(Fs, prof_typeid)) return SCHED_FAIL;
+    if (echo(Fs, version)) return SCHED_FAIL;
 
-    return 0;
+    return SCHED_DONE;
 
 #undef Fg
 #undef Fs
@@ -259,14 +259,13 @@ int sched_prod_write_match(sched_prod_write_match_cb *cb, void const *match)
 
 int sched_prod_write_match_sep(void)
 {
-    if (fputc(';', prod_file.fp) == EOF) return error("failed to write sep");
+    if (fputc(';', prod_file.fp) == EOF) return SCHED_FAIL;
     return 0;
 }
 
 int sched_prod_write_nl(void)
 {
-    if (fputc('\n', prod_file.fp) == EOF)
-        return error("failed to write newline");
+    if (fputc('\n', prod_file.fp) == EOF) return SCHED_FAIL;
     return 0;
 }
 
@@ -289,21 +288,13 @@ int sched_prod_add_from_tsv(FILE *restrict fp)
             if (col_type[i] == COL_TYPE_INT64)
             {
                 int64_t val = 0;
-                if (!to_int64(tok_value(&tok), &val))
-                {
-                    error("failed to parse int64");
-                    goto cleanup;
-                }
+                if (!to_int64(tok_value(&tok), &val)) goto cleanup;
                 if ((rc = xsql_bind_i64(stmt, i, val))) goto cleanup;
             }
             else if (col_type[i] == COL_TYPE_DOUBLE)
             {
                 double val = 0;
-                if (!to_double(tok_value(&tok), &val))
-                {
-                    error("failed to parse double");
-                    goto cleanup;
-                }
+                if (!to_double(tok_value(&tok), &val)) goto cleanup;
                 if ((rc = xsql_bind_dbl(stmt, i, val))) goto cleanup;
             }
             else if (col_type[i] == COL_TYPE_TEXT)
@@ -315,9 +306,9 @@ int sched_prod_add_from_tsv(FILE *restrict fp)
         }
         assert(tok_id(&tok) == TOK_NL);
         rc = xsql_step(stmt);
-        if (rc != 2)
+        if (rc != SCHED_NEXT)
         {
-            rc = error("failed to add prod");
+            rc = SCHED_FAIL;
             goto cleanup;
         }
         if ((rc = xsql_end_step(stmt))) goto cleanup;

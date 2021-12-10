@@ -20,8 +20,10 @@ int sched_begin_job_submission(int64_t db_id, bool multi_hits,
 void sched_add_seq(char const *name, char const *data);
 int sched_end_job_submission(void);
 
-int sched_start_prod_submission(void);
+int sched_begin_prod_submission(void);
 int sched_add_prod(void);
 int sched_end_prod_submission(void);
+
+int sched_next_pending_job(void);
 
 #endif

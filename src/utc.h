@@ -4,6 +4,6 @@
 #include <stdint.h>
 #include <time.h>
 
-static inline uint64_t utc_now(void) { return (uint64_t)time(NULL); }
+static inline int64_t utc_now(void) { return (int64_t)time(NULL); }
 
 #endif

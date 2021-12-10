@@ -42,7 +42,7 @@ static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};
 static int init_db(struct db *db, char const *filepath)
 {
     FILE *fp = fopen(filepath, "rb");
-    if (!fp) return error("failed to open file");
+    if (!fp) return SCHED_FAIL;
 
     int rc = xfile_hash(fp, (uint64_t *)&db->xxh64);
     if (rc) goto cleanup;

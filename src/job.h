@@ -22,7 +22,6 @@ struct job
 
 void job_init(int64_t db_id, bool multi_hits, bool hmmer3_compat);
 int job_submit(void);
-void job_add_seq(void);
 int job_next_pending(void);
 int job_set_error(int64_t job_id, char const *error, int64_t exec_ended);
 int job_set_done(int64_t job_id, int64_t exec_ended);

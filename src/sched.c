@@ -37,39 +37,35 @@ int sched_setup(char const *filepath)
 {
     safe_strcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath));
     int thread_safe = sqlite3_threadsafe();
-    if (thread_safe == 0)
-        return error("the provided sqlite3 is not thread-safe");
+    if (thread_safe == 0) return SCHED_FAIL;
 
-    int rc = touch_db(filepath);
-    if (rc) return rc;
+    if (touch_db(filepath)) return SCHED_FAIL;
 
     bool empty = false;
-    if ((rc = is_empty(filepath, &empty))) return rc;
+    if (is_empty(filepath, &empty)) return SCHED_FAIL;
 
-    if (empty && (rc = emerge_db(filepath))) return rc;
+    if (empty && emerge_db(filepath)) return SCHED_FAIL;
 
     bool ok = false;
-    if ((rc = check_integrity(filepath, &ok))) return rc;
-    if (!ok) return error("damaged sched database");
+    if (check_integrity(filepath, &ok)) return SCHED_FAIL;
+    if (!ok) return SCHED_FAIL;
 
-    return rc;
+    return SCHED_DONE;
 }
 
 int sched_open(void)
 {
-    int rc = 0;
+    if (xsql_open(sched_filepath, &sched)) goto cleanup;
+    if (job_module_init()) goto cleanup;
+    if (seq_module_init()) goto cleanup;
+    if (prod_module_init()) goto cleanup;
+    if (db_module_init()) goto cleanup;
 
-    if ((rc = xsql_open(sched_filepath, &sched))) goto cleanup;
-    if ((rc = job_module_init())) goto cleanup;
-    if ((rc = seq_module_init())) goto cleanup;
-    if ((rc = prod_module_init())) goto cleanup;
-    if ((rc = db_module_init())) goto cleanup;
-
-    return rc;
+    return SCHED_DONE;
 
 cleanup:
     xsql_close(sched);
-    return rc;
+    return SCHED_FAIL;
 }
 
 int sched_close(void)
@@ -83,12 +79,10 @@ int sched_close(void)
 
 static int dbs_have_same_filepath(char const *filepath, bool *answer)
 {
-    int rc = SCHED_DONE;
-
     int64_t xxh64 = 0;
-    if ((rc = db_hash(filepath, &xxh64))) return rc;
+    if (db_hash(filepath, &xxh64)) return SCHED_FAIL;
     struct db db = {0};
-    if ((rc = db_get_by_xxh64(&db, xxh64))) return rc;
+    if (db_get_by_xxh64(&db, xxh64)) return SCHED_FAIL;
 
     char resolved[PATH_MAX] = {0};
     char *ptr = realpath(filepath, resolved);
@@ -139,26 +133,29 @@ int sched_end_job_submission(void)
     return xsql_end_transaction(sched);
 }
 
+int sched_next_pending_job(void) { return job_next_pending(); }
+
 int check_integrity(char const *filepath, bool *ok)
 {
     char tmp[] = XFILE_PATH_TEMP_TEMPLATE;
-    int rc = 0;
 
-    if ((rc = create_ground_truth_db(tmp))) return rc;
-    if ((rc = sqldiff_compare(filepath, tmp, ok))) goto cleanup;
+    if (create_ground_truth_db(tmp)) return SCHED_FAIL;
+    if (sqldiff_compare(filepath, tmp, ok))
+    {
+        remove(tmp);
+        return SCHED_FAIL;
+    }
 
-cleanup:
     remove(tmp);
-    return rc;
+    return SCHED_DONE;
 }
 
 int create_ground_truth_db(char *filepath)
 {
-    int rc = 0;
-    if ((rc = xfile_mktemp(filepath))) return rc;
-    if ((rc = touch_db(filepath))) return rc;
-    if ((rc = emerge_db(filepath))) return rc;
-    return rc;
+    if (xfile_mktemp(filepath)) return SCHED_FAIL;
+    if (touch_db(filepath)) return SCHED_FAIL;
+    if (emerge_db(filepath)) return SCHED_FAIL;
+    return SCHED_DONE;
 }
 
 int emerge_db(char const *filepath)
