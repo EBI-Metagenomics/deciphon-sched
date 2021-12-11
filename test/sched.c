@@ -5,6 +5,7 @@ void test_sched_reopen(void);
 void test_sched_add_db(void);
 void test_sched_submit_job(void);
 void test_sched_submit_and_fetch_job(void);
+void test_sched_submit_product(void);
 
 int main(void)
 {
@@ -12,6 +13,7 @@ int main(void)
     test_sched_add_db();
     test_sched_submit_job();
     test_sched_submit_and_fetch_job();
+    test_sched_submit_product();
     return hope_status();
 }
 
@@ -144,46 +146,99 @@ void test_sched_submit_and_fetch_job()
     sched_add_seq("seq1_2", "YXYX");
     EQ(sched_end_job_submission(), SCHED_DONE);
 
-    EQ(sched_next_pending_job(), SCHED_DONE);
-    EQ(sched_next_pending_job(), SCHED_DONE);
-    EQ(sched_next_pending_job(), SCHED_NOTFOUND);
+    int64_t job_id = 0;
+    EQ(sched_next_pending_job(&job_id), SCHED_DONE);
+    EQ(job_id, 1);
+    EQ(sched_next_pending_job(&job_id), SCHED_DONE);
+    EQ(job_id, 2);
+    EQ(sched_next_pending_job(&job_id), SCHED_NOTFOUND);
 
-    /*     int64_t prod_id = 0; */
-    /*     EQ(server_next_prod(1, &prod_id), RC_NEXT); */
-    /*     EQ(prod_id, 1); */
-    /*  */
-    /*     struct prod const *p = server_get_prod(); */
-    /*  */
-    /*     EQ(p->id, 1); */
-    /*     EQ(p->seq_id, 2); */
-    /*     EQ(p->match_id, 1); */
-    /*     EQ(p->prof_name, "ACC0"); */
-    /*     EQ(p->abc_name, "dna_iupac"); */
-    /*     CLOSE(p->loglik, -2720.38134765625); */
-    /*     CLOSE(p->null_loglik, -3163.185302734375); */
-    /*     EQ(p->prof_typeid, "protein"); */
-    /*     EQ(p->version, "0.0.4"); */
-    /*  */
-    /*     extern char const prod1_match_data[]; */
-    /*     for (unsigned i = 0; i < array_size(p->match); ++i) */
-    /*     { */
-    /*         EQ(array_data(p->match)[i], prod1_match_data[i]); */
-    /*     } */
-    /*  */
-    /*     EQ(server_next_prod(1, &prod_id), RC_NEXT); */
-    /*     EQ(prod_id, 2); */
-    /*  */
-    /*     EQ(p->id, 2); */
-    /*     EQ(p->seq_id, 2); */
-    /*     EQ(p->match_id, 2); */
-    /*     EQ(p->prof_name, "ACC1"); */
-    /*     EQ(p->abc_name, "dna_iupac"); */
-    /*     CLOSE(p->loglik, -2854.53369140625); */
-    /*     CLOSE(p->null_loglik, -3094.66308593750); */
-    /*     EQ(p->prof_typeid, "protein"); */
-    /*     EQ(p->version, "0.0.4"); */
-    /*  */
-    /*     EQ(server_next_prod(1, &prod_id), SCHED_DONE); */
+    EQ(sched_close(), SCHED_DONE);
+}
+
+struct match
+{
+    char state[10];
+    char codon[4];
+};
+
+static int write_match_cb(FILE *fp, void const *match)
+{
+    struct match const *m = match;
+    if (fprintf(fp, "%s,", m->state) < 0) return SCHED_FAIL;
+    if (fprintf(fp, "%s", m->codon) < 0) return SCHED_FAIL;
+    return SCHED_DONE;
+}
+
+void test_sched_submit_product(void)
+{
+    char const sched_path[] = TMPDIR "/submit_product.sched";
+    char const db_path[] = TMPDIR "/submit_product.dcp";
+
+    remove(sched_path);
+    create_file1(db_path);
+
+    EQ(sched_setup(sched_path), SCHED_DONE);
+    EQ(sched_open(), SCHED_DONE);
+
+    int64_t db_id = 0;
+    EQ(sched_add_db(db_path, &db_id), SCHED_DONE);
+    EQ(db_id, 1);
+
+    EQ(sched_begin_job_submission(db_id, true, false), SCHED_DONE);
+    sched_add_seq("seq0", "ACAAGCAG");
+    sched_add_seq("seq1", "ACTTGCCG");
+    EQ(sched_end_job_submission(), SCHED_DONE);
+
+    EQ(sched_begin_job_submission(db_id, true, true), SCHED_DONE);
+    sched_add_seq("seq0_2", "XXGG");
+    sched_add_seq("seq1_2", "YXYX");
+    EQ(sched_end_job_submission(), SCHED_DONE);
+
+    int64_t job_id = 0;
+    EQ(sched_next_pending_job(&job_id), SCHED_DONE);
+
+    EQ(sched_begin_prod_submission(), SCHED_DONE);
+
+    sched_prod_set_job_id(job_id);
+    sched_prod_set_seq_id(1);
+    sched_prod_set_match_id(31);
+
+    sched_prod_set_profile_name("ACC0");
+    sched_prod_set_abc_name("dna");
+
+    sched_prod_set_alt_loglik(-2720.381);
+    sched_prod_set_null_loglik(-3163.185);
+
+    sched_prod_set_profile_typeid("protein");
+    sched_prod_set_version("0.0.4");
+
+    struct match match0 = {"state0", "GAC"};
+    struct match match1 = {"state1", "GGC"};
+
+    EQ(sched_prod_write_begin(), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
+    EQ(sched_prod_write_match_sep(), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);
+    EQ(sched_prod_write_end(), SCHED_DONE);
+
+    sched_prod_set_job_id(job_id);
+    sched_prod_set_seq_id(2);
+    sched_prod_set_match_id(39);
+
+    sched_prod_set_profile_name("ACC1");
+    sched_prod_set_abc_name("dna");
+
+    sched_prod_set_alt_loglik(-1111.);
+    sched_prod_set_null_loglik(-2222.);
+
+    EQ(sched_prod_write_begin(), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
+    EQ(sched_prod_write_match_sep(), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);
+    EQ(sched_prod_write_end(), SCHED_DONE);
+
+    EQ(sched_end_prod_submission(), SCHED_DONE);
 
     EQ(sched_close(), SCHED_DONE);
 }

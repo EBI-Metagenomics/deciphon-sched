@@ -122,18 +122,32 @@ void sched_add_seq(char const *name, char const *data)
 
 int sched_end_job_submission(void)
 {
-    if (job_submit()) return SCHED_FAIL;
+    int64_t job_id = 0;
+    if (job_submit(&job_id)) return SCHED_FAIL;
 
     for (unsigned i = 0; i < seq_queue_size(); ++i)
     {
         struct seq *seq = seq_queue_get(i);
+        seq->job_id = job_id;
         if (seq_submit(seq)) return xsql_rollback_transaction(sched);
     }
 
     return xsql_end_transaction(sched);
 }
 
-int sched_next_pending_job(void) { return job_next_pending(); }
+int sched_begin_prod_submission(void)
+{
+    if (prod_begin_submission()) return SCHED_FAIL;
+    return SCHED_DONE;
+}
+
+int sched_end_prod_submission(void)
+{
+    if (prod_end_submission()) return SCHED_FAIL;
+    return SCHED_DONE;
+}
+
+int sched_next_pending_job(int64_t *job_id) { return job_next_pending(job_id); }
 
 int check_integrity(char const *filepath, bool *ok)
 {

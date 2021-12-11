@@ -90,7 +90,7 @@ void job_init(int64_t db_id, bool multi_hits, bool hmmer3_compat)
     job.exec_ended = 0;
 }
 
-int job_submit(void)
+int job_submit(int64_t *job_id)
 {
     job.submission = utc_now();
     struct sqlite3_stmt *stmt = stmts[INSERT];
@@ -108,6 +108,7 @@ int job_submit(void)
 
     if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
     job.id = sqlite3_column_int64(stmt, 0);
+    *job_id = job.id;
     return xsql_end_step(stmt);
 }
 
@@ -126,11 +127,12 @@ static int next_pending_job_id(int64_t *job_id)
     return xsql_end_step(stmt);
 }
 
-int job_next_pending(void)
+int job_next_pending(int64_t *job_id)
 {
     int rc = next_pending_job_id(&job.id);
     if (rc == SCHED_NOTFOUND) return SCHED_NOTFOUND;
     if (rc != SCHED_DONE) return SCHED_FAIL;
+    *job_id = job.id;
     return job_get(job.id);
 }
 

@@ -81,6 +81,90 @@ int prod_module_init(void)
     return 0;
 }
 
+int prod_begin_submission(void)
+{
+    if (xfile_tmp_open(&prod_file)) return SCHED_FAIL;
+    return SCHED_DONE;
+}
+
+int sched_prod_write_begin(void)
+{
+#define TAB "\t"
+#define echo(fmt, var) fprintf(prod_file.fp, fmt, prod.var) < 0
+#define Fd64 "%" PRId64 TAB
+#define Fs "%s" TAB
+#define Fg "%.17g" TAB
+
+    if (echo(Fd64, job_id)) return SCHED_FAIL;
+    if (echo(Fd64, seq_id)) return SCHED_FAIL;
+    if (echo(Fd64, match_id)) return SCHED_FAIL;
+
+    if (echo(Fs, prof_name)) return SCHED_FAIL;
+    if (echo(Fs, abc_name)) return SCHED_FAIL;
+
+    /* Reference: https://stackoverflow.com/a/21162120 */
+    if (echo(Fg, loglik)) return SCHED_FAIL;
+    if (echo(Fg, null_loglik)) return SCHED_FAIL;
+
+    if (echo(Fs, prof_typeid)) return SCHED_FAIL;
+    if (echo(Fs, version)) return SCHED_FAIL;
+
+    return SCHED_DONE;
+
+#undef Fg
+#undef Fs
+#undef Fd64
+#undef echo
+#undef TAB
+}
+
+/* Output example
+ *             ___________________________
+ *             |   match0   |   match1   |
+ *             ---------------------------
+ * Output----->| CG,M1,CGA,K;CG,M4,CGA,K |
+ *             ---|-|---|--|--------------
+ * -----------   /  |   |  \    ---------------
+ * | matched |__/   |   |   \___| most likely |
+ * | letters |      |   |       | amino acid  |
+ * -----------      |   |       ---------------
+ *      -------------   ---------------
+ *      | hmm state |   | most likely |
+ *      -------------   | codon       |
+ *                      ---------------
+ */
+
+int sched_prod_write_match(sched_prod_write_match_cb *cb, void const *match)
+{
+    return cb(prod_file.fp, match);
+}
+
+int sched_prod_write_match_sep(void)
+{
+    if (fputc(';', prod_file.fp) == EOF) return SCHED_FAIL;
+    return SCHED_DONE;
+}
+
+int sched_prod_write_end(void)
+{
+    if (fputc('\n', prod_file.fp) == EOF) return SCHED_FAIL;
+    return SCHED_DONE;
+}
+
+static int submit_prod_file(FILE *restrict fp);
+
+int prod_end_submission(void)
+{
+    int rc = SCHED_FAIL;
+    if (xfile_tmp_rewind(&prod_file)) goto cleanup;
+    if (submit_prod_file(prod_file.fp)) goto cleanup;
+    rc = SCHED_DONE;
+
+cleanup:
+    xfile_tmp_del(&prod_file);
+    return rc;
+}
+
 int sched_prod_add(void)
 {
     struct sqlite3_stmt *stmt = stmts[INSERT];
@@ -205,71 +289,7 @@ void sched_prod_set_version(char const *version)
     safe_strcpy(prod.version, version, DCP_VERSION_SIZE);
 }
 
-int sched_prod_write_preamble(void)
-{
-#define TAB "\t"
-#define echo(fmt, var) fprintf(prod_file.fp, fmt, prod.var) < 0
-#define Fd64 "%" PRId64 TAB
-#define Fs "%s" TAB
-#define Fg "%.17g" TAB
-
-    if (echo(Fd64, job_id)) return SCHED_FAIL;
-    if (echo(Fd64, seq_id)) return SCHED_FAIL;
-    if (echo(Fd64, match_id)) return SCHED_FAIL;
-
-    if (echo(Fs, prof_name)) return SCHED_FAIL;
-    if (echo(Fs, abc_name)) return SCHED_FAIL;
-
-    /* Reference: https://stackoverflow.com/a/21162120 */
-    if (echo(Fg, loglik)) return SCHED_FAIL;
-    if (echo(Fg, null_loglik)) return SCHED_FAIL;
-
-    if (echo(Fs, prof_typeid)) return SCHED_FAIL;
-    if (echo(Fs, version)) return SCHED_FAIL;
-
-    return SCHED_DONE;
-
-#undef Fg
-#undef Fs
-#undef Fd64
-#undef echo
-#undef TAB
-}
-
-/* Output example
- *             ___________________________
- *             |   match0   |   match1   |
- *             ---------------------------
- * Output----->| CG,M1,CGA,K;CG,M4,CGA,K |
- *             ---|-|---|--|--------------
- * -----------   /  |   |  \    ---------------
- * | matched |__/   |   |   \___| most likely |
- * | letters |      |   |       | amino acid  |
- * -----------      |   |       ---------------
- *      -------------   ---------------
- *      | hmm state |   | most likely |
- *      -------------   | codon       |
- *                      ---------------
- */
-
-int sched_prod_write_match(sched_prod_write_match_cb *cb, void const *match)
-{
-    return cb(prod_file.fp, match);
-}
-
-int sched_prod_write_match_sep(void)
-{
-    if (fputc(';', prod_file.fp) == EOF) return SCHED_FAIL;
-    return 0;
-}
-
-int sched_prod_write_nl(void)
-{
-    if (fputc('\n', prod_file.fp) == EOF) return SCHED_FAIL;
-    return 0;
-}
-
-int sched_prod_add_from_tsv(FILE *restrict fp)
+static int submit_prod_file(FILE *restrict fp)
 {
     int rc = 0;
     if ((rc = xsql_begin_transaction(sched))) goto cleanup;

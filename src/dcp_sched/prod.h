@@ -18,9 +18,9 @@ void sched_prod_set_null_loglik(double);
 void sched_prod_set_profile_typeid(char const *);
 void sched_prod_set_version(char const *);
 
-int sched_prod_write_preamble(void);
+int sched_prod_write_begin(void);
 int sched_prod_write_match(sched_prod_write_match_cb *cb, void const *match);
 int sched_prod_write_match_sep(void);
-int sched_prod_write_nl(void);
+int sched_prod_write_end(void);
 
 #endif
