@@ -10,8 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest]
-        # os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -23,16 +22,6 @@ jobs:
       run: |
         if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
         echo "SUDO=$SUDO" >> $GITHUB_ENV
-
-    - name: Uninstall Mono MacOS
-      if: runner.os == 'macOS'
-      env:
-        DIR: /Library/Frameworks/Mono.framework/Headers
-      run: test -d ${{env.DIR}} && $SUDO /bin/rm -rf ${{env.DIR}}
-
-    - name: Install xxhash for MacOS
-      if: runner.os == 'macOS'
-      run: brew install xxhash
 
     - name: Install dependencies
       shell: bash
