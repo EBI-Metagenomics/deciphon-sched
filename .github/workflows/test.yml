@@ -15,9 +15,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install sqlite for MacOS
+    - name: Uninstall Mono MacOS
       if: runner.os == 'macOS'
-      run: brew install sqlite
+      run: test -d /Library/Frameworks/Mono.framework/Headers && /bin/rm -rf /Library/Frameworks/Mono.framework/Headers
 
     - name: Install xxhash for MacOS
       if: runner.os == 'macOS'
