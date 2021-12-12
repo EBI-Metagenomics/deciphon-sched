@@ -1,17 +1,9 @@
 #include "xsql.h"
-#include "array.h"
 #include "dcp_sched/rc.h"
 #include <assert.h>
 #include <safe.h>
 #include <sqlite3.h>
 #include <stdlib.h>
-
-int xsql_txt_as_array(struct xsql_txt const *txt, struct array **arr)
-{
-    *arr = array_put(*arr, txt->str, (size_t)(txt->len + 1));
-    if (!*arr) return SCHED_FAIL;
-    return SCHED_DONE;
-}
 
 int xsql_bind_dbl(struct sqlite3_stmt *stmt, int col, double val)
 {

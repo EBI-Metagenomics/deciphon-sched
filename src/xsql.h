@@ -7,7 +7,6 @@
 
 typedef int(xsql_callback)(void *, int, char **, char **);
 
-struct array;
 struct sqlite3;
 struct sqlite3_stmt;
 
@@ -19,8 +18,6 @@ struct xsql_txt
 
 #define XSQL_TXT_OF(var, member)                                               \
     (struct xsql_txt) { ARRAY_SIZE_OF((var), member) - 1, (var).member }
-
-int xsql_txt_as_array(struct xsql_txt const *txt, struct array **arr);
 
 int xsql_bind_dbl(struct sqlite3_stmt *stmt, int col, double val);
 int xsql_bind_i64(struct sqlite3_stmt *stmt, int col, int64_t val);

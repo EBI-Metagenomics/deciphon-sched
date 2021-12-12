@@ -1,11 +1,14 @@
 #include "dcp_sched/sched.h"
 #include "hope/hope.h"
 
+struct sched_prod prod = {0};
+
 void test_sched_reopen(void);
 void test_sched_add_db(void);
 void test_sched_submit_job(void);
 void test_sched_submit_and_fetch_job(void);
 void test_sched_submit_product(void);
+void test_sched_submit_and_fetch_product(void);
 
 int main(void)
 {
@@ -14,6 +17,7 @@ int main(void)
     test_sched_submit_job();
     test_sched_submit_and_fetch_job();
     test_sched_submit_product();
+    test_sched_submit_and_fetch_product();
     return hope_status();
 }
 
@@ -200,17 +204,17 @@ void test_sched_submit_product(void)
 
     EQ(sched_begin_prod_submission(), SCHED_DONE);
 
-    struct sched_prod prod = {.id = 0,
-                              .job_id = 0,
-                              .seq_id = 1,
-                              .match_id = 31,
-                              .profile_name = "ACC0",
-                              .abc_name = "dna",
-                              .alt_loglik = -2720.381,
-                              .null_loglik = -3163.185,
-                              .profile_typeid = "protein",
-                              .version = "0.0.4",
-                              .match = 0};
+    prod.id = 0;
+    prod.job_id = 0;
+    prod.seq_id = 1;
+    prod.match_id = 31;
+    strcpy(prod.profile_name, "ACC0");
+    strcpy(prod.abc_name, "dna");
+    prod.alt_loglik = -2720.381;
+    prod.null_loglik = -3163.185;
+    strcpy(prod.profile_typeid, "protein");
+    strcpy(prod.version, "0.0.4");
+    strcpy(prod.match, "A,B,C");
 
     struct match match0 = {"state0", "GAC"};
     struct match match1 = {"state1", "GGC"};
@@ -238,6 +242,88 @@ void test_sched_submit_product(void)
     EQ(sched_prod_write_end(), SCHED_DONE);
 
     EQ(sched_end_prod_submission(), SCHED_DONE);
+
+    EQ(sched_close(), SCHED_DONE);
+}
+
+void test_sched_submit_and_fetch_product(void)
+{
+    char const sched_path[] = TMPDIR "/submit_and_fetch_product.sched";
+    char const db_path[] = TMPDIR "/submit_and_fetch_product.dcp";
+
+    remove(sched_path);
+    create_file1(db_path);
+
+    EQ(sched_setup(sched_path), SCHED_DONE);
+    EQ(sched_open(), SCHED_DONE);
+
+    int64_t db_id = 0;
+    EQ(sched_add_db(db_path, &db_id), SCHED_DONE);
+    EQ(db_id, 1);
+
+    EQ(sched_begin_job_submission(db_id, true, false), SCHED_DONE);
+    sched_add_seq("seq0", "ACAAGCAG");
+    sched_add_seq("seq1", "ACTTGCCG");
+    EQ(sched_end_job_submission(), SCHED_DONE);
+
+    EQ(sched_begin_job_submission(db_id, true, true), SCHED_DONE);
+    sched_add_seq("seq0_2", "XXGG");
+    sched_add_seq("seq1_2", "YXYX");
+    EQ(sched_end_job_submission(), SCHED_DONE);
+
+    int64_t job_id = 0;
+    EQ(sched_next_pending_job(&job_id), SCHED_DONE);
+
+    EQ(sched_begin_prod_submission(), SCHED_DONE);
+
+    prod.id = 0;
+    prod.job_id = 0;
+    prod.seq_id = 1;
+    prod.match_id = 31;
+    strcpy(prod.profile_name, "ACC0");
+    strcpy(prod.abc_name, "dna");
+    prod.alt_loglik = -2720.381;
+    prod.null_loglik = -3163.185;
+    strcpy(prod.profile_typeid, "protein");
+    strcpy(prod.version, "0.0.4");
+    strcpy(prod.match, "A,B,C");
+
+    struct match match0 = {"state0", "GAC"};
+    struct match match1 = {"state1", "GGC"};
+
+    EQ(sched_prod_write_begin(&prod), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
+    EQ(sched_prod_write_match_sep(), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);
+    EQ(sched_prod_write_end(), SCHED_DONE);
+
+    prod.job_id = job_id;
+    prod.seq_id = 2;
+    prod.match_id = 39;
+
+    strcpy(prod.profile_name, "ACC1");
+    strcpy(prod.abc_name, "dna");
+
+    prod.alt_loglik = -1111.;
+    prod.null_loglik = -2222.;
+
+    EQ(sched_prod_write_begin(&prod), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
+    EQ(sched_prod_write_match_sep(), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);
+    EQ(sched_prod_write_end(), SCHED_DONE);
+
+    EQ(sched_end_prod_submission(), SCHED_DONE);
+
+    enum sched_job_state state = 0;
+    EQ(sched_job_state(job_id, &state), SCHED_DONE);
+    EQ(state, SCHED_JOB_RUN);
+
+    sched_prod_init(&prod, job_id);
+    EQ(sched_prod_next(&prod), SCHED_NEXT);
+
+    EQ(sched_job_state(2, &state), SCHED_DONE);
+    EQ(state, SCHED_JOB_PEND);
 
     EQ(sched_close(), SCHED_DONE);
 }

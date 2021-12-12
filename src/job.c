@@ -161,13 +161,13 @@ int job_set_done(int64_t job_id, int64_t exec_ended)
 static enum sched_job_state resolve_job_state(char const *state)
 {
     if (strcmp("pend", state) == 0)
-        return JOB_PEND;
+        return SCHED_JOB_PEND;
     else if (strcmp("run", state) == 0)
-        return JOB_RUN;
+        return SCHED_JOB_RUN;
     else if (strcmp("done", state) == 0)
-        return JOB_DONE;
+        return SCHED_JOB_DONE;
     else if (strcmp("fail", state) == 0)
-        return JOB_FAIL;
+        return SCHED_JOB_FAIL;
 
     exit(EXIT_FAILURE);
     return 0;

@@ -11,6 +11,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include("${CMAKE_CURRENT_LIST_DIR}/external/cmake-boilerplate/cbp.cmake")
 cbp_set_rpath()
 cbp_include_sanitizers()
+cbp_include_code_coverage()
+add_code_coverage_all_targets()
 
 find_package(SQLite3 3.35.0 REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -37,7 +39,6 @@ add_custom_command(
 add_library(
   dcp_sched
   schema.c
-  src/array.c
   src/db.c
   src/job.c
   src/prod.c
@@ -51,6 +52,7 @@ add_library(
   src/xsql.c
 )
 add_library(DCP_SCHED::dcp_sched ALIAS dcp_sched)
+target_code_coverage(dcp_sched)
 
 cbp_hide_functions(dcp_sched)
 cbp_set_warning_flags()
@@ -91,3 +93,4 @@ install(FILES ${EXPORT_FILE} ${CONFIG_FILE} DESTINATION include/dcp_sched)
 
 enable_testing()
 add_subdirectory(test)
+target_code_coverage(sched AUTO ALL)

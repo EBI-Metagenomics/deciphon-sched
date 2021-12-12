@@ -101,6 +101,8 @@ int sched_add_db(char const *filepath, int64_t *id)
     return SCHED_FAIL;
 }
 
+int sched_get_job(int64_t job_id) { return job_get(job_id); }
+
 int sched_begin_job_submission(int64_t db_id, bool multi_hits,
                                bool hmmer3_compat)
 {

@@ -25,10 +25,13 @@ struct sched_prod
     char profile_typeid[SCHED_PROFILE_TYPEID_SIZE];
     char version[SCHED_VERSION_SIZE];
 
-    struct array *match;
+    char match[SCHED_MATCH_SIZE];
 };
 
 typedef int(sched_prod_write_match_cb)(FILE *fp, void const *match);
+
+SCHED_API void sched_prod_init(struct sched_prod *prod, int64_t job_id);
+SCHED_API int sched_prod_next(struct sched_prod *prod);
 
 SCHED_API int sched_prod_write_begin(struct sched_prod const *prod);
 SCHED_API int sched_prod_write_match(sched_prod_write_match_cb *cb,

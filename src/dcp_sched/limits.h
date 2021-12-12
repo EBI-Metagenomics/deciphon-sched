@@ -12,6 +12,7 @@ enum sched_limits
     SCHED_PROFILE_TYPEID_SIZE = 16,
     SCHED_SEQ_NAME_SIZE = 256,
     SCHED_SEQ_SIZE = (1024 * 1024),
+    SCHED_MATCH_SIZE = 5 * (1024 * 1024),
     SCHED_VERSION_SIZE = 16,
 };
 

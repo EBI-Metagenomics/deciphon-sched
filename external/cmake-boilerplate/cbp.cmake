@@ -39,6 +39,10 @@ macro(cbp_include_sanitizers)
   include("${CBP_DIR}/cmake-scripts/sanitizers.cmake")
 endmacro()
 
+macro(cbp_include_code_coverage)
+  include("${CBP_DIR}/cmake-scripts/code-coverage.cmake")
+endmacro()
+
 macro(cbp_set_warning_flags)
   if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     # /wd5105:
