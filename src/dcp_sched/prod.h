@@ -1,6 +1,7 @@
 #ifndef DCP_SCHED_PROD_H
 #define DCP_SCHED_PROD_H
 
+#include <stdint.h>
 #include <stdio.h>
 
 typedef int(sched_prod_write_match_cb)(FILE *fp, void const *match);
