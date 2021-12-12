@@ -1,6 +1,5 @@
 set(CBP_DIR "${CMAKE_CURRENT_LIST_DIR}")
 list(APPEND CMAKE_MODULE_PATH "${CBP_DIR}/cmake")
-message(STATUS "CBP_DIR is ${CBP_DIR}")
 
 function(cbp_install tgt hdr_place)
   install(TARGETS ${tgt} EXPORT ${tgt}-targets)
@@ -36,6 +35,10 @@ function(cbp_install tgt hdr_place)
   install(FILES ${cfg} ${ver} DESTINATION ${dst})
 endfunction()
 
+macro(cbp_include_sanitizers)
+  include("${CBP_DIR}/cmake-scripts/sanitizers.cmake")
+endmacro()
+
 macro(cbp_set_warning_flags)
   if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     # /wd5105:
@@ -60,7 +63,7 @@ macro(cbp_set_warning_flags)
       list(
         APPEND WARNING_FLAGS -Wno-gnu-designator -Wno-empty-translation-unit
         -Wno-gnu-statement-expression -Wno-nullability-extension
-        -Wconditional-uninitialized
+        -Wconditional-uninitialized -Wgnu-empty-initializer
       )
     endif()
   endif()
@@ -100,18 +103,18 @@ function(cbp_hide_functions tgt)
   endif()
 endfunction()
 
-macro(cbp_generate_export_header tgt export_file)
+macro(cbp_generate_export_header tgt base export_file)
   set(${export_file} ${CMAKE_CURRENT_BINARY_DIR}/${tgt}/export.h)
   string(TOUPPER ${tgt} TGT)
   include(GenerateExportHeader)
   generate_export_header(
     ${tgt}
     BASE_NAME
-    ${TGT}
+    ${base}
     INCLUDE_GUARD_NAME
     ${TGT}_EXPORT_H
     EXPORT_MACRO_NAME
-    ${TGT}_API
+    ${base}_API
     EXPORT_FILE_NAME
     ${${export_file}}
   )

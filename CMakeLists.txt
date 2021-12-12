@@ -9,8 +9,8 @@ project(
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include("${CMAKE_CURRENT_LIST_DIR}/external/cmake-boilerplate/cbp.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/external/cmake-scripts/sanitizers.cmake")
 cbp_set_rpath()
+cbp_include_sanitizers()
 
 find_package(SQLite3 3.35.0 REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -57,6 +57,7 @@ cbp_hide_functions(dcp_sched)
 cbp_set_warning_flags()
 cbp_ci_build_option()
 cbp_assert_null_is_zero_bits()
+cbp_generate_export_header(dcp_sched SCHED EXPORT_FILE)
 
 target_include_directories(
   dcp_sched

@@ -22,7 +22,10 @@ struct sqlite3 *sched = NULL;
 char sched_filepath[DCP_PATH_SIZE] = {0};
 extern struct job job;
 
-static_assert(SQLITE_VERSION_NUMBER >= 3035000, "We need RETURNING statement");
+#define MIN_SQLITE_VERSION 3035000
+
+static_assert(SQLITE_VERSION_NUMBER >= MIN_SQLITE_VERSION,
+              "We need RETURNING statement");
 
 int check_integrity(char const *filepath, bool *ok);
 int create_ground_truth_db(char *filepath);
@@ -35,8 +38,10 @@ int touch_db(char const *filepath);
 int sched_setup(char const *filepath)
 {
     safe_strcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath));
+
     int thread_safe = sqlite3_threadsafe();
     if (thread_safe == 0) return SCHED_FAIL;
+    if (sqlite3_libversion_number() < MIN_SQLITE_VERSION) return SCHED_FAIL;
 
     if (touch_db(filepath)) return SCHED_FAIL;
 
