@@ -64,9 +64,8 @@ vercomp ()
         ./install-sqlite3
     else
         VERSION=$(pkg-config --modversion sqlite3)
-        if vercomp $VERSION 3.35.0 "<"; then
-            ./install-sqlite3
-        fi
+        vercomp $VERSION 3.35.0
+        [[ $? == 2 ]] && ./install-sqlite3
     fi
 
     if ! pkg-config --exists --print-errors libxxhash; then
