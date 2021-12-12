@@ -1,8 +1,9 @@
-#include "dcp_sched/prod.h"
+#include "prod.h"
 #include "array.h"
 #include "compiler.h"
+#include "dcp_sched/prod.h"
 #include "dcp_sched/rc.h"
-#include "prod.h"
+#include "dcp_sched/sched.h"
 #include "safe.h"
 #include "sched.h"
 #include "to.h"
@@ -27,11 +28,11 @@ static char const *const queries[] = {
 "\
         INSERT INTO prod\
             (\
-                job_id,           seq_id,   match_id,\
-                prof_name,      abc_name,            \
-                loglik,      null_loglik,            \
-                prof_typeid,     version,            \
-                match_data                           \
+                job_id,         seq_id,      match_id,\
+                profile_name,   abc_name,             \
+                alt_loglik,     null_loglik,          \
+                profile_typeid, version,              \
+                match_data                            \
             )\
         VALUES\
             (\
@@ -67,7 +68,7 @@ enum
 extern struct sqlite3 *sched;
 static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};
 static TOK_DECLARE(tok);
-struct prod prod = {0};
+struct sched_prod prod = {0};
 struct xfile_tmp prod_file = {0};
 
 int prod_module_init(void)
@@ -86,10 +87,10 @@ int prod_begin_submission(void)
     return SCHED_DONE;
 }
 
-int sched_prod_write_begin(void)
+int sched_prod_write_begin(struct sched_prod const *p)
 {
 #define TAB "\t"
-#define echo(fmt, var) fprintf(prod_file.fp, fmt, prod.var) < 0
+#define echo(fmt, var) fprintf(prod_file.fp, fmt, p->var) < 0
 #define Fd64 "%" PRId64 TAB
 #define Fs "%s" TAB
 #define Fg "%.17g" TAB
@@ -98,14 +99,14 @@ int sched_prod_write_begin(void)
     if (echo(Fd64, seq_id)) return SCHED_FAIL;
     if (echo(Fd64, match_id)) return SCHED_FAIL;
 
-    if (echo(Fs, prof_name)) return SCHED_FAIL;
+    if (echo(Fs, profile_name)) return SCHED_FAIL;
     if (echo(Fs, abc_name)) return SCHED_FAIL;
 
     /* Reference: https://stackoverflow.com/a/21162120 */
-    if (echo(Fg, loglik)) return SCHED_FAIL;
+    if (echo(Fg, alt_loglik)) return SCHED_FAIL;
     if (echo(Fg, null_loglik)) return SCHED_FAIL;
 
-    if (echo(Fs, prof_typeid)) return SCHED_FAIL;
+    if (echo(Fs, profile_typeid)) return SCHED_FAIL;
     if (echo(Fs, version)) return SCHED_FAIL;
 
     return SCHED_DONE;
@@ -174,13 +175,14 @@ int sched_prod_add(void)
     if ((rc = xsql_bind_i64(stmt, 1, prod.seq_id))) return rc;
     if ((rc = xsql_bind_i64(stmt, 2, prod.match_id))) return rc;
 
-    if ((rc = xsql_bind_txt(stmt, 3, XSQL_TXT_OF(prod, prof_name)))) return rc;
+    if ((rc = xsql_bind_txt(stmt, 3, XSQL_TXT_OF(prod, profile_name))))
+        return rc;
     if ((rc = xsql_bind_txt(stmt, 4, XSQL_TXT_OF(prod, abc_name)))) return rc;
 
-    if ((rc = xsql_bind_dbl(stmt, 5, prod.loglik))) return rc;
+    if ((rc = xsql_bind_dbl(stmt, 5, prod.alt_loglik))) return rc;
     if ((rc = xsql_bind_dbl(stmt, 6, prod.null_loglik))) return rc;
 
-    if ((rc = xsql_bind_txt(stmt, 7, XSQL_TXT_OF(prod, prof_typeid))))
+    if ((rc = xsql_bind_txt(stmt, 7, XSQL_TXT_OF(prod, profile_typeid))))
         return rc;
     if ((rc = xsql_bind_txt(stmt, 8, XSQL_TXT_OF(prod, version)))) return rc;
 
@@ -229,15 +231,15 @@ int sched_prod_get(int64_t prod_id)
     prod.seq_id = sqlite3_column_int64(stmt, 2);
     prod.match_id = sqlite3_column_int64(stmt, 3);
 
-    rc = xsql_cpy_txt(stmt, 4, XSQL_TXT_OF(prod, prof_name));
+    rc = xsql_cpy_txt(stmt, 4, XSQL_TXT_OF(prod, profile_name));
     if (rc) return rc;
     rc = xsql_cpy_txt(stmt, 5, XSQL_TXT_OF(prod, abc_name));
     if (rc) return rc;
 
-    prod.loglik = sqlite3_column_double(stmt, 6);
+    prod.alt_loglik = sqlite3_column_double(stmt, 6);
     prod.null_loglik = sqlite3_column_double(stmt, 7);
 
-    rc = xsql_cpy_txt(stmt, 8, XSQL_TXT_OF(prod, prof_typeid));
+    rc = xsql_cpy_txt(stmt, 8, XSQL_TXT_OF(prod, profile_typeid));
     if (rc) return rc;
     rc = xsql_cpy_txt(stmt, 9, XSQL_TXT_OF(prod, version));
     if (rc) return rc;
@@ -253,39 +255,6 @@ void prod_module_del(void)
 {
     for (unsigned i = 0; i < ARRAY_SIZE(stmts); ++i)
         sqlite3_finalize(stmts[i]);
-}
-
-void sched_prod_set_job_id(int64_t job_id) { prod.job_id = job_id; }
-
-void sched_prod_set_seq_id(int64_t seq_id) { prod.seq_id = seq_id; }
-
-void sched_prod_set_match_id(int64_t match_id) { prod.match_id = match_id; }
-
-void sched_prod_set_profile_name(char const *name)
-{
-    safe_strcpy(prod.prof_name, name, DCP_PROF_NAME_SIZE);
-}
-
-void sched_prod_set_abc_name(char const *abc_name)
-{
-    safe_strcpy(prod.abc_name, abc_name, DCP_ABC_NAME_SIZE);
-}
-
-void sched_prod_set_alt_loglik(double loglik) { prod.loglik = loglik; }
-
-void sched_prod_set_null_loglik(double null_loglik)
-{
-    prod.null_loglik = null_loglik;
-}
-
-void sched_prod_set_profile_typeid(char const *model)
-{
-    safe_strcpy(prod.prof_typeid, model, DCP_PROFILE_TYPEID_SIZE);
-}
-
-void sched_prod_set_version(char const *version)
-{
-    safe_strcpy(prod.version, version, DCP_VERSION_SIZE);
 }
 
 static int submit_prod_file(FILE *restrict fp)

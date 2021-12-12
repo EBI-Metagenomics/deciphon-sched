@@ -1,7 +1,7 @@
 #ifndef DCP_SCHED_JOB_H
 #define DCP_SCHED_JOB_H
 
-#include <stdbool.h>
+#include "dcp_sched/export.h"
 #include <stdint.h>
 
 enum sched_job_state
@@ -12,6 +12,6 @@ enum sched_job_state
     JOB_FAIL
 };
 
-int sched_job_state(int64_t job_id, enum sched_job_state *state);
+SCHED_API int sched_job_state(int64_t job_id, enum sched_job_state *state);
 
 #endif

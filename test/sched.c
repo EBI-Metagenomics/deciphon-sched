@@ -200,39 +200,38 @@ void test_sched_submit_product(void)
 
     EQ(sched_begin_prod_submission(), SCHED_DONE);
 
-    sched_prod_set_job_id(job_id);
-    sched_prod_set_seq_id(1);
-    sched_prod_set_match_id(31);
-
-    sched_prod_set_profile_name("ACC0");
-    sched_prod_set_abc_name("dna");
-
-    sched_prod_set_alt_loglik(-2720.381);
-    sched_prod_set_null_loglik(-3163.185);
-
-    sched_prod_set_profile_typeid("protein");
-    sched_prod_set_version("0.0.4");
+    struct sched_prod prod = {.id = 0,
+                              .job_id = 0,
+                              .seq_id = 1,
+                              .match_id = 31,
+                              .profile_name = "ACC0",
+                              .abc_name = "dna",
+                              .alt_loglik = -2720.381,
+                              .null_loglik = -3163.185,
+                              .profile_typeid = "protein",
+                              .version = "0.0.4",
+                              .match = 0};
 
     struct match match0 = {"state0", "GAC"};
     struct match match1 = {"state1", "GGC"};
 
-    EQ(sched_prod_write_begin(), SCHED_DONE);
+    EQ(sched_prod_write_begin(&prod), SCHED_DONE);
     EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
     EQ(sched_prod_write_match_sep(), SCHED_DONE);
     EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);
     EQ(sched_prod_write_end(), SCHED_DONE);
 
-    sched_prod_set_job_id(job_id);
-    sched_prod_set_seq_id(2);
-    sched_prod_set_match_id(39);
+    prod.job_id = job_id;
+    prod.seq_id = 2;
+    prod.match_id = 39;
 
-    sched_prod_set_profile_name("ACC1");
-    sched_prod_set_abc_name("dna");
+    strcpy(prod.profile_name, "ACC1");
+    strcpy(prod.abc_name, "dna");
 
-    sched_prod_set_alt_loglik(-1111.);
-    sched_prod_set_null_loglik(-2222.);
+    prod.alt_loglik = -1111.;
+    prod.null_loglik = -2222.;
 
-    EQ(sched_prod_write_begin(), SCHED_DONE);
+    EQ(sched_prod_write_begin(&prod), SCHED_DONE);
     EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
     EQ(sched_prod_write_match_sep(), SCHED_DONE);
     EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);

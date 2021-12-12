@@ -28,13 +28,13 @@ CREATE TABLE prod (
     seq_id INTEGER REFERENCES seq (id) NOT NULL,
     match_id INTEGER NOT NULL,
 
-    prof_name TEXT NOT NULL,
+    profile_name TEXT NOT NULL,
     abc_name TEXT NOT NULL,
 
-    loglik REAL NOT NULL,
+    alt_loglik REAL NOT NULL,
     null_loglik REAL NOT NULL,
 
-    prof_typeid TEXT NOT NULL,
+    profile_typeid TEXT NOT NULL,
     version TEXT NOT NULL,
 
     match_data TEXT NOT NULL

@@ -2,11 +2,9 @@
 #define DCP_SCHED_SCHED_H
 
 #include "dcp_sched/export.h"
-#include "dcp_sched/job.h"
 #include "dcp_sched/limits.h"
 #include "dcp_sched/prod.h"
 #include "dcp_sched/rc.h"
-#include "dcp_sched/version.h"
 #include <stdbool.h>
 #include <stdint.h>
 
