@@ -1,6 +1,6 @@
 #include "tok.h"
 #include "compiler.h"
-#include "logger.h"
+#include "dcp_sched/rc.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +32,7 @@ int tok_next(struct tok *tok, FILE *restrict fd)
                 tok->value = NULL;
                 tok->id = TOK_EOF;
                 tok->line.data[0] = '\0';
-                return 0;
+                return SCHED_DONE;
             }
             return 2;
         }
@@ -42,7 +42,7 @@ int tok_next(struct tok *tok, FILE *restrict fd)
     else
         tok->value = strtok_r(NULL, DELIM, &tok->line.ctx);
 
-    if (!tok->value) return error("parse error");
+    if (!tok->value) return SCHED_FAIL;
 
     if (!strcmp(tok->value, "\n"))
         tok->id = TOK_NL;
@@ -51,7 +51,7 @@ int tok_next(struct tok *tok, FILE *restrict fd)
 
     tok->line.consumed = tok->id == TOK_NL;
 
-    return 0;
+    return SCHED_DONE;
 }
 
 static int next_line(FILE *restrict fd, unsigned size, char *line)
@@ -62,11 +62,11 @@ static int next_line(FILE *restrict fd, unsigned size, char *line)
     {
         if (feof(fd)) return 2;
 
-        return error("failed to read line");
+        return SCHED_FAIL;
     }
 
     add_space_before_newline(line);
-    return 0;
+    return SCHED_DONE;
 }
 
 static void add_space_before_newline(char *line)

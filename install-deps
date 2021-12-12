@@ -5,11 +5,6 @@ if ! type pkg-config >/dev/null; then
     exit 1
 fi
 
-if ! pkg-config --exists --print-errors libxxhash; then
-    echo "Please, install xxhash." >&2
-    exit 1
-fi
-
 (
     # Change dir to script's
     {
@@ -25,7 +20,10 @@ fi
     if ! pkg-config --exists --print-errors sqlite3; then
         ./install-sqlite3
     fi
+
+    if ! pkg-config --exists --print-errors libxxhash; then
+        ./install-xxhash
+    fi
 )
 
 bash -c "$(curl -fsSL https://git.io/Jz7Oa)" -s horta/hope || exit 1
-bash -c "$(curl -fsSL https://git.io/Jz7Oa)" -s EBI-Metagenomics/log || exit 1

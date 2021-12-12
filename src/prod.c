@@ -2,7 +2,6 @@
 #include "array.h"
 #include "compiler.h"
 #include "dcp_sched/rc.h"
-#include "logger.h"
 #include "prod.h"
 #include "safe.h"
 #include "sched.h"

@@ -1,7 +1,6 @@
 #include "seq.h"
 #include "compiler.h"
 #include "dcp_sched/rc.h"
-#include "logger.h"
 #include "safe.h"
 #include "sched.h"
 #include "xsql.h"
@@ -105,7 +104,7 @@ int seq_get(int64_t id)
 
     if (xsql_bind_i64(stmt, 0, id)) return SCHED_FAIL;
 
-    if (xsql_step(stmt) != SCHED_NEXT) return error("failed to get seq");
+    if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
 
     seq.id = sqlite3_column_int64(stmt, 0);
     seq.job_id = sqlite3_column_int64(stmt, 1);

@@ -2,7 +2,6 @@
 #include "compiler.h"
 #include "dcp_sched/job.h"
 #include "dcp_sched/rc.h"
-#include "logger.h"
 #include "safe.h"
 #include "sched.h"
 #include "sched_limits.h"

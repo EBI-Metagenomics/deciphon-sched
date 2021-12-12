@@ -12,7 +12,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/external/cmake-boilerplate/cbp.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/external/cmake-scripts/sanitizers.cmake")
 cbp_set_rpath()
 
-find_package(log REQUIRED)
 find_package(SQLite3 3.35.0 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(xxHash REQUIRED)
@@ -41,7 +40,6 @@ add_library(
   src/array.c
   src/db.c
   src/job.c
-  src/logger.c
   src/prod.c
   src/safe.c
   src/sched.c
@@ -67,7 +65,6 @@ target_include_directories(
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-target_link_libraries(dcp_sched PUBLIC LOG::log)
 target_link_libraries(dcp_sched PUBLIC SQLite::SQLite3)
 target_link_libraries(dcp_sched PUBLIC xxHash::xxHash)
 set_target_properties(dcp_sched PROPERTIES VERSION ${PROJECT_VERSION})

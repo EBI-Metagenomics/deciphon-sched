@@ -20,7 +20,7 @@
 */
 
 #include "sqldiff.h"
-#include "logger.h"
+#include "dcp_sched/rc.h"
 #include "sqlite3.h"
 #include "xfile.h"
 #include <assert.h>
@@ -2476,25 +2476,18 @@ static int call_main(int argc, char const **argv, FILE *out)
 int sqldiff_compare(char const *db0, char const *db1, bool *equal)
 {
     char path[] = XFILE_PATH_TEMP_TEMPLATE;
-    int rc = xfile_mktemp(path);
-    if (rc) return rc;
+    int rc = SCHED_FAIL;
+    if (xfile_mktemp(path)) return rc;
 
     FILE *out = fopen(path, "w");
-    if (!out)
-    {
-        rc = error("failed to open file");
-        goto cleanup;
-    }
+    if (!out) goto cleanup;
 
     long begin = ftell(out);
     char const *argv[] = {"sqldiff", "--schema", db0, db1};
-    if (call_main(sizeof argv / sizeof(char *), argv, out))
-    {
-        rc = error("failed to compare databases");
-        goto cleanup;
-    }
+    if (call_main(sizeof argv / sizeof(char *), argv, out)) goto cleanup;
     long end = ftell(out);
     *equal = !(begin - end);
+    rc = SCHED_DONE;
 
 cleanup:
     fclose(out);

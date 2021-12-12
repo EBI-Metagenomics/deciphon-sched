@@ -1,7 +1,6 @@
 #include "xsql.h"
 #include "array.h"
 #include "dcp_sched/rc.h"
-#include "logger.h"
 #include <assert.h>
 #include <safe.h>
 #include <sqlite3.h>

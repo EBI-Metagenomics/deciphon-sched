@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+(
+    cd ~/
+    VERSION=0.8.1
+    wget https://github.com/Cyan4973/xxHash/archive/refs/tags/v$VERSION.tar.gz
+    tar xzf v$VERSION.tar.gz
+    cd xxHash-$VERSION
+    if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
+    make && $SUDO make install
+    cd ..
+    /bin/rm -f v$VERSION.tar.gz
+    /bin/rm -rf xxHash-$VERSION
+)

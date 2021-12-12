@@ -2,7 +2,6 @@
 #include "compiler.h"
 #include "db.h"
 #include "job.h"
-#include "logger.h"
 #include "prod.h"
 #include "safe.h"
 #include "schema.h"

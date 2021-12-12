@@ -1,7 +1,6 @@
 #include "db.h"
 #include "compiler.h"
 #include "dcp_sched/rc.h"
-#include "logger.h"
 #include "safe.h"
 #include "sched.h"
 #include "xfile.h"
