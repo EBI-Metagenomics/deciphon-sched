@@ -15,19 +15,21 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Uninstall Mono MacOS
-      if: runner.os == 'macOS'
-      run: test -d /Library/Frameworks/Mono.framework/Headers && /bin/rm -rf /Library/Frameworks/Mono.framework/Headers
-
-    - name: Install xxhash for MacOS
-      if: runner.os == 'macOS'
-      run: brew install xxhash
-
     - name: Check for sudo
       shell: bash
       run: |
         if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
         echo "SUDO=$SUDO" >> $GITHUB_ENV
+
+    - name: Uninstall Mono MacOS
+      if: runner.os == 'macOS'
+      env:
+        DIR: /Library/Frameworks/Mono.framework/Headers
+      run: test -d ${{env.DIR}} && $SUDO /bin/rm -rf ${{env.DIR}}
+
+    - name: Install xxhash for MacOS
+      if: runner.os == 'macOS'
+      run: brew install xxhash
 
     - name: Install dependencies
       shell: bash
