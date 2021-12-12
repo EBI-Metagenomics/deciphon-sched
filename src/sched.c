@@ -7,7 +7,6 @@
 #include "schema.h"
 #include "seq.h"
 #include "seq_queue.h"
-#include "sqldiff.h"
 #include "utc.h"
 #include "xfile.h"
 #include "xsql.h"
@@ -19,7 +18,7 @@
 #include <string.h>
 
 struct sqlite3 *sched = NULL;
-char sched_filepath[DCP_PATH_SIZE] = {0};
+char sched_filepath[SCHED_PATH_SIZE] = {0};
 extern struct job job;
 
 #define MIN_SQLITE_VERSION 3035000
@@ -27,12 +26,8 @@ extern struct job job;
 static_assert(SQLITE_VERSION_NUMBER >= MIN_SQLITE_VERSION,
               "We need RETURNING statement");
 
-int check_integrity(char const *filepath, bool *ok);
-int create_ground_truth_db(char *filepath);
 int emerge_db(char const *filepath);
 int is_empty(char const *filepath, bool *empty);
-int submit_job(struct sqlite3_stmt *, struct job *, int64_t db_id,
-               int64_t *job_id);
 int touch_db(char const *filepath);
 
 int sched_setup(char const *filepath)
@@ -49,10 +44,6 @@ int sched_setup(char const *filepath)
     if (is_empty(filepath, &empty)) return SCHED_FAIL;
 
     if (empty && emerge_db(filepath)) return SCHED_FAIL;
-
-    bool ok = false;
-    if (check_integrity(filepath, &ok)) return SCHED_FAIL;
-    if (!ok) return SCHED_FAIL;
 
     return SCHED_DONE;
 }
@@ -152,29 +143,6 @@ int sched_end_prod_submission(void)
 }
 
 int sched_next_pending_job(int64_t *job_id) { return job_next_pending(job_id); }
-
-int check_integrity(char const *filepath, bool *ok)
-{
-    char tmp[] = XFILE_PATH_TEMP_TEMPLATE;
-
-    if (create_ground_truth_db(tmp)) return SCHED_FAIL;
-    if (sqldiff_compare(filepath, tmp, ok))
-    {
-        remove(tmp);
-        return SCHED_FAIL;
-    }
-
-    remove(tmp);
-    return SCHED_DONE;
-}
-
-int create_ground_truth_db(char *filepath)
-{
-    if (xfile_mktemp(filepath)) return SCHED_FAIL;
-    if (touch_db(filepath)) return SCHED_FAIL;
-    if (emerge_db(filepath)) return SCHED_FAIL;
-    return SCHED_DONE;
-}
 
 int emerge_db(char const *filepath)
 {

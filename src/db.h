@@ -8,7 +8,7 @@ struct db
 {
     int64_t id;
     int64_t xxh64;
-    char filepath[DCP_PATH_SIZE];
+    char filepath[SCHED_PATH_SIZE];
 };
 
 int db_module_init(void);

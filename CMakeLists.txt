@@ -45,7 +45,6 @@ add_library(
   src/sched.c
   src/seq.c
   src/seq_queue.c
-  src/sqldiff.c
   src/to.c
   src/tok.c
   src/xfile.c

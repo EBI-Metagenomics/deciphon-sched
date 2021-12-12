@@ -16,14 +16,14 @@ struct sched_prod
     int64_t seq_id;
     int64_t match_id;
 
-    char profile_name[DCP_PROF_NAME_SIZE];
-    char abc_name[DCP_ABC_NAME_SIZE];
+    char profile_name[SCHED_PROFILE_NAME_SIZE];
+    char abc_name[SCHED_ABC_NAME_SIZE];
 
     double alt_loglik;
     double null_loglik;
 
-    char profile_typeid[DCP_PROFILE_TYPEID_SIZE];
-    char version[DCP_VERSION_SIZE];
+    char profile_typeid[SCHED_PROFILE_TYPEID_SIZE];
+    char version[SCHED_VERSION_SIZE];
 
     struct array *match;
 };

@@ -1,7 +1,6 @@
 #ifndef JOB_H
 #define JOB_H
 
-#include "dcp_sched/job.h"
 #include "dcp_sched/limits.h"
 #include <stdbool.h>
 #include <stdint.h>

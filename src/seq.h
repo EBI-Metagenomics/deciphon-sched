@@ -8,8 +8,8 @@ struct seq
 {
     int64_t id;
     int64_t job_id;
-    char name[DCP_SEQ_NAME_SIZE];
-    char data[DCP_SEQ_SIZE];
+    char name[SCHED_SEQ_NAME_SIZE];
+    char data[SCHED_SEQ_SIZE];
 };
 
 int seq_module_init(void);
