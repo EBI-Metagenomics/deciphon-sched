@@ -1,19 +1,12 @@
 #!/bin/bash
 
-if ! type pkg-config >/dev/null; then
-    echo "Please, install pkg-config." >&2
-    exit 1
-fi
-
-if ! type curl >/dev/null; then
-    echo "Please, install curl." >&2
-    exit 1
-fi
-
-if ! type cmake >/dev/null; then
-    echo "Please, install cmake." >&2
-    exit 1
-fi
+for BIN in pkg-config curl cmake xxd
+do
+    if ! type $BIN >/dev/null; then
+        echo "Please, install $BIN." >&2
+        exit 1
+    fi
+done
 
 # https://stackoverflow.com/a/4025065
 vercomp ()
