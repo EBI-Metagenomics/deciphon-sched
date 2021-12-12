@@ -112,11 +112,6 @@ static int select_db(struct db *db, int64_t by_value, enum stmt select_stmt)
     return xsql_end_step(stmt);
 }
 
-int db_get_by_id(struct db *db, int64_t id)
-{
-    return select_db(db, id, SELECT_BY_ID);
-}
-
 int db_get_by_xxh64(struct db *db, int64_t xxh64)
 {
     return select_db(db, xxh64, SELECT_BY_XXH64);

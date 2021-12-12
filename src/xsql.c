@@ -36,16 +36,6 @@ int xsql_bind_txt(struct sqlite3_stmt *stmt, int col, struct xsql_txt txt)
     return SCHED_DONE;
 }
 
-int xsql_get_txt(struct sqlite3_stmt *stmt, int col, struct xsql_txt *txt)
-{
-    txt->str = (char const *)sqlite3_column_text(stmt, col);
-    if (!txt->str) return SCHED_FAIL;
-    int ilen = sqlite3_column_bytes(stmt, col);
-    assert(ilen > 0);
-    txt->len = (unsigned)ilen;
-    return SCHED_DONE;
-}
-
 int xsql_cpy_txt(struct sqlite3_stmt *stmt, int col, struct xsql_txt txt)
 {
     char const *str = (char const *)sqlite3_column_text(stmt, col);
@@ -100,12 +90,6 @@ int xsql_reset(struct sqlite3_stmt *stmt)
 {
     if (sqlite3_reset(stmt)) return SCHED_FAIL;
     return SCHED_DONE;
-}
-
-int xsql_insert_step(struct sqlite3_stmt *stmt)
-{
-    if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
-    return xsql_end_step(stmt);
 }
 
 int xsql_step(struct sqlite3_stmt *stmt)

@@ -6,8 +6,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-struct array;
-
 struct sched_prod
 {
     int64_t id;

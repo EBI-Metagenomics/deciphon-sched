@@ -24,7 +24,6 @@ int xsql_bind_i64(struct sqlite3_stmt *stmt, int col, int64_t val);
 int xsql_bind_str(struct sqlite3_stmt *stmt, int col, char const *str);
 int xsql_bind_txt(struct sqlite3_stmt *stmt, int col, struct xsql_txt txt);
 
-int xsql_get_txt(struct sqlite3_stmt *stmt, int col, struct xsql_txt *txt);
 int xsql_cpy_txt(struct sqlite3_stmt *stmt, int col, struct xsql_txt txt);
 
 int xsql_open(char const *filepath, struct sqlite3 **db);
@@ -38,7 +37,6 @@ int xsql_rollback_transaction(struct sqlite3 *db);
 int xsql_prepare(struct sqlite3 *db, char const *sql,
                  struct sqlite3_stmt **stmt);
 int xsql_reset(struct sqlite3_stmt *stmt);
-int xsql_insert_step(struct sqlite3_stmt *stmt);
 int xsql_step(struct sqlite3_stmt *stmt);
 int xsql_end_step(struct sqlite3_stmt *stmt);
 

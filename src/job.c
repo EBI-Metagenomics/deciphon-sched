@@ -1,5 +1,6 @@
 #include "job.h"
 #include "compiler.h"
+#include "dcp_sched/job.h"
 #include "dcp_sched/rc.h"
 #include "dcp_sched/sched.h"
 #include "safe.h"
@@ -12,7 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct job job = {0};
 extern struct sqlite3 *sched;
 
 enum
@@ -75,39 +75,39 @@ int job_module_init(void)
     return SCHED_DONE;
 }
 
-void job_init(int64_t db_id, bool multi_hits, bool hmmer3_compat)
+void sched_job_init(struct sched_job *job, int64_t db_id, bool multi_hits,
+                    bool hmmer3_compat)
 {
-    job.id = 0;
-    job.db_id = db_id;
-    job.multi_hits = multi_hits;
-    job.hmmer3_compat = hmmer3_compat;
-    safe_strcpy(job.state, "pend", ARRAY_SIZE_OF(job, state));
+    job->id = 0;
+    job->db_id = db_id;
+    job->multi_hits = multi_hits;
+    job->hmmer3_compat = hmmer3_compat;
+    safe_strcpy(job->state, "pend", ARRAY_SIZE_OF(*job, state));
 
-    job.error[0] = 0;
-    job.submission = 0;
-    job.exec_started = 0;
-    job.exec_ended = 0;
+    job->error[0] = 0;
+    job->submission = 0;
+    job->exec_started = 0;
+    job->exec_ended = 0;
 }
 
-int job_submit(int64_t *job_id)
+int job_submit(struct sched_job *job)
 {
-    job.submission = utc_now();
+    job->submission = utc_now();
     struct sqlite3_stmt *stmt = stmts[INSERT];
     if (xsql_reset(stmt)) return SCHED_FAIL;
 
-    if (xsql_bind_i64(stmt, 0, job.db_id)) return SCHED_FAIL;
-    if (xsql_bind_i64(stmt, 1, job.multi_hits)) return SCHED_FAIL;
-    if (xsql_bind_i64(stmt, 2, job.hmmer3_compat)) return SCHED_FAIL;
-    if (xsql_bind_str(stmt, 3, job.state)) return SCHED_FAIL;
+    if (xsql_bind_i64(stmt, 0, job->db_id)) return SCHED_FAIL;
+    if (xsql_bind_i64(stmt, 1, job->multi_hits)) return SCHED_FAIL;
+    if (xsql_bind_i64(stmt, 2, job->hmmer3_compat)) return SCHED_FAIL;
+    if (xsql_bind_str(stmt, 3, job->state)) return SCHED_FAIL;
 
-    if (xsql_bind_str(stmt, 4, job.error)) return SCHED_FAIL;
-    if (xsql_bind_i64(stmt, 5, job.submission)) return SCHED_FAIL;
-    if (xsql_bind_i64(stmt, 6, job.exec_started)) return SCHED_FAIL;
-    if (xsql_bind_i64(stmt, 7, job.exec_ended)) return SCHED_FAIL;
+    if (xsql_bind_str(stmt, 4, job->error)) return SCHED_FAIL;
+    if (xsql_bind_i64(stmt, 5, job->submission)) return SCHED_FAIL;
+    if (xsql_bind_i64(stmt, 6, job->exec_started)) return SCHED_FAIL;
+    if (xsql_bind_i64(stmt, 7, job->exec_ended)) return SCHED_FAIL;
 
     if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
-    job.id = sqlite3_column_int64(stmt, 0);
-    *job_id = job.id;
+    job->id = sqlite3_column_int64(stmt, 0);
     return xsql_end_step(stmt);
 }
 
@@ -126,13 +126,12 @@ static int next_pending_job_id(int64_t *job_id)
     return xsql_end_step(stmt);
 }
 
-int job_next_pending(int64_t *job_id)
+int job_next_pending(struct sched_job *job)
 {
-    int rc = next_pending_job_id(&job.id);
+    int rc = next_pending_job_id(&job->id);
     if (rc == SCHED_NOTFOUND) return SCHED_NOTFOUND;
     if (rc != SCHED_DONE) return SCHED_FAIL;
-    *job_id = job.id;
-    return job_get(job.id);
+    return job_get(job);
 }
 
 int job_set_error(int64_t job_id, char const *error, int64_t exec_ended)
@@ -192,26 +191,26 @@ int sched_job_state(int64_t job_id, enum sched_job_state *state)
     return xsql_end_step(stmt);
 }
 
-int job_get(int64_t job_id)
+int job_get(struct sched_job *job)
 {
     struct sqlite3_stmt *stmt = stmts[SELECT];
     if (xsql_reset(stmt)) return SCHED_FAIL;
 
-    if (xsql_bind_i64(stmt, 0, job_id)) return SCHED_FAIL;
+    if (xsql_bind_i64(stmt, 0, job->id)) return SCHED_FAIL;
 
     if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
 
-    job.id = sqlite3_column_int64(stmt, 0);
+    job->id = sqlite3_column_int64(stmt, 0);
 
-    job.db_id = sqlite3_column_int64(stmt, 1);
-    job.multi_hits = sqlite3_column_int(stmt, 2);
-    job.hmmer3_compat = sqlite3_column_int(stmt, 3);
-    if (xsql_cpy_txt(stmt, 4, XSQL_TXT_OF(job, state))) return SCHED_FAIL;
+    job->db_id = sqlite3_column_int64(stmt, 1);
+    job->multi_hits = sqlite3_column_int(stmt, 2);
+    job->hmmer3_compat = sqlite3_column_int(stmt, 3);
+    if (xsql_cpy_txt(stmt, 4, XSQL_TXT_OF(*job, state))) return SCHED_FAIL;
 
-    if (xsql_cpy_txt(stmt, 5, XSQL_TXT_OF(job, error))) return SCHED_FAIL;
-    job.submission = sqlite3_column_int64(stmt, 6);
-    job.exec_started = sqlite3_column_int64(stmt, 7);
-    job.exec_ended = sqlite3_column_int64(stmt, 8);
+    if (xsql_cpy_txt(stmt, 5, XSQL_TXT_OF(*job, error))) return SCHED_FAIL;
+    job->submission = sqlite3_column_int64(stmt, 6);
+    job->exec_started = sqlite3_column_int64(stmt, 7);
+    job->exec_ended = sqlite3_column_int64(stmt, 8);
 
     return xsql_end_step(stmt);
 }

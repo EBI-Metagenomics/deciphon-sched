@@ -19,7 +19,6 @@
 
 struct sqlite3 *sched = NULL;
 char sched_filepath[SCHED_PATH_SIZE] = {0};
-extern struct job job;
 
 #define MIN_SQLITE_VERSION 3035000
 
@@ -72,6 +71,15 @@ int sched_close(void)
     return xsql_close(sched);
 }
 
+int sched_set_job_fail(int64_t job_id, char const *msg)
+{
+    return job_set_error(job_id, msg, utc_now());
+}
+int sched_set_job_done(int64_t job_id)
+{
+    return job_set_done(job_id, utc_now());
+}
+
 static int dbs_have_same_filepath(char const *filepath, bool *answer)
 {
     int64_t xxh64 = 0;
@@ -101,31 +109,33 @@ int sched_add_db(char const *filepath, int64_t *id)
     return SCHED_FAIL;
 }
 
-int sched_get_job(int64_t job_id) { return job_get(job_id); }
+int sched_get_job(struct sched_job *job) { return job_get(job); }
 
-int sched_begin_job_submission(int64_t db_id, bool multi_hits,
-                               bool hmmer3_compat)
+int sched_begin_job_submission(struct sched_job *job)
 {
     if (xsql_begin_transaction(sched)) return SCHED_FAIL;
-    job_init(db_id, multi_hits, hmmer3_compat);
     seq_queue_init();
     return SCHED_DONE;
 }
 
-void sched_add_seq(char const *name, char const *data)
+void sched_add_seq(struct sched_job *job, char const *name, char const *data)
 {
-    seq_queue_add(job.id, name, data);
+    seq_queue_add(job->id, name, data);
 }
 
-int sched_end_job_submission(void)
+int sched_rollback_job_submission(struct sched_job *job)
 {
-    int64_t job_id = 0;
-    if (job_submit(&job_id)) return SCHED_FAIL;
+    return xsql_rollback_transaction(sched);
+}
+
+int sched_end_job_submission(struct sched_job *job)
+{
+    if (job_submit(job)) return SCHED_FAIL;
 
     for (unsigned i = 0; i < seq_queue_size(); ++i)
     {
-        struct seq *seq = seq_queue_get(i);
-        seq->job_id = job_id;
+        struct sched_seq *seq = seq_queue_get(i);
+        seq->job_id = job->id;
         if (seq_submit(seq)) return xsql_rollback_transaction(sched);
     }
 
@@ -144,7 +154,10 @@ int sched_end_prod_submission(void)
     return SCHED_DONE;
 }
 
-int sched_next_pending_job(int64_t *job_id) { return job_next_pending(job_id); }
+int sched_next_pending_job(struct sched_job *job)
+{
+    return job_next_pending(job);
+}
 
 int emerge_db(char const *filepath)
 {
