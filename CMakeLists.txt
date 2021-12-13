@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(
   deciphon_sched
-  VERSION 0.0.1
+  VERSION 0.0.2
   LANGUAGES C
 )
 
@@ -89,7 +89,7 @@ configure_file(
 )
 
 cbp_install(dcp_sched MERGED)
-install(FILES ${EXPORT_FILE} ${CONFIG_FILE} DESTINATION include/dcp_sched)
+install(FILES ${EXPORT_FILE} ${CONFIG_FILE} ${VERSION_FILE} DESTINATION include/dcp_sched)
 
 enable_testing()
 add_subdirectory(test)
