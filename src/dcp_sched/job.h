@@ -6,6 +6,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+enum sched_job_state
+{
+    SCHED_JOB_PEND,
+    SCHED_JOB_RUN,
+    SCHED_JOB_DONE,
+    SCHED_JOB_FAIL
+};
+
 struct sched_job
 {
     int64_t id;
@@ -23,5 +31,7 @@ struct sched_job
 
 SCHED_API void sched_job_init(struct sched_job *job, int64_t db_id,
                               bool multi_hits, bool hmmer3_compat);
+
+SCHED_API int sched_job_state(int64_t job_id, enum sched_job_state *state);
 
 #endif

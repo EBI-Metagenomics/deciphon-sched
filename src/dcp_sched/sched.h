@@ -10,16 +10,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-enum sched_job_state
-{
-    SCHED_JOB_PEND,
-    SCHED_JOB_RUN,
-    SCHED_JOB_DONE,
-    SCHED_JOB_FAIL
-};
-
-SCHED_API int sched_job_state(int64_t job_id, enum sched_job_state *state);
-
 SCHED_API int sched_setup(char const *filepath);
 SCHED_API int sched_open(void);
 SCHED_API int sched_close(void);
