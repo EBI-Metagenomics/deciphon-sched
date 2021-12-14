@@ -105,7 +105,12 @@ int sched_add_db(char const *filepath, int64_t *id)
         if (answer) return SCHED_DONE;
         return SCHED_FAIL;
     }
-    if (rc == SCHED_NOTFOUND) return db_add(filepath, id);
+
+    char resolved[PATH_MAX] = {0};
+    char *ptr = realpath(filepath, resolved);
+    if (!ptr) return SCHED_FAIL;
+
+    if (rc == SCHED_NOTFOUND) return db_add(resolved, id);
     return SCHED_FAIL;
 }
 
