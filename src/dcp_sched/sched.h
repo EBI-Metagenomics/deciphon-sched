@@ -26,7 +26,7 @@ SCHED_API void sched_add_seq(struct sched_job *job, char const *name,
 SCHED_API int sched_rollback_job_submission(struct sched_job *job);
 SCHED_API int sched_end_job_submission(struct sched_job *job);
 
-SCHED_API int sched_begin_prod_submission(void);
+SCHED_API int sched_begin_prod_submission(unsigned num_threads);
 SCHED_API int sched_end_prod_submission(void);
 
 SCHED_API int sched_next_pending_job(struct sched_job *job);

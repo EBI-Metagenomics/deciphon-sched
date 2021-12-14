@@ -48,6 +48,11 @@ int xsql_cpy_txt(struct sqlite3_stmt *stmt, int col, struct xsql_txt txt)
 int xsql_open(char const *filepath, struct sqlite3 **db)
 {
     if (sqlite3_open(filepath, db)) return SCHED_FAIL;
+    if (xsql_exec(*db, "PRAGMA foreign_keys = ON;", 0, 0))
+    {
+        sqlite3_close(*db);
+        return SCHED_FAIL;
+    }
     return SCHED_DONE;
 }
 

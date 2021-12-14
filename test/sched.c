@@ -256,12 +256,12 @@ void test_sched_submit_product(void)
 
     EQ(sched_next_pending_job(&job), SCHED_DONE);
 
-    EQ(sched_begin_prod_submission(), SCHED_DONE);
+    EQ(sched_begin_prod_submission(1), SCHED_DONE);
 
     prod.id = 0;
-    prod.job_id = 0;
+    prod.job_id = job.id;
     prod.seq_id = 1;
-    prod.match_id = 31;
+    prod.hit_id = 1;
     strcpy(prod.profile_name, "ACC0");
     strcpy(prod.abc_name, "dna");
     prod.alt_loglik = -2720.381;
@@ -273,15 +273,15 @@ void test_sched_submit_product(void)
     struct match match0 = {"state0", "GAC"};
     struct match match1 = {"state1", "GGC"};
 
-    EQ(sched_prod_write_begin(&prod), SCHED_DONE);
-    EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
-    EQ(sched_prod_write_match_sep(), SCHED_DONE);
-    EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);
-    EQ(sched_prod_write_end(), SCHED_DONE);
+    EQ(sched_prod_write_begin(&prod, 0), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match0, 0), SCHED_DONE);
+    EQ(sched_prod_write_match_sep(0), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match1, 0), SCHED_DONE);
+    EQ(sched_prod_write_end(0), SCHED_DONE);
 
     prod.job_id = job.id;
     prod.seq_id = 2;
-    prod.match_id = 39;
+    prod.hit_id = 2;
 
     strcpy(prod.profile_name, "ACC1");
     strcpy(prod.abc_name, "dna");
@@ -289,11 +289,11 @@ void test_sched_submit_product(void)
     prod.alt_loglik = -1111.;
     prod.null_loglik = -2222.;
 
-    EQ(sched_prod_write_begin(&prod), SCHED_DONE);
-    EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
-    EQ(sched_prod_write_match_sep(), SCHED_DONE);
-    EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);
-    EQ(sched_prod_write_end(), SCHED_DONE);
+    EQ(sched_prod_write_begin(&prod, 0), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match0, 0), SCHED_DONE);
+    EQ(sched_prod_write_match_sep(0), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match1, 0), SCHED_DONE);
+    EQ(sched_prod_write_end(0), SCHED_DONE);
 
     EQ(sched_end_prod_submission(), SCHED_DONE);
 
@@ -329,15 +329,15 @@ void test_sched_submit_and_fetch_product(void)
 
     EQ(sched_next_pending_job(&job), SCHED_DONE);
 
-    EQ(sched_begin_prod_submission(), SCHED_DONE);
-
     EQ(sched_begin_job_submission(&job), SCHED_DONE);
     EQ(sched_rollback_job_submission(&job), SCHED_DONE);
 
+    EQ(sched_begin_prod_submission(1), SCHED_DONE);
+
     prod.id = 0;
-    prod.job_id = 0;
+    prod.job_id = job.id;
     prod.seq_id = 1;
-    prod.match_id = 31;
+    prod.hit_id = 1;
     strcpy(prod.profile_name, "ACC0");
     strcpy(prod.abc_name, "dna");
     prod.alt_loglik = -2720.381;
@@ -348,15 +348,15 @@ void test_sched_submit_and_fetch_product(void)
     struct match match0 = {"state0", "GAC"};
     struct match match1 = {"state1", "GGC"};
 
-    EQ(sched_prod_write_begin(&prod), SCHED_DONE);
-    EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
-    EQ(sched_prod_write_match_sep(), SCHED_DONE);
-    EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);
-    EQ(sched_prod_write_end(), SCHED_DONE);
+    EQ(sched_prod_write_begin(&prod, 0), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match0, 0), SCHED_DONE);
+    EQ(sched_prod_write_match_sep(0), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match1, 0), SCHED_DONE);
+    EQ(sched_prod_write_end(0), SCHED_DONE);
 
     prod.job_id = job.id;
     prod.seq_id = 2;
-    prod.match_id = 39;
+    prod.hit_id = 2;
 
     strcpy(prod.profile_name, "ACC1");
     strcpy(prod.abc_name, "dna");
@@ -364,11 +364,11 @@ void test_sched_submit_and_fetch_product(void)
     prod.alt_loglik = -1111.;
     prod.null_loglik = -2222.;
 
-    EQ(sched_prod_write_begin(&prod), SCHED_DONE);
-    EQ(sched_prod_write_match(write_match_cb, &match0), SCHED_DONE);
-    EQ(sched_prod_write_match_sep(), SCHED_DONE);
-    EQ(sched_prod_write_match(write_match_cb, &match1), SCHED_DONE);
-    EQ(sched_prod_write_end(), SCHED_DONE);
+    EQ(sched_prod_write_begin(&prod, 0), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match0, 0), SCHED_DONE);
+    EQ(sched_prod_write_match_sep(0), SCHED_DONE);
+    EQ(sched_prod_write_match(write_match_cb, &match1, 0), SCHED_DONE);
+    EQ(sched_prod_write_end(0), SCHED_DONE);
 
     EQ(sched_end_prod_submission(), SCHED_DONE);
 
@@ -384,9 +384,9 @@ void test_sched_submit_and_fetch_product(void)
 
     sched_prod_init(&prod, 1);
     EQ(sched_prod_next(&prod), SCHED_NEXT);
-    EQ(prod.id, 2);
+    EQ(prod.id, 1);
     EQ(prod.job_id, 1);
-    EQ(prod.match_id, 39);
+    EQ(prod.hit_id, 1);
     EQ(prod.match, "state0,GAC;state1,GGC");
 
     EQ(sched_close(), SCHED_DONE);

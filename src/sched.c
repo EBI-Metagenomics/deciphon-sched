@@ -142,9 +142,10 @@ int sched_end_job_submission(struct sched_job *job)
     return xsql_end_transaction(sched);
 }
 
-int sched_begin_prod_submission(void)
+int sched_begin_prod_submission(unsigned num_threads)
 {
-    if (prod_begin_submission()) return SCHED_FAIL;
+    assert(num_threads > 0);
+    if (prod_begin_submission(num_threads)) return SCHED_FAIL;
     return SCHED_DONE;
 }
 

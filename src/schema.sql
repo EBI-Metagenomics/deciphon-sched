@@ -26,7 +26,7 @@ CREATE TABLE prod (
 
     job_id INTEGER REFERENCES job (id) NOT NULL,
     seq_id INTEGER REFERENCES seq (id) NOT NULL,
-    match_id INTEGER NOT NULL,
+    hit_id INTEGER NOT NULL,
 
     profile_name TEXT NOT NULL,
     abc_name TEXT NOT NULL,
@@ -37,7 +37,9 @@ CREATE TABLE prod (
     profile_typeid TEXT NOT NULL,
     version TEXT NOT NULL,
 
-    match_data TEXT NOT NULL
+    match TEXT NOT NULL,
+
+    UNIQUE(job_id, seq_id, hit_id)
 );
 
 CREATE TABLE db (
