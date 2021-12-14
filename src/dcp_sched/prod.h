@@ -12,7 +12,6 @@ struct sched_prod
 
     int64_t job_id;
     int64_t seq_id;
-    int64_t hit_id;
 
     char profile_name[SCHED_PROFILE_NAME_SIZE];
     char abc_name[SCHED_ABC_NAME_SIZE];

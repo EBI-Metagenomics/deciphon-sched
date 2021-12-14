@@ -4,10 +4,12 @@ BEGIN TRANSACTION;
 
 CREATE TABLE job (
     id INTEGER PRIMARY KEY UNIQUE NOT NULL,
+
     db_id INTEGER REFERENCES db (id) NOT NULL,
     multi_hits INTEGER NOT NULL,
     hmmer3_compat INTEGER NOT NULL,
     state TEXT CHECK(state IN ('pend', 'run', 'done', 'fail')) NOT NULL,
+
     error TEXT NOT NULL,
     submission INTEGER NOT NULL,
     exec_started INTEGER NOT NULL,
@@ -26,7 +28,6 @@ CREATE TABLE prod (
 
     job_id INTEGER REFERENCES job (id) NOT NULL,
     seq_id INTEGER REFERENCES seq (id) NOT NULL,
-    hit_id INTEGER NOT NULL,
 
     profile_name TEXT NOT NULL,
     abc_name TEXT NOT NULL,
@@ -39,7 +40,7 @@ CREATE TABLE prod (
 
     match TEXT NOT NULL,
 
-    UNIQUE(job_id, seq_id, hit_id)
+    UNIQUE(job_id, seq_id)
 );
 
 CREATE TABLE db (

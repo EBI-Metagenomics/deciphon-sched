@@ -27,15 +27,15 @@ static char const *const queries[] = {
 "\
         INSERT INTO prod\
             (\
-                job_id,         seq_id,      hit_id,\
-                profile_name,   abc_name,           \
-                alt_loglik,     null_loglik,        \
-                profile_typeid, version,            \
-                match                               \
+                job_id,         seq_id,      \
+                profile_name,   abc_name,    \
+                alt_loglik,     null_loglik, \
+                profile_typeid, version,     \
+                match                        \
             )\
         VALUES\
             (\
-                ?, ?, ?, \
+                ?, ?,\
                 ?, ?,\
                 ?, ?,\
                 ?, ?,\
@@ -76,7 +76,6 @@ void sched_prod_init(struct sched_prod *prod, int64_t job_id)
 
     prod->job_id = job_id;
     prod->seq_id = 0;
-    prod->hit_id = 0;
 
     prod->profile_name[0] = 0;
     prod->abc_name[0] = 0;
@@ -130,7 +129,6 @@ int sched_prod_write_begin(struct sched_prod const *prod, unsigned thread_num)
 
     if (echo(Fd64, job_id)) return SCHED_FAIL;
     if (echo(Fd64, seq_id)) return SCHED_FAIL;
-    if (echo(Fd64, hit_id)) return SCHED_FAIL;
 
     if (echo(Fs, profile_name)) return SCHED_FAIL;
     if (echo(Fs, abc_name)) return SCHED_FAIL;
@@ -212,24 +210,25 @@ static int get_prod(struct sched_prod *prod)
 
     if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
 
-    prod->id = sqlite3_column_int64(stmt, 0);
+    int i = 0;
+    prod->id = sqlite3_column_int64(stmt, i++);
 
-    prod->job_id = sqlite3_column_int64(stmt, 1);
-    prod->seq_id = sqlite3_column_int64(stmt, 2);
-    prod->hit_id = sqlite3_column_int64(stmt, 3);
+    prod->job_id = sqlite3_column_int64(stmt, i++);
+    prod->seq_id = sqlite3_column_int64(stmt, i++);
 
-    if (xsql_cpy_txt(stmt, 4, XSQL_TXT_OF(*prod, profile_name)))
+    if (xsql_cpy_txt(stmt, i++, XSQL_TXT_OF(*prod, profile_name)))
         return SCHED_FAIL;
-    if (xsql_cpy_txt(stmt, 5, XSQL_TXT_OF(*prod, abc_name))) return SCHED_FAIL;
-
-    prod->alt_loglik = sqlite3_column_double(stmt, 6);
-    prod->null_loglik = sqlite3_column_double(stmt, 7);
-
-    if (xsql_cpy_txt(stmt, 8, XSQL_TXT_OF(*prod, profile_typeid)))
+    if (xsql_cpy_txt(stmt, i++, XSQL_TXT_OF(*prod, abc_name)))
         return SCHED_FAIL;
-    if (xsql_cpy_txt(stmt, 9, XSQL_TXT_OF(*prod, version))) return SCHED_FAIL;
 
-    if (xsql_cpy_txt(stmt, 10, XSQL_TXT_OF(*prod, match))) return SCHED_FAIL;
+    prod->alt_loglik = sqlite3_column_double(stmt, i++);
+    prod->null_loglik = sqlite3_column_double(stmt, i++);
+
+    if (xsql_cpy_txt(stmt, i++, XSQL_TXT_OF(*prod, profile_typeid)))
+        return SCHED_FAIL;
+    if (xsql_cpy_txt(stmt, i++, XSQL_TXT_OF(*prod, version))) return SCHED_FAIL;
+
+    if (xsql_cpy_txt(stmt, i++, XSQL_TXT_OF(*prod, match))) return SCHED_FAIL;
 
     return xsql_end_step(stmt);
 }

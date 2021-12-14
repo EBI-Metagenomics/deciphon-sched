@@ -261,7 +261,6 @@ void test_sched_submit_product(void)
     prod.id = 0;
     prod.job_id = job.id;
     prod.seq_id = 1;
-    prod.hit_id = 1;
     strcpy(prod.profile_name, "ACC0");
     strcpy(prod.abc_name, "dna");
     prod.alt_loglik = -2720.381;
@@ -281,7 +280,6 @@ void test_sched_submit_product(void)
 
     prod.job_id = job.id;
     prod.seq_id = 2;
-    prod.hit_id = 2;
 
     strcpy(prod.profile_name, "ACC1");
     strcpy(prod.abc_name, "dna");
@@ -337,7 +335,6 @@ void test_sched_submit_and_fetch_product(void)
     prod.id = 0;
     prod.job_id = job.id;
     prod.seq_id = 1;
-    prod.hit_id = 1;
     strcpy(prod.profile_name, "ACC0");
     strcpy(prod.abc_name, "dna");
     prod.alt_loglik = -2720.381;
@@ -356,7 +353,6 @@ void test_sched_submit_and_fetch_product(void)
 
     prod.job_id = job.id;
     prod.seq_id = 2;
-    prod.hit_id = 2;
 
     strcpy(prod.profile_name, "ACC1");
     strcpy(prod.abc_name, "dna");
@@ -386,7 +382,6 @@ void test_sched_submit_and_fetch_product(void)
     EQ(sched_prod_next(&prod), SCHED_NEXT);
     EQ(prod.id, 1);
     EQ(prod.job_id, 1);
-    EQ(prod.hit_id, 1);
     EQ(prod.match, "state0,GAC;state1,GGC");
 
     EQ(sched_close(), SCHED_DONE);
