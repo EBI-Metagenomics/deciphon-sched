@@ -59,10 +59,9 @@ enum
     COL_TYPE_INT64,
     COL_TYPE_DOUBLE,
     COL_TYPE_TEXT
-} col_type[12] = {COL_TYPE_INT64,  COL_TYPE_INT64, COL_TYPE_INT64,
-                  COL_TYPE_TEXT,   COL_TYPE_TEXT,  COL_TYPE_DOUBLE,
-                  COL_TYPE_DOUBLE, COL_TYPE_TEXT,  COL_TYPE_TEXT,
-                  COL_TYPE_TEXT};
+} col_type[9] = {COL_TYPE_INT64, COL_TYPE_INT64,  COL_TYPE_TEXT,
+                 COL_TYPE_TEXT,  COL_TYPE_DOUBLE, COL_TYPE_DOUBLE,
+                 COL_TYPE_TEXT,  COL_TYPE_TEXT,   COL_TYPE_TEXT};
 
 extern struct sqlite3 *sched;
 static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};
@@ -271,7 +270,7 @@ static int submit_prod_file(FILE *restrict fp)
         if (tok_next(&tok, fp)) goto cleanup;
         if (tok_id(&tok) == TOK_EOF) break;
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < (int)ARRAY_SIZE(col_type); i++)
         {
             if (col_type[i] == COL_TYPE_INT64)
             {
