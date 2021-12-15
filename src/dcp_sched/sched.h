@@ -15,6 +15,7 @@ SCHED_API int sched_open(void);
 SCHED_API int sched_close(void);
 
 SCHED_API int sched_add_db(char const *filepath, int64_t *id);
+SCHED_API int sched_cpy_db_filepath(unsigned size, char *filepath, int64_t id);
 SCHED_API int sched_get_job(struct sched_job *job);
 
 SCHED_API int sched_set_job_fail(int64_t job_id, char const *msg);

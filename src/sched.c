@@ -114,6 +114,16 @@ int sched_add_db(char const *filepath, int64_t *id)
     return SCHED_FAIL;
 }
 
+int sched_cpy_db_filepath(unsigned size, char *filepath, int64_t id)
+{
+    struct db db = {0};
+    int code = db_get_by_id(&db, id);
+    if (code == SCHED_NOTFOUND) return SCHED_NOTFOUND;
+    if (code != SCHED_DONE) return SCHED_FAIL;
+    safe_strcpy(filepath, db.filepath, size);
+    return SCHED_DONE;
+}
+
 int sched_get_job(struct sched_job *job) { return job_get(job); }
 
 int sched_begin_job_submission(struct sched_job *job)
