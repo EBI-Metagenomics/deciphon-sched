@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(
   deciphon_sched
-  VERSION 0.0.7
+  VERSION 0.0.8
   LANGUAGES C
 )
 
