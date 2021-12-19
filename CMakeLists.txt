@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(
   deciphon_sched
-  VERSION 0.0.6
+  VERSION 0.0.7
   LANGUAGES C
 )
 
@@ -15,7 +15,6 @@ cbp_include_code_coverage()
 add_code_coverage_all_targets()
 
 find_package(SQLite3 3.31.1 REQUIRED)
-find_package(PkgConfig REQUIRED)
 find_package(xxHash REQUIRED)
 
 find_program(XXD_FOUND "xxd")
