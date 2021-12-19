@@ -79,11 +79,10 @@ int db_add(char const *filepath, int64_t *id)
     return xsql_end_step(stmt);
 }
 
-int db_has(char const *filepath)
+int db_has(char const *filepath, struct db *db)
 {
-    struct db db = {0};
-    if (init_db(&db, filepath)) return SCHED_FAIL;
-    return db_get_by_xxh64(&db, db.xxh64);
+    if (init_db(db, filepath)) return SCHED_FAIL;
+    return db_get_by_xxh64(db, db->xxh64);
 }
 
 int db_hash(char const *filepath, int64_t *xxh64)

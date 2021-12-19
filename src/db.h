@@ -13,7 +13,7 @@ struct db
 
 int db_module_init(void);
 int db_add(char const *filepath, int64_t *id);
-int db_has(char const *filepath);
+int db_has(char const *filepath, struct db *db);
 int db_hash(char const *filepath, int64_t *xxh64);
 int db_get_by_id(struct db *db, int64_t id);
 int db_get_by_xxh64(struct db *db, int64_t xxh64);

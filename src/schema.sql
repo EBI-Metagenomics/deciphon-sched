@@ -40,7 +40,7 @@ CREATE TABLE prod (
 
     match TEXT NOT NULL,
 
-    UNIQUE(job_id, seq_id)
+    UNIQUE(job_id, seq_id, profile_name)
 );
 
 CREATE TABLE db (

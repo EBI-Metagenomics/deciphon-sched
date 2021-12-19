@@ -80,35 +80,20 @@ int sched_set_job_done(int64_t job_id)
     return job_set_done(job_id, utc_now());
 }
 
-static int dbs_have_same_filepath(char const *filepath, bool *answer)
-{
-    int64_t xxh64 = 0;
-    if (db_hash(filepath, &xxh64)) return SCHED_FAIL;
-    struct db db = {0};
-    if (db_get_by_xxh64(&db, xxh64)) return SCHED_FAIL;
-
-    char resolved[PATH_MAX] = {0};
-    char *ptr = realpath(filepath, resolved);
-    if (!ptr) return SCHED_FAIL;
-
-    *answer = strcmp(db.filepath, resolved) == 0;
-    return SCHED_DONE;
-}
-
 int sched_add_db(char const *filepath, int64_t *id)
 {
-    int rc = db_has(filepath);
-    if (rc == SCHED_DONE)
-    {
-        bool answer = false;
-        if ((rc = dbs_have_same_filepath(filepath, &answer))) return rc;
-        if (answer) return SCHED_DONE;
-        return SCHED_FAIL;
-    }
-
     char resolved[PATH_MAX] = {0};
     char *ptr = realpath(filepath, resolved);
     if (!ptr) return SCHED_FAIL;
+
+    struct db db = {0};
+    int rc = db_has(resolved, &db);
+    if (rc == SCHED_DONE)
+    {
+        *id = db.id;
+        if (strcmp(db.filepath, resolved) == 0) return SCHED_DONE;
+        return SCHED_FAIL;
+    }
 
     if (rc == SCHED_NOTFOUND) return db_add(resolved, id);
     return SCHED_FAIL;
