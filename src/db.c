@@ -26,8 +26,7 @@ static char const *const queries[] = {
         VALUES\
             (\
                 ?, ?\
-            )\
-        RETURNING id;\
+            );\
 ",
     [SELECT_BY_ID] = "SELECT * FROM db WHERE id = ?;\
 ",
@@ -74,9 +73,9 @@ int db_add(char const *filepath, int64_t *id)
     if (xsql_bind_i64(stmt, 0, db.xxh64)) return SCHED_FAIL;
     if (xsql_bind_txt(stmt, 1, XSQL_TXT_OF(db, filepath))) return SCHED_FAIL;
 
-    if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
-    *id = sqlite3_column_int64(stmt, 0);
-    return xsql_end_step(stmt);
+    if (xsql_step(stmt) != SCHED_DONE) return SCHED_FAIL;
+    *id = xsql_last_id(sched);
+    return SCHED_DONE;
 }
 
 int db_has(char const *filepath, struct db *db)

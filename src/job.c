@@ -19,6 +19,7 @@ enum
 {
     INSERT,
     GET_PEND,
+    SET_RUN,
     GET_STATE,
     SELECT,
     SET_ERROR,
@@ -38,16 +39,18 @@ static char const *const queries[] = {
             (\
                 ?, ?, ?, ?,\
                 ?, ?, ?, ?\
-            )\
-        RETURNING id;\
+            );\
 ",
     [GET_PEND] = \
+"\
+    SELECT id FROM job WHERE state = 'pend' ORDER BY id LIMIT 1;\
+",
+    [SET_RUN] = \
 "\
         UPDATE job SET\
             state = 'run', exec_started = ?\
         WHERE \
-            id = (SELECT MIN(id) FROM job WHERE state = 'pend' LIMIT 1)\
-        RETURNING id;\
+            id = ?;\
 ",
     [GET_STATE] = "SELECT state FROM job WHERE id = ?;",
     [SELECT] = "SELECT * FROM job WHERE id = ?;\
@@ -106,9 +109,9 @@ int job_submit(struct sched_job *job)
     if (xsql_bind_i64(stmt, 6, job->exec_started)) return SCHED_FAIL;
     if (xsql_bind_i64(stmt, 7, job->exec_ended)) return SCHED_FAIL;
 
-    if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
-    job->id = sqlite3_column_int64(stmt, 0);
-    return xsql_end_step(stmt);
+    if (xsql_step(stmt) != SCHED_DONE) return SCHED_FAIL;
+    job->id = xsql_last_id(sched);
+    return SCHED_DONE;
 }
 
 static int next_pending_job_id(int64_t *job_id)
@@ -116,14 +119,18 @@ static int next_pending_job_id(int64_t *job_id)
     struct sqlite3_stmt *stmt = stmts[GET_PEND];
     if (xsql_reset(stmt)) return SCHED_FAIL;
 
-    if (xsql_bind_i64(stmt, 0, utc_now())) return SCHED_FAIL;
-
     int rc = xsql_step(stmt);
     if (rc == SCHED_DONE) return SCHED_NOTFOUND;
     if (rc != SCHED_NEXT) return SCHED_FAIL;
-
     *job_id = sqlite3_column_int64(stmt, 0);
-    return xsql_end_step(stmt);
+    if (xsql_step(stmt)) return SCHED_FAIL;
+
+    stmt = stmts[SET_RUN];
+    if (xsql_reset(stmt)) return SCHED_FAIL;
+
+    if (xsql_bind_i64(stmt, 0, utc_now())) return SCHED_FAIL;
+    if (xsql_bind_i64(stmt, 1, *job_id)) return SCHED_FAIL;
+    return xsql_step(stmt) == SCHED_DONE ? SCHED_DONE : SCHED_FAIL;
 }
 
 int job_next_pending(struct sched_job *job)

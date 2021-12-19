@@ -29,7 +29,7 @@ static char const *const queries[] = {
         VALUES\
             (\
                 ?, ?, ?\
-            ) RETURNING id;\
+            );\
 ",
     [SELECT] = "SELECT id, job_id, name, upper(data) FROM seq WHERE id = ?;\
 ",
@@ -71,9 +71,9 @@ int seq_submit(struct sched_seq *seq)
     if (xsql_bind_str(stmt, 1, seq->name)) return SCHED_FAIL;
     if (xsql_bind_str(stmt, 2, seq->data)) return SCHED_FAIL;
 
-    if (xsql_step(stmt) != SCHED_NEXT) return SCHED_FAIL;
-    seq->id = sqlite3_column_int64(stmt, 0);
-    return xsql_end_step(stmt);
+    if (xsql_step(stmt) != SCHED_DONE) return SCHED_FAIL;
+    seq->id = xsql_last_id(sched);
+    return SCHED_DONE;
 }
 
 static int next_seq_id(int64_t job_id, int64_t *seq_id)

@@ -40,7 +40,7 @@ static char const *const queries[] = {
                 ?, ?,\
                 ?, ?,\
                 ?\
-            ) RETURNING id;\
+            );\
 ",
     [SELECT] = "SELECT * FROM prod WHERE id = ?;\
 ",
@@ -292,8 +292,7 @@ static int submit_prod_file(FILE *restrict fp)
             if (tok_next(&tok, fp)) goto cleanup;
         }
         assert(tok_id(&tok) == TOK_NL);
-        if (xsql_step(stmt) != SCHED_NEXT) goto cleanup;
-        if (xsql_end_step(stmt)) goto cleanup;
+        if (xsql_step(stmt) != SCHED_DONE) goto cleanup;
     } while (true);
 
     return xsql_end_transaction(sched);
