@@ -110,3 +110,8 @@ int xsql_end_step(struct sqlite3_stmt *stmt)
     if (sqlite3_step(stmt) != SQLITE_DONE) return SCHED_FAIL;
     return SCHED_DONE;
 }
+
+int64_t xsql_last_id(struct sqlite3 *db)
+{
+    return sqlite3_last_insert_rowid(db);
+}

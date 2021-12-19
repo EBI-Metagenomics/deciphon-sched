@@ -20,10 +20,10 @@
 struct sqlite3 *sched = NULL;
 char sched_filepath[SCHED_PATH_SIZE] = {0};
 
-#define MIN_SQLITE_VERSION 3035000
+#define MIN_SQLITE_VERSION 3031001
 
 static_assert(SQLITE_VERSION_NUMBER >= MIN_SQLITE_VERSION,
-              "We need RETURNING statement");
+              "Minimum sqlite requirement.");
 
 int emerge_db(char const *filepath);
 int is_empty(char const *filepath, bool *empty);

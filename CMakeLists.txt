@@ -14,7 +14,7 @@ cbp_include_sanitizers()
 cbp_include_code_coverage()
 add_code_coverage_all_targets()
 
-find_package(SQLite3 3.35.0 REQUIRED)
+find_package(SQLite3 3.31.1 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(xxHash REQUIRED)
 

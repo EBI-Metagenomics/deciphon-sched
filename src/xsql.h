@@ -40,4 +40,6 @@ int xsql_reset(struct sqlite3_stmt *stmt);
 int xsql_step(struct sqlite3_stmt *stmt);
 int xsql_end_step(struct sqlite3_stmt *stmt);
 
+int64_t xsql_last_id(struct sqlite3 *db);
+
 #endif
