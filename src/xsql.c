@@ -1,6 +1,6 @@
 #include "xsql.h"
-#include "safe.h"
 #include "sched/rc.h"
+#include "strlcpy.h"
 #include <assert.h>
 #include <sqlite3.h>
 #include <stdlib.h>
@@ -43,7 +43,7 @@ enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
     char const *str = (char const *)sqlite3_column_text(stmt, col);
     if (!str) return SCHED_EFAIL;
     sqlite3_column_bytes(stmt, col);
-    safe_strcpy((char *)txt.str, str, txt.len + 1);
+    strlcpy((char *)txt.str, str, txt.len + 1);
     return SCHED_DONE;
 }
 

@@ -5,12 +5,12 @@
 #include "job.h"
 #include "logger.h"
 #include "prod.h"
-#include "safe.h"
 #include "sched/rc.h"
 #include "schema.h"
 #include "seq.h"
 #include "seq_queue.h"
 #include "stmt.h"
+#include "strlcpy.h"
 #include "utc.h"
 #include "xfile.h"
 #include "xsql.h"
@@ -35,7 +35,7 @@ enum sched_rc is_empty(char const *filepath, bool *empty);
 
 enum sched_rc sched_setup(char const *filepath)
 {
-    safe_strcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath));
+    strlcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath));
 
     int thread_safe = sqlite3_threadsafe();
     if (thread_safe == 0) return efail("not thread safe");

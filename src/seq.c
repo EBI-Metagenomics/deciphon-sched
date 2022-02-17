@@ -1,8 +1,8 @@
 #include "seq.h"
 #include "logger.h"
-#include "safe.h"
 #include "sched/rc.h"
 #include "stmt.h"
+#include "strlcpy.h"
 #include "xsql.h"
 #include <sqlite3.h>
 
@@ -13,8 +13,8 @@ void sched_seq_init(struct sched_seq *seq, int64_t job_id, char const *name,
 {
     seq->id = 0;
     seq->job_id = job_id;
-    safe_strcpy(seq->name, name, ARRAY_SIZE_OF(*seq, name));
-    safe_strcpy(seq->data, data, ARRAY_SIZE_OF(*seq, data));
+    strlcpy(seq->name, name, ARRAY_SIZE_OF(*seq, name));
+    strlcpy(seq->data, data, ARRAY_SIZE_OF(*seq, data));
 }
 
 enum sched_rc seq_submit(struct sched_seq *seq)

@@ -3,8 +3,9 @@
 #include "compiler.h"
 #include "limits.h"
 #include "logger.h"
-#include "safe.h"
-#include "xxhash.h"
+#include "sched/limits.h"
+#include "strlcpy.h"
+#include "xxhash/xxhash.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,7 +32,7 @@ enum sched_rc xfile_size(char const *filepath, int64_t *size)
     assert(sizeof(st.st_size) == 8);
     off_t sz = st.st_size;
     *size = (int64_t)sz;
-    return RC_DONE;
+    return SCHED_DONE;
 }
 
 enum sched_rc xfile_psize(FILE *fp, int64_t *size)
@@ -43,7 +44,7 @@ enum sched_rc xfile_psize(FILE *fp, int64_t *size)
     if (sz == -1) return eio("fseeko");
     if (fseeko(fp, old, SEEK_SET) == -1) return eio("fseeko");
     *size = (int64_t)sz;
-    return RC_DONE;
+    return SCHED_DONE;
 }
 
 enum sched_rc xfile_dsize(int fd, int64_t *size)
@@ -54,16 +55,16 @@ enum sched_rc xfile_dsize(int fd, int64_t *size)
     assert(sizeof(st.st_size) == 8);
     off_t sz = st.st_size;
     *size = (int64_t)sz;
-    return RC_DONE;
+    return SCHED_DONE;
 }
 
 enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
 {
-    int rc = RC_EFAIL;
+    int rc = SCHED_EFAIL;
     XXH64_state_t *const state = XXH64_createState();
     if (!state)
     {
-        rc = error(RC_EFAIL, "failed to create state");
+        rc = error(SCHED_EFAIL, "failed to create state");
         goto cleanup;
     }
     XXH64_reset(state, 0);
@@ -86,7 +87,7 @@ enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
         goto cleanup;
     }
 
-    rc = RC_DONE;
+    rc = SCHED_DONE;
     *hash = XXH64_digest(state);
 
 cleanup:
@@ -96,8 +97,7 @@ cleanup:
 
 enum sched_rc xfile_tmp_open(struct xfile_tmp *file)
 {
-    safe_strcpy(file->path, XFILE_PATH_TEMP_TEMPLATE,
-                ARRAY_SIZE_OF(*file, path));
+    strlcpy(file->path, XFILE_PATH_TEMP_TEMPLATE, ARRAY_SIZE_OF(*file, path));
     file->fp = 0;
 
     enum sched_rc rc = xfile_mktemp(file->path);
@@ -105,7 +105,7 @@ enum sched_rc xfile_tmp_open(struct xfile_tmp *file)
 
     if (!(file->fp = fopen(file->path, "wb+"))) return eio("fopen");
 
-    return RC_DONE;
+    return SCHED_DONE;
 }
 
 void xfile_tmp_del(struct xfile_tmp const *file)
@@ -126,7 +126,7 @@ enum sched_rc xfile_copy(FILE *restrict dst, FILE *restrict src)
     }
     if (ferror(src)) return eio("fread");
 
-    return RC_DONE;
+    return SCHED_DONE;
 }
 
 bool xfile_is_readable(char const *filepath)
@@ -142,8 +142,8 @@ bool xfile_is_readable(char const *filepath)
 
 enum sched_rc xfile_mktemp(char *filepath)
 {
-    if (mkstemp(filepath) == -1) return error(RC_EIO, "mkstemp failed");
-    return RC_DONE;
+    if (mkstemp(filepath) == -1) return error(SCHED_EIO, "mkstemp failed");
+    return SCHED_DONE;
 }
 
 static char *glibc_basename(const char *filename)
@@ -158,13 +158,13 @@ static enum sched_rc append_ext(char *str, size_t len, size_t max_size,
     char *j = &str[len];
     size_t n = strlen(ext);
     if (n + 1 + (size_t)(j - str) > max_size)
-        return error(RC_ENOMEM, "not enough memory");
+        return error(SCHED_ENOMEM, "not enough memory");
     *(j++) = *(ext++);
     *(j++) = *(ext++);
     *(j++) = *(ext++);
     *(j++) = *(ext++);
     *j = *ext;
-    return RC_DONE;
+    return SCHED_DONE;
 }
 
 static enum sched_rc change_ext(char *str, size_t pos, size_t max_size,
@@ -173,7 +173,7 @@ static enum sched_rc change_ext(char *str, size_t pos, size_t max_size,
     char *j = &str[pos];
     while (j > str && *j != '.')
         --j;
-    if (j == str) return RC_EFAIL;
+    if (j == str) return SCHED_EFAIL;
     return append_ext(str, (size_t)(j - str), max_size, ext);
 }
 
@@ -182,13 +182,13 @@ enum sched_rc xfile_set_ext(size_t max_size, char *str, char const *ext)
     size_t len = strlen(str);
     if (change_ext(str, len, max_size, ext))
         return append_ext(str, len, max_size, ext);
-    return RC_DONE;
+    return SCHED_DONE;
 }
 
 void xfile_basename(char *filename, char const *path)
 {
     char *p = glibc_basename(path);
-    safe_strcpy(filename, p, FILENAME_SIZE);
+    strlcpy(filename, p, FILENAME_SIZE);
 }
 
 void xfile_strip_ext(char *str)
@@ -205,7 +205,7 @@ enum sched_rc xfile_filepath_from_fptr(FILE *fp, char *filepath)
 #else
     sprintf(filepath, "/proc/self/fd/%d", fd);
 #endif
-    return RC_DONE;
+    return SCHED_DONE;
 }
 
 FILE *xfile_open_from_fptr(FILE *fp, char const *mode)
@@ -220,9 +220,9 @@ bool xfile_exists(char const *filepath) { return access(filepath, F_OK) == 0; }
 
 enum sched_rc xfile_touch(char const *filepath)
 {
-    if (xfile_exists(filepath)) return RC_DONE;
+    if (xfile_exists(filepath)) return SCHED_DONE;
     FILE *fp = fopen(filepath, "wb");
     if (!fp) return eio("fopen");
     if (fclose(fp)) return eio("fclose");
-    return RC_DONE;
+    return SCHED_DONE;
 }

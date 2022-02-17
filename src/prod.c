@@ -1,7 +1,6 @@
 #include "prod.h"
 #include "compiler.h"
 #include "logger.h"
-#include "safe.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
 #include "sched/sched.h"

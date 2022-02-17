@@ -1,10 +1,10 @@
 #include "db.h"
 #include "logger.h"
-#include "safe.h"
 #include "sched/db.h"
 #include "sched/rc.h"
 #include "sched/sched.h"
 #include "stmt.h"
+#include "strlcpy.h"
 #include "xfile.h"
 #include "xsql.h"
 #include <sqlite3.h>
@@ -20,7 +20,7 @@ static enum sched_rc init_db(struct sched_db *db, char const *filename)
     enum sched_rc rc = xfile_hash(fp, (uint64_t *)&db->xxh64);
     if (rc) goto cleanup;
 
-    safe_strcpy(db->filename, filename, ARRAY_SIZE_OF(*db, filename));
+    strlcpy(db->filename, filename, ARRAY_SIZE_OF(*db, filename));
 
 cleanup:
     fclose(fp);

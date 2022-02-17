@@ -3,7 +3,6 @@
 #include "compiler.h"
 #include "logger.h"
 #include "prod.h"
-#include "safe.h"
 #include "sched/job.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
@@ -11,6 +10,7 @@
 #include "seq.h"
 #include "seq_queue.h"
 #include "stmt.h"
+#include "strlcpy.h"
 #include "utc.h"
 #include "xsql.h"
 #include <sqlite3.h>
@@ -27,7 +27,7 @@ void sched_job_init(struct sched_job *job, int64_t db_id, bool multi_hits,
     job->db_id = db_id;
     job->multi_hits = multi_hits;
     job->hmmer3_compat = hmmer3_compat;
-    safe_strcpy(job->state, "pend", ARRAY_SIZE_OF(*job, state));
+    strlcpy(job->state, "pend", ARRAY_SIZE_OF(*job, state));
 
     job->error[0] = 0;
     job->submission = 0;
