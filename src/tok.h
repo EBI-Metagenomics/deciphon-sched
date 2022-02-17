@@ -30,6 +30,6 @@ struct tok
 enum tok_id tok_id(struct tok const *tok);
 char const *tok_value(struct tok const *tok);
 unsigned tok_size(struct tok const *tok);
-int tok_next(struct tok *tok, FILE *restrict fd);
+enum sched_rc tok_next(struct tok *tok, FILE *restrict fd);
 
 #endif

@@ -1,127 +1,170 @@
 #include "db.h"
-#include "compiler.h"
-#include "dcp_sched/rc.h"
+#include "logger.h"
 #include "safe.h"
-#include "sched.h"
+#include "sched/db.h"
+#include "sched/rc.h"
+#include "sched/sched.h"
+#include "stmt.h"
 #include "xfile.h"
 #include "xsql.h"
 #include <sqlite3.h>
 #include <stdlib.h>
 
-enum stmt
-{
-    INSERT,
-    SELECT_BY_ID,
-    SELECT_BY_XXH64
-};
-
-/* clang-format off */
-static char const *const queries[] = {
-    [INSERT] = \
-"\
-        INSERT INTO db\
-            (\
-                xxh64, filepath\
-            )\
-        VALUES\
-            (\
-                ?, ?\
-            );\
-",
-    [SELECT_BY_ID] = "SELECT * FROM db WHERE id = ?;\
-",
-    [SELECT_BY_XXH64] = "SELECT * FROM db WHERE xxh64 = ?;\
-"};
-/* clang-format on */
-
 extern struct sqlite3 *sched;
-static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};
 
-static int init_db(struct db *db, char const *filepath)
+static enum sched_rc init_db(struct sched_db *db, char const *filename)
 {
-    FILE *fp = fopen(filepath, "rb");
-    if (!fp) return SCHED_FAIL;
+    FILE *fp = fopen(filename, "rb");
+    if (!fp) return eio("fopen");
 
-    int rc = xfile_hash(fp, (uint64_t *)&db->xxh64);
+    enum sched_rc rc = xfile_hash(fp, (uint64_t *)&db->xxh64);
     if (rc) goto cleanup;
 
-    safe_strcpy(db->filepath, filepath, SCHED_PATH_SIZE);
+    safe_strcpy(db->filename, filename, ARRAY_SIZE_OF(*db, filename));
 
 cleanup:
     fclose(fp);
-    return 0;
+    return rc;
 }
 
-int db_module_init(void)
+static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
+                                   enum stmt select_stmt)
 {
-    int rc = 0;
-    for (unsigned i = 0; i < ARRAY_SIZE(queries); ++i)
-    {
-        if ((rc = xsql_prepare(sched, queries[i], stmts + i))) return rc;
-    }
-    return 0;
-}
+    struct sqlite3_stmt *st = stmt[select_stmt];
+    if (xsql_reset(st)) return efail("reset");
 
-int db_add(char const *filepath, int64_t *id)
-{
-    struct sqlite3_stmt *stmt = stmts[INSERT];
-    struct db db = {0};
-    if (init_db(&db, filepath)) return SCHED_FAIL;
+    if (xsql_bind_i64(st, 0, by_value)) return efail("bind");
 
-    if (xsql_reset(stmt)) return SCHED_FAIL;
+    enum sched_rc rc = xsql_step(st);
+    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc != SCHED_DONE) return efail("get db");
 
-    if (xsql_bind_i64(stmt, 0, db.xxh64)) return SCHED_FAIL;
-    if (xsql_bind_txt(stmt, 1, XSQL_TXT_OF(db, filepath))) return SCHED_FAIL;
+    db->id = sqlite3_column_int64(st, 0);
+    db->xxh64 = sqlite3_column_int64(st, 1);
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename)))
+        return efail("copy txt");
 
-    if (xsql_step(stmt) != SCHED_DONE) return SCHED_FAIL;
-    *id = xsql_last_id(sched);
+    if (xsql_step(st) != SCHED_END) return efail("step");
     return SCHED_DONE;
 }
 
-int db_has(char const *filepath, struct db *db)
+static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
+                                   enum stmt select_stmt)
 {
-    if (init_db(db, filepath)) return SCHED_FAIL;
+    struct sqlite3_stmt *st = stmt[select_stmt];
+    if (xsql_reset(st)) return efail("reset");
+
+    if (xsql_bind_str(st, 0, by_value)) return efail("bind");
+
+    enum sched_rc rc = xsql_step(st);
+    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc != SCHED_DONE) return efail("get db");
+
+    db->id = sqlite3_column_int64(st, 0);
+    db->xxh64 = sqlite3_column_int64(st, 1);
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename)))
+        return efail("copy txt");
+
+    if (xsql_step(st) != SCHED_END) return efail("step");
+    return SCHED_DONE;
+}
+
+static enum sched_rc add_db(char const *filename, struct sched_db *db)
+{
+    struct sqlite3_stmt *st = stmt[DB_INSERT];
+
+    enum sched_rc rc = init_db(db, filename);
+    if (rc) return rc;
+
+    if (xsql_reset(st)) return efail("reset");
+
+    if (xsql_bind_i64(st, 0, db->xxh64)) return efail("bind");
+    if (xsql_bind_str(st, 1, filename)) return efail("bind");
+
+    if (xsql_step(st) != SCHED_END) return efail("add db");
+    db->id = xsql_last_id(sched);
+    return SCHED_DONE;
+}
+
+enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
+{
+    struct sched_db tmp = {0};
+    enum sched_rc rc = select_db_str(&tmp, filename, DB_SELECT_BY_FILENAME);
+
+    if (rc == SCHED_DONE)
+        return error(SCHED_EFAIL, "db with same filename already exist");
+
+    if (rc == SCHED_NOTFOUND) return add_db(filename, db);
+
+    return rc;
+}
+
+static enum sched_rc db_next(struct sched_db *db)
+{
+#define ecpy efail("copy txt")
+
+    struct sqlite3_stmt *st = stmt[DB_SELECT_NEXT];
+    int rc = SCHED_DONE;
+    if (xsql_reset(st)) return efail("reset");
+
+    if (xsql_bind_i64(st, 0, db->id)) return efail("bind");
+
+    rc = xsql_step(st);
+    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc != SCHED_DONE) return efail("step");
+
+    db->id = sqlite3_column_int64(st, 0);
+    db->xxh64 = sqlite3_column_int64(st, 1);
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ecpy;
+    if (xsql_step(st) != SCHED_END) return efail("step");
+    return SCHED_DONE;
+
+#undef ecpy
+}
+
+enum sched_rc sched_db_get_all(sched_db_set_cb cb, struct sched_db *db,
+                               void *arg)
+{
+    enum sched_rc rc = SCHED_DONE;
+
+    sched_db_init(db);
+    while ((rc = db_next(db)) == SCHED_DONE)
+    {
+        cb(db, arg);
+    }
+    return rc == SCHED_NOTFOUND ? SCHED_DONE : rc;
+}
+
+enum sched_rc db_has(char const *filename, struct sched_db *db)
+{
+    enum sched_rc rc = init_db(db, filename);
+    if (rc) return rc;
     return db_get_by_xxh64(db, db->xxh64);
 }
 
-int db_hash(char const *filepath, int64_t *xxh64)
+enum sched_rc db_get_by_xxh64(struct sched_db *db, int64_t xxh64)
 {
-    struct db db = {0};
-    if (init_db(&db, filepath)) return SCHED_FAIL;
+    return select_db_i64(db, xxh64, DB_SELECT_BY_XXH64);
+}
+
+enum sched_rc db_hash(char const *filename, int64_t *xxh64)
+{
+    struct sched_db db = {0};
+    enum sched_rc rc = init_db(&db, filename);
     *xxh64 = db.xxh64;
-    return SCHED_DONE;
+    return rc;
 }
 
-static int select_db(struct db *db, int64_t by_value, enum stmt select_stmt)
+void sched_db_init(struct sched_db *db)
 {
-    struct sqlite3_stmt *stmt = stmts[select_stmt];
-    if (xsql_reset(stmt)) return SCHED_DONE;
-
-    if (xsql_bind_i64(stmt, 0, by_value)) return SCHED_DONE;
-
-    int rc = xsql_step(stmt);
-    if (rc == SCHED_DONE) return SCHED_NOTFOUND;
-    if (rc != SCHED_NEXT) return SCHED_FAIL;
-
-    db->id = sqlite3_column_int64(stmt, 0);
-    db->xxh64 = sqlite3_column_int64(stmt, 1);
-    if (xsql_cpy_txt(stmt, 2, XSQL_TXT_OF(*db, filepath))) return SCHED_DONE;
-
-    return xsql_end_step(stmt);
+    db->id = 0;
+    db->xxh64 = 0;
+    db->filename[0] = 0;
 }
 
-int db_get_by_id(struct db *db, int64_t id)
+enum sched_rc sched_db_get(struct sched_db *db)
 {
-    return select_db(db, id, SELECT_BY_ID);
-}
-
-int db_get_by_xxh64(struct db *db, int64_t xxh64)
-{
-    return select_db(db, xxh64, SELECT_BY_XXH64);
-}
-
-void db_module_del(void)
-{
-    for (unsigned i = 0; i < ARRAY_SIZE(stmts); ++i)
-        sqlite3_finalize(stmts[i]);
+    if (db->id) return select_db_i64(db, db->id, DB_SELECT_BY_ID);
+    if (db->xxh64) return select_db_i64(db, db->xxh64, DB_SELECT_BY_XXH64);
+    return select_db_str(db, db->filename, DB_SELECT_BY_FILENAME);
 }
