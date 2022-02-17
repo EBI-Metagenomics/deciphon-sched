@@ -50,7 +50,7 @@ enum sched_rc sched_setup(char const *filepath)
 
     if (empty && emerge_db(filepath)) return efail("emerge db");
 
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 enum sched_rc sched_open(void)
@@ -58,7 +58,7 @@ enum sched_rc sched_open(void)
     if (xsql_open(sched_filepath, &sched)) goto cleanup;
     if (stmt_init()) goto cleanup;
 
-    return SCHED_DONE;
+    return SCHED_OK;
 
 cleanup:
     xsql_close(sched);

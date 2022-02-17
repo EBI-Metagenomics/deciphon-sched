@@ -1,7 +1,8 @@
 #ifndef SCHED_DB_H
 #define SCHED_DB_H
 
-#include "limits.h"
+#include "sched/export.h"
+#include "sched/limits.h"
 #include <stdint.h>
 
 struct sched_db

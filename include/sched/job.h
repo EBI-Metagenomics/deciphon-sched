@@ -1,7 +1,8 @@
 #ifndef SCHED_JOB_H
 #define SCHED_JOB_H
 
-#include "limits.h"
+#include "sched/export.h"
+#include "sched/limits.h"
 #include <stdbool.h>
 #include <stdint.h>
 

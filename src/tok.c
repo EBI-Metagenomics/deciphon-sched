@@ -31,7 +31,7 @@ enum sched_rc tok_next(struct tok *tok, FILE *restrict fd)
             tok->value = NULL;
             tok->id = TOK_EOF;
             tok->line.data[0] = '\0';
-            return SCHED_DONE;
+            return SCHED_OK;
         }
         if (rc && rc != SCHED_NOTFOUND) return efail("get line");
         tok->value = strtok_r(tok->line.data, DELIM, &tok->line.ctx);
@@ -49,7 +49,7 @@ enum sched_rc tok_next(struct tok *tok, FILE *restrict fd)
 
     tok->line.consumed = tok->id == TOK_NL;
 
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 static enum sched_rc next_line(FILE *restrict fd, unsigned size, char *line)
@@ -64,7 +64,7 @@ static enum sched_rc next_line(FILE *restrict fd, unsigned size, char *line)
     }
 
     add_space_before_newline(line);
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 static void add_space_before_newline(char *line)

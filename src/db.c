@@ -37,7 +37,7 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_DONE) return efail("get db");
+    if (rc != SCHED_OK) return efail("get db");
 
     db->id = sqlite3_column_int64(st, 0);
     db->xxh64 = sqlite3_column_int64(st, 1);
@@ -45,7 +45,7 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
         return efail("copy txt");
 
     if (xsql_step(st) != SCHED_END) return efail("step");
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
@@ -58,7 +58,7 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_DONE) return efail("get db");
+    if (rc != SCHED_OK) return efail("get db");
 
     db->id = sqlite3_column_int64(st, 0);
     db->xxh64 = sqlite3_column_int64(st, 1);
@@ -66,7 +66,7 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
         return efail("copy txt");
 
     if (xsql_step(st) != SCHED_END) return efail("step");
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 static enum sched_rc add_db(char const *filename, struct sched_db *db)
@@ -83,7 +83,7 @@ static enum sched_rc add_db(char const *filename, struct sched_db *db)
 
     if (xsql_step(st) != SCHED_END) return efail("add db");
     db->id = xsql_last_id(sched);
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
@@ -91,7 +91,7 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
     struct sched_db tmp = {0};
     enum sched_rc rc = select_db_str(&tmp, filename, DB_SELECT_BY_FILENAME);
 
-    if (rc == SCHED_DONE)
+    if (rc == SCHED_OK)
         return error(SCHED_EFAIL, "db with same filename already exist");
 
     if (rc == SCHED_NOTFOUND) return add_db(filename, db);
@@ -104,20 +104,20 @@ static enum sched_rc db_next(struct sched_db *db)
 #define ecpy efail("copy txt")
 
     struct sqlite3_stmt *st = stmt[DB_SELECT_NEXT];
-    int rc = SCHED_DONE;
+    int rc = SCHED_OK;
     if (xsql_reset(st)) return efail("reset");
 
     if (xsql_bind_i64(st, 0, db->id)) return efail("bind");
 
     rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_DONE) return efail("step");
+    if (rc != SCHED_OK) return efail("step");
 
     db->id = sqlite3_column_int64(st, 0);
     db->xxh64 = sqlite3_column_int64(st, 1);
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ecpy;
     if (xsql_step(st) != SCHED_END) return efail("step");
-    return SCHED_DONE;
+    return SCHED_OK;
 
 #undef ecpy
 }
@@ -125,14 +125,14 @@ static enum sched_rc db_next(struct sched_db *db)
 enum sched_rc sched_db_get_all(sched_db_set_cb cb, struct sched_db *db,
                                void *arg)
 {
-    enum sched_rc rc = SCHED_DONE;
+    enum sched_rc rc = SCHED_OK;
 
     sched_db_init(db);
-    while ((rc = db_next(db)) == SCHED_DONE)
+    while ((rc = db_next(db)) == SCHED_OK)
     {
         cb(db, arg);
     }
-    return rc == SCHED_NOTFOUND ? SCHED_DONE : rc;
+    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
 
 enum sched_rc db_has(char const *filename, struct sched_db *db)

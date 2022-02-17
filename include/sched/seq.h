@@ -1,7 +1,8 @@
 #ifndef SCHED_SEQ_H
 #define SCHED_SEQ_H
 
-#include "limits.h"
+#include "sched/export.h"
+#include "sched/limits.h"
 #include <stdint.h>
 
 struct sched_seq

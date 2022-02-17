@@ -3,7 +3,7 @@
 
 enum sched_rc
 {
-    SCHED_DONE,
+    SCHED_OK,
     SCHED_END,
     SCHED_NOTFOUND,
     SCHED_EFAIL,

@@ -48,7 +48,7 @@ enum sched_rc stmt_init(void)
         if (xsql_prepare(sched, queries[i], stmt + i))
             return efail("prepare stmt");
     }
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 void stmt_del(void)

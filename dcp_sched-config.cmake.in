@@ -1,8 +1,3 @@
 @PACKAGE_INIT@
 
-include(CMakeFindDependencyMacro)
-find_dependency(xxHash)
-find_dependency(SQLite3)
 include("${CMAKE_CURRENT_LIST_DIR}/dcp_sched-targets.cmake")
-check_required_components(SQLite3)
-check_required_components(xxHash)

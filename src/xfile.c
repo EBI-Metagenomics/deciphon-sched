@@ -32,7 +32,7 @@ enum sched_rc xfile_size(char const *filepath, int64_t *size)
     assert(sizeof(st.st_size) == 8);
     off_t sz = st.st_size;
     *size = (int64_t)sz;
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 enum sched_rc xfile_psize(FILE *fp, int64_t *size)
@@ -44,7 +44,7 @@ enum sched_rc xfile_psize(FILE *fp, int64_t *size)
     if (sz == -1) return eio("fseeko");
     if (fseeko(fp, old, SEEK_SET) == -1) return eio("fseeko");
     *size = (int64_t)sz;
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 enum sched_rc xfile_dsize(int fd, int64_t *size)
@@ -55,7 +55,7 @@ enum sched_rc xfile_dsize(int fd, int64_t *size)
     assert(sizeof(st.st_size) == 8);
     off_t sz = st.st_size;
     *size = (int64_t)sz;
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
@@ -87,7 +87,7 @@ enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
         goto cleanup;
     }
 
-    rc = SCHED_DONE;
+    rc = SCHED_OK;
     *hash = XXH64_digest(state);
 
 cleanup:
@@ -105,7 +105,7 @@ enum sched_rc xfile_tmp_open(struct xfile_tmp *file)
 
     if (!(file->fp = fopen(file->path, "wb+"))) return eio("fopen");
 
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 void xfile_tmp_del(struct xfile_tmp const *file)
@@ -126,7 +126,7 @@ enum sched_rc xfile_copy(FILE *restrict dst, FILE *restrict src)
     }
     if (ferror(src)) return eio("fread");
 
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 bool xfile_is_readable(char const *filepath)
@@ -143,7 +143,7 @@ bool xfile_is_readable(char const *filepath)
 enum sched_rc xfile_mktemp(char *filepath)
 {
     if (mkstemp(filepath) == -1) return error(SCHED_EIO, "mkstemp failed");
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 static char *glibc_basename(const char *filename)
@@ -164,7 +164,7 @@ static enum sched_rc append_ext(char *str, size_t len, size_t max_size,
     *(j++) = *(ext++);
     *(j++) = *(ext++);
     *j = *ext;
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 static enum sched_rc change_ext(char *str, size_t pos, size_t max_size,
@@ -182,7 +182,7 @@ enum sched_rc xfile_set_ext(size_t max_size, char *str, char const *ext)
     size_t len = strlen(str);
     if (change_ext(str, len, max_size, ext))
         return append_ext(str, len, max_size, ext);
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 void xfile_basename(char *filename, char const *path)
@@ -205,7 +205,7 @@ enum sched_rc xfile_filepath_from_fptr(FILE *fp, char *filepath)
 #else
     sprintf(filepath, "/proc/self/fd/%d", fd);
 #endif
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 FILE *xfile_open_from_fptr(FILE *fp, char const *mode)
@@ -220,9 +220,9 @@ bool xfile_exists(char const *filepath) { return access(filepath, F_OK) == 0; }
 
 enum sched_rc xfile_touch(char const *filepath)
 {
-    if (xfile_exists(filepath)) return SCHED_DONE;
+    if (xfile_exists(filepath)) return SCHED_OK;
     FILE *fp = fopen(filepath, "wb");
     if (!fp) return eio("fopen");
     if (fclose(fp)) return eio("fclose");
-    return SCHED_DONE;
+    return SCHED_OK;
 }

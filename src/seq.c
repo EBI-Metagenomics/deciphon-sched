@@ -28,7 +28,7 @@ enum sched_rc seq_submit(struct sched_seq *seq)
 
     if (xsql_step(st) != SCHED_END) return efail("step");
     seq->id = xsql_last_id(sched);
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 static int next_seq_id(int64_t job_id, int64_t *seq_id)
@@ -41,11 +41,11 @@ static int next_seq_id(int64_t job_id, int64_t *seq_id)
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_DONE) return efail("get next seq id");
+    if (rc != SCHED_OK) return efail("get next seq id");
     *seq_id = sqlite3_column_int64(st, 0);
 
     if (xsql_step(st) != SCHED_END) return efail("step");
-    return SCHED_DONE;
+    return SCHED_OK;
 }
 
 enum sched_rc sched_seq_get(struct sched_seq *seq)
@@ -59,7 +59,7 @@ enum sched_rc sched_seq_get(struct sched_seq *seq)
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_DONE) efail("get seq");
+    if (rc != SCHED_OK) efail("get seq");
 
     seq->id = sqlite3_column_int64(st, 0);
     seq->job_id = sqlite3_column_int64(st, 1);
@@ -68,7 +68,7 @@ enum sched_rc sched_seq_get(struct sched_seq *seq)
     if (xsql_cpy_txt(st, 3, XSQL_TXT_OF(*seq, data))) return ecpy;
 
     if (xsql_step(st) != SCHED_END) return efail("step");
-    return SCHED_DONE;
+    return SCHED_OK;
 
 #undef ecpy
 }
@@ -79,6 +79,6 @@ enum sched_rc sched_seq_next(struct sched_seq *seq)
     enum sched_rc rc = next_seq_id(seq->job_id, &seq->id);
     printf("sched_seq_next: seq->id: %lld\n", seq->id);
     if (rc == SCHED_NOTFOUND) return SCHED_NOTFOUND;
-    if (rc != SCHED_DONE) return rc;
+    if (rc != SCHED_OK) return rc;
     return sched_seq_get(seq);
 }
