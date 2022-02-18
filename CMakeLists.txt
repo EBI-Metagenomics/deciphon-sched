@@ -54,6 +54,7 @@ add_library(
   src/tok.c
   src/xfile.c
   src/xsql.c)
+add_library(SCHED::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 set(EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/export.h)
 include(GenerateExportHeader)
@@ -94,5 +95,17 @@ target_compile_definitions(${PROJECT_NAME}
                            PRIVATE $<$<BOOL:${HAVE_STRLCPY}>:HAVE_STRLCPY>)
 target_compile_definitions(${PROJECT_NAME} PRIVATE XXH_STATIC_LINKING_ONLY)
 target_compile_definitions(${PROJECT_NAME} PRIVATE XXH_IMPLEMENTATION)
+
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets)
+
+install(
+  EXPORT ${PROJECT_NAME}-targets
+  FILE ${PROJECT_NAME}-targets.cmake
+  NAMESPACE SCHED::
+  DESTINATION lib/cmake/${PROJECT_NAME})
+
+install(DIRECTORY include/ DESTINATION include)
+
+install(FILES ${EXPORT_FILE} DESTINATION include/${PROJECT_NAME})
 
 add_subdirectory(test)
