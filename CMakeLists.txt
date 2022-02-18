@@ -35,6 +35,8 @@ add_custom_command(
           ${CMAKE_CURRENT_SOURCE_DIR}/src/schema.sql
   VERBATIM)
 
+find_package(Threads REQUIRED)
+
 add_library(
   ${PROJECT_NAME} STATIC
   schema.c
@@ -80,6 +82,7 @@ target_include_directories(
          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION
                                                  ${PROJECT_VERSION_MAJOR})

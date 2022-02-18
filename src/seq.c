@@ -73,11 +73,9 @@ enum sched_rc sched_seq_get(struct sched_seq *seq)
 #undef ecpy
 }
 
-#include <stdio.h>
 enum sched_rc sched_seq_next(struct sched_seq *seq)
 {
     enum sched_rc rc = next_seq_id(seq->job_id, &seq->id);
-    printf("sched_seq_next: seq->id: %lld\n", seq->id);
     if (rc == SCHED_NOTFOUND) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) return rc;
     return sched_seq_get(seq);

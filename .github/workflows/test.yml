@@ -21,9 +21,9 @@ jobs:
         if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
         echo "SUDO=$SUDO" >> $GITHUB_ENV
 
-    - name: Install xxhash
+    - name: Install xxd
       shell: bash
-      run: $SUDO apt install libxxhash-dev xxd --yes
+      run: $SUDO apt install xxd --yes
 
     - name: Install dependencies
       shell: bash
