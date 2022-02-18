@@ -122,8 +122,8 @@ enum sched_rc sched_prod_write_end(unsigned thread_num)
 
 static enum sched_rc get_prod(struct sched_prod *prod)
 {
-    struct sqlite3_stmt *st = stmt[PROD_SELECT].st;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_SELECT]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
 
@@ -157,8 +157,8 @@ static enum sched_rc get_prod(struct sched_prod *prod)
 
 enum sched_rc prod_next(struct sched_prod *prod)
 {
-    struct sqlite3_stmt *st = stmt[PROD_SELECT_NEXT].st;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_SELECT_NEXT]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
     if (xsql_bind_i64(st, 1, prod->job_id)) return efail("bind");
@@ -185,13 +185,11 @@ enum sched_rc sched_prod_add_file(FILE *fp)
     enum sched_rc rc = SCHED_OK;
     if (xsql_begin_transaction(sched)) CLEANUP(efail("submit prod"));
 
-    struct sqlite3_stmt *st = stmt[PROD_INSERT].st;
-
     do
     {
-        if (xsql_reset(st)) CLEANUP(efail("submit prod"));
+        struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_INSERT]);
+        if (!st) CLEANUP(efail("submit prod"));
         if (tok_next(&tok, fp)) CLEANUP(eparse("parse prods file"));
-        printf("TOK_NEXT_VALUE1: %s\n", tok_value(&tok));
         if (tok_id(&tok) == TOK_EOF) break;
 
         for (int i = 0; i < (int)ARRAY_SIZE(col_type); i++)
@@ -216,11 +214,9 @@ enum sched_rc sched_prod_add_file(FILE *fp)
                 if (xsql_bind_txt(st, i, txt)) CLEANUP(efail("submit prod"));
             }
             if (tok_next(&tok, fp)) CLEANUP(eparse("parse prods file"));
-            printf("TOK_NEXT_VALUE2: %s\n", tok_value(&tok));
         }
         if (tok_id(&tok) != TOK_NL)
         {
-            printf("TOK_VALUE: %s\n", tok_value(&tok));
             rc = error(SCHED_EPARSE, "expected newline");
             goto cleanup;
         }
@@ -242,8 +238,8 @@ enum sched_rc sched_prod_get(struct sched_prod *prod)
 {
 #define ecpy efail("copy txt")
 
-    struct sqlite3_stmt *st = stmt[PROD_SELECT].st;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_SELECT]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
 
@@ -274,8 +270,8 @@ enum sched_rc sched_prod_get(struct sched_prod *prod)
 
 enum sched_rc sched_prod_add(struct sched_prod *prod)
 {
-    struct sqlite3_stmt *st = stmt[PROD_INSERT].st;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_INSERT]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, prod->job_id)) return efail("bind");
     if (xsql_bind_i64(st, 1, prod->seq_id)) return efail("bind");

@@ -31,8 +31,8 @@ cleanup:
 static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
                                    enum stmt select_stmt)
 {
-    struct sqlite3_stmt *st = stmt[select_stmt].st;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[select_stmt]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, by_value)) return efail("bind");
 
@@ -52,8 +52,8 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
 static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
                                    enum stmt select_stmt)
 {
-    struct sqlite3_stmt *st = stmt[select_stmt].st;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[select_stmt]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_str(st, 0, by_value)) return efail("bind");
 
@@ -72,19 +72,11 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
 
 static enum sched_rc add_db(char const *filename, struct sched_db *db)
 {
-    struct sqlite3_stmt *st = stmt[DB_INSERT].st;
-
     enum sched_rc rc = init_db(db, filename);
     if (rc) return rc;
 
-    rc = xsql_reset(st);
-    if (rc == SCHED_EINVAL)
-    {
-        xsql_finalize(stmt[DB_INSERT].st);
-        xsql_prepare(sched, stmt[DB_INSERT].query, &stmt[DB_INSERT].st);
-        rc = SCHED_OK;
-    }
-    if (rc) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[DB_INSERT]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, db->xxh64)) return efail("bind");
     if (xsql_bind_str(st, 1, filename)) return efail("bind");
@@ -119,13 +111,12 @@ static enum sched_rc db_next(struct sched_db *db)
 {
 #define ecpy efail("copy txt")
 
-    struct sqlite3_stmt *st = stmt[DB_SELECT_NEXT].st;
-    int rc = SCHED_OK;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[DB_SELECT_NEXT]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, db->id)) return efail("bind");
 
-    rc = xsql_step(st);
+    enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) return efail("step");
 
@@ -145,9 +136,7 @@ enum sched_rc sched_db_get_all(sched_db_set_cb cb, struct sched_db *db,
 
     sched_db_init(db);
     while ((rc = db_next(db)) == SCHED_OK)
-    {
         cb(db, arg);
-    }
     return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
 

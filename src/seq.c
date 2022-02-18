@@ -19,8 +19,8 @@ void sched_seq_init(struct sched_seq *seq, int64_t job_id, char const *name,
 
 enum sched_rc seq_submit(struct sched_seq *seq)
 {
-    struct sqlite3_stmt *st = stmt[SEQ_INSERT].st;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[SEQ_INSERT]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, seq->job_id)) return efail("bind");
     if (xsql_bind_str(st, 1, seq->name)) return efail("bind");
@@ -33,8 +33,8 @@ enum sched_rc seq_submit(struct sched_seq *seq)
 
 static int next_seq_id(int64_t job_id, int64_t *seq_id)
 {
-    struct sqlite3_stmt *st = stmt[SEQ_SELECT_NEXT].st;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[SEQ_SELECT_NEXT]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, *seq_id)) return efail("bind");
     if (xsql_bind_i64(st, 1, job_id)) return efail("bind");
@@ -52,8 +52,8 @@ enum sched_rc sched_seq_get(struct sched_seq *seq)
 {
 #define ecpy efail("copy txt")
 
-    struct sqlite3_stmt *st = stmt[SEQ_SELECT].st;
-    if (xsql_reset(st)) return efail("reset");
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[SEQ_SELECT]);
+    if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, seq->id)) return efail("bind");
 

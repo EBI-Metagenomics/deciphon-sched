@@ -86,19 +86,30 @@ enum sched_rc xsql_rollback_transaction(struct sqlite3 *db)
     return xsql_exec(db, "ROLLBACK TRANSACTION;", 0, 0);
 }
 
-enum sched_rc xsql_prepare(struct sqlite3 *db, char const *sql,
-                           struct sqlite3_stmt **stmt)
+enum sched_rc xsql_prepare(struct sqlite3 *db, struct xsql_stmt *stmt)
 {
-    if (sqlite3_prepare_v2(db, sql, -1, stmt, 0)) return SCHED_EFAIL;
-    return SCHED_OK;
+    return sqlite3_prepare_v2(db, stmt->query, -1, &stmt->st, 0) ? SCHED_EFAIL
+                                                                 : SCHED_OK;
 }
 
-enum sched_rc xsql_reset(struct sqlite3_stmt *stmt)
+static enum sched_rc reset(struct sqlite3_stmt *stmt)
 {
     int code = sqlite3_reset(stmt);
     if (code == SQLITE_CONSTRAINT) return SCHED_EINVAL;
     if (code) return SCHED_EFAIL;
     return SCHED_OK;
+}
+
+struct sqlite3_stmt *xsql_fresh_stmt(struct sqlite3 *db, struct xsql_stmt *stmt)
+{
+    int code = sqlite3_reset(stmt->st);
+    if (code == SQLITE_CONSTRAINT)
+    {
+        if (sqlite3_finalize(stmt->st)) return 0;
+        if (sqlite3_prepare_v2(db, stmt->query, -1, &stmt->st, 0)) return 0;
+        return reset(stmt->st) ? 0 : stmt->st;
+    }
+    return code ? 0 : stmt->st;
 }
 
 enum sched_rc xsql_step(struct sqlite3_stmt *stmt)

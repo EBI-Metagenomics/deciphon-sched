@@ -16,6 +16,12 @@ struct xsql_txt
     char const *str;
 };
 
+struct xsql_stmt
+{
+    struct sqlite3_stmt *st;
+    char const *query;
+};
+
 #define XSQL_TXT_OF(var, member)                                               \
     (struct xsql_txt) { ARRAY_SIZE_OF((var), member) - 1, (var).member }
 
@@ -38,9 +44,9 @@ enum sched_rc xsql_begin_transaction(struct sqlite3 *db);
 enum sched_rc xsql_end_transaction(struct sqlite3 *db);
 enum sched_rc xsql_rollback_transaction(struct sqlite3 *db);
 
-enum sched_rc xsql_prepare(struct sqlite3 *db, char const *sql,
-                           struct sqlite3_stmt **stmt);
-enum sched_rc xsql_reset(struct sqlite3_stmt *stmt);
+enum sched_rc xsql_prepare(struct sqlite3 *db, struct xsql_stmt *stmt);
+struct sqlite3_stmt *xsql_fresh_stmt(struct sqlite3 *db,
+                                     struct xsql_stmt *stmt);
 enum sched_rc xsql_step(struct sqlite3_stmt *stmt);
 enum sched_rc xsql_finalize(struct sqlite3_stmt *stmt);
 

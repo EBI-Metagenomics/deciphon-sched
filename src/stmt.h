@@ -2,6 +2,7 @@
 #define STMT_H
 
 #include "sched/rc.h"
+#include "xsql.h"
 
 enum stmt
 {
@@ -26,14 +27,9 @@ enum stmt
 };
 
 struct sqlite3_stmt;
+struct xsql_stmt;
 
-struct stmt_struct
-{
-    struct sqlite3_stmt *st;
-    char const *query;
-};
-
-extern struct stmt_struct stmt[];
+extern struct xsql_stmt stmt[];
 
 enum sched_rc stmt_init(void);
 void stmt_del(void);

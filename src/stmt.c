@@ -42,7 +42,7 @@ static char const *const queries[] =
 
 static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};
 
-struct stmt_struct stmt[ARRAY_SIZE(queries)] = {0};
+struct xsql_stmt stmt[ARRAY_SIZE(queries)] = {0};
 
 enum sched_rc stmt_init(void)
 {
@@ -51,8 +51,7 @@ enum sched_rc stmt_init(void)
         stmt[i].st = stmts[i];
         stmt[i].query = queries[i];
 
-        if (xsql_prepare(sched, queries[i], &stmt[i].st))
-            return efail("prepare stmt");
+        if (xsql_prepare(sched, stmt + i)) return efail("prepare stmt");
     }
     return SCHED_OK;
 }
