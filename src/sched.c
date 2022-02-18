@@ -9,6 +9,7 @@
 #include "schema.h"
 #include "seq.h"
 #include "seq_queue.h"
+#include "sqlite3/sqlite3.h"
 #include "stmt.h"
 #include "strlcpy.h"
 #include "utc.h"
@@ -16,7 +17,6 @@
 #include "xsql.h"
 #include <assert.h>
 #include <limits.h>
-#include <sqlite3.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>

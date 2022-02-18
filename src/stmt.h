@@ -26,7 +26,14 @@ enum stmt
 };
 
 struct sqlite3_stmt;
-extern struct sqlite3_stmt *stmt[];
+
+struct stmt_struct
+{
+    struct sqlite3_stmt *st;
+    char const *query;
+};
+
+extern struct stmt_struct stmt[];
 
 enum sched_rc stmt_init(void);
 void stmt_del(void);

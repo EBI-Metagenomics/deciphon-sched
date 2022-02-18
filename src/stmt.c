@@ -1,8 +1,10 @@
 #include "stmt.h"
 #include "compiler.h"
 #include "logger.h"
+#include "sqlite3/sqlite3.h"
 #include "xsql.h"
-#include <sqlite3.h>
+
+extern struct sqlite3 *sched;
 
 /* clang-format off */
 static char const *const queries[] =
@@ -38,14 +40,18 @@ static char const *const queries[] =
 };
 /* clang-format on */
 
-struct sqlite3_stmt *stmt[ARRAY_SIZE(queries)] = {0};
-extern struct sqlite3 *sched;
+static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};
+
+struct stmt_struct stmt[ARRAY_SIZE(queries)] = {0};
 
 enum sched_rc stmt_init(void)
 {
     for (unsigned i = 0; i < ARRAY_SIZE(queries); ++i)
     {
-        if (xsql_prepare(sched, queries[i], stmt + i))
+        stmt[i].st = stmts[i];
+        stmt[i].query = queries[i];
+
+        if (xsql_prepare(sched, queries[i], &stmt[i].st))
             return efail("prepare stmt");
     }
     return SCHED_OK;
@@ -53,6 +59,10 @@ enum sched_rc stmt_init(void)
 
 void stmt_del(void)
 {
+    enum sched_rc rc = SCHED_OK;
     for (unsigned i = 0; i < ARRAY_SIZE(stmt); ++i)
-        sqlite3_finalize(stmt[i]);
+    {
+        rc |= xsql_finalize(stmt[i].st);
+    }
+    if (rc) efail("finalize statements properly");
 }

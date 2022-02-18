@@ -109,4 +109,5 @@ install(DIRECTORY include/ DESTINATION include)
 
 install(FILES ${EXPORT_FILE} DESTINATION include/${PROJECT_NAME})
 
+enable_testing()
 add_subdirectory(test)

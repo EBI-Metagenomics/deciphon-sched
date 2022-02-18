@@ -1,8 +1,8 @@
 #include "xsql.h"
 #include "sched/rc.h"
+#include "sqlite3/sqlite3.h"
 #include "strlcpy.h"
 #include <assert.h>
-#include <sqlite3.h>
 #include <stdlib.h>
 
 enum sched_rc xsql_bind_dbl(struct sqlite3_stmt *stmt, int col, double val)
@@ -95,7 +95,9 @@ enum sched_rc xsql_prepare(struct sqlite3 *db, char const *sql,
 
 enum sched_rc xsql_reset(struct sqlite3_stmt *stmt)
 {
-    if (sqlite3_reset(stmt)) return SCHED_EFAIL;
+    int code = sqlite3_reset(stmt);
+    if (code == SQLITE_CONSTRAINT) return SCHED_EINVAL;
+    if (code) return SCHED_EFAIL;
     return SCHED_OK;
 }
 
@@ -106,6 +108,11 @@ enum sched_rc xsql_step(struct sqlite3_stmt *stmt)
     if (code == SQLITE_ROW) return SCHED_OK;
     if (code == SQLITE_CONSTRAINT) return SCHED_EINVAL;
     return SCHED_EFAIL;
+}
+
+enum sched_rc xsql_finalize(struct sqlite3_stmt *stmt)
+{
+    return sqlite3_finalize(stmt) ? SCHED_EFAIL : SCHED_OK;
 }
 
 int64_t xsql_last_id(struct sqlite3 *db)

@@ -62,12 +62,13 @@ static void create_file2(char const *path)
 void test_sched_add_db(void)
 {
     char const sched_path[] = TMPDIR "/file.sched";
-    char const file1a[] = TMPDIR "/file1a.dcp";
-    char const file1b[] = TMPDIR "/file1b.dcp";
-    char const file1a_relative[] = TMPDIR "/dir/../file1a.dcp";
-    char const file2[] = TMPDIR "/file2.dcp";
-    char const file3[] = TMPDIR "/dir/does_not_exist.dcp";
+    char const nonfilename[] = TMPDIR "/file1a.dcp";
+    char const file1a[] = "file1a.dcp";
+    char const file1b[] = "file1b.dcp";
+    char const file2[] = "file2.dcp";
+    char const file3[] = "does_not_exist.dcp";
 
+    create_file1(nonfilename);
     create_file1(file1a);
     create_file1(file1b);
     create_file2(file2);
@@ -78,20 +79,16 @@ void test_sched_add_db(void)
     EQ(sched_open(), SCHED_OK);
 
     struct sched_db db = {0};
-    EQ(sched_db_add(&db, file1a), SCHED_OK);
-    EQ(db.id, 1);
+    EQ(sched_db_add(&db, nonfilename), SCHED_EINVAL);
     EQ(sched_db_add(&db, file1a), SCHED_OK);
     EQ(db.id, 1);
 
-    EQ(sched_db_add(&db, file1b), SCHED_EFAIL);
-
-    EQ(sched_db_add(&db, file1a_relative), SCHED_OK);
-    EQ(db.id, 1);
+    EQ(sched_db_add(&db, file1b), SCHED_EINVAL);
 
     EQ(sched_db_add(&db, file2), SCHED_OK);
     EQ(db.id, 2);
 
-    EQ(sched_db_add(&db, file3), SCHED_EFAIL);
+    EQ(sched_db_add(&db, file3), SCHED_EIO);
 
     EQ(sched_close(), SCHED_OK);
 }
@@ -99,16 +96,16 @@ void test_sched_add_db(void)
 void test_sched_submit_job(void)
 {
     char const sched_path[] = TMPDIR "/submit_job.sched";
-    char const db_path[] = TMPDIR "/submit_job.dcp";
+    char const db_filename[] = "submit_job.dcp";
 
-    create_file1(db_path);
+    create_file1(db_filename);
     remove(sched_path);
 
     EQ(sched_setup(sched_path), SCHED_OK);
     EQ(sched_open(), SCHED_OK);
 
     struct sched_db db = {0};
-    EQ(sched_db_add(&db, db_path), SCHED_OK);
+    EQ(sched_db_add(&db, db_filename), SCHED_OK);
     EQ(db.id, 1);
 
     sched_job_init(&job, db.id, true, false);
@@ -129,16 +126,16 @@ void test_sched_submit_job(void)
 void test_sched_submit_and_fetch_job()
 {
     char const sched_path[] = TMPDIR "/submit_and_fetch_job.sched";
-    char const db_path[] = TMPDIR "/submit_and_fetch_job.dcp";
+    char const db_filename[] = "submit_and_fetch_job.dcp";
 
     remove(sched_path);
-    create_file1(db_path);
+    create_file1(db_filename);
 
     EQ(sched_setup(sched_path), SCHED_OK);
     EQ(sched_open(), SCHED_OK);
 
     struct sched_db db = {0};
-    EQ(sched_db_add(&db, db_path), SCHED_OK);
+    EQ(sched_db_add(&db, db_filename), SCHED_OK);
     EQ(db.id, 1);
 
     sched_job_init(&job, db.id, true, false);
@@ -155,8 +152,12 @@ void test_sched_submit_and_fetch_job()
 
     EQ(sched_job_next_pend(&job), SCHED_OK);
     EQ(job.id, 1);
+    EQ(sched_job_set_run(job.id), SCHED_OK);
+
     EQ(sched_job_next_pend(&job), SCHED_OK);
     EQ(job.id, 2);
+    EQ(sched_job_set_run(job.id), SCHED_OK);
+
     EQ(sched_job_next_pend(&job), SCHED_NOTFOUND);
 
     EQ(sched_close(), SCHED_OK);
@@ -165,16 +166,16 @@ void test_sched_submit_and_fetch_job()
 void test_sched_submit_and_fetch_seq()
 {
     char const sched_path[] = TMPDIR "/submit_and_fetch_seq.sched";
-    char const db_path[] = TMPDIR "/submit_and_fetch_seq.dcp";
+    char const db_filename[] = "submit_and_fetch_seq.dcp";
 
     remove(sched_path);
-    create_file1(db_path);
+    create_file1(db_filename);
 
     EQ(sched_setup(sched_path), SCHED_OK);
     EQ(sched_open(), SCHED_OK);
 
     struct sched_db db = {0};
-    EQ(sched_db_add(&db, db_path), SCHED_OK);
+    EQ(sched_db_add(&db, db_filename), SCHED_OK);
     EQ(db.id, 1);
 
     sched_job_init(&job, db.id, true, false);
@@ -203,7 +204,7 @@ void test_sched_submit_and_fetch_seq()
     EQ(seq.job_id, 1);
     EQ(seq.name, "seq1");
     EQ(seq.data, "ACTTGCCG");
-    EQ(sched_seq_next(&seq), SCHED_OK);
+    EQ(sched_seq_next(&seq), SCHED_END);
 
     EQ(sched_close(), SCHED_OK);
 }

@@ -17,6 +17,7 @@ enum sched_rc __logger_error(enum sched_rc rc, char const *msg);
 
 #define eio(what) error(SCHED_EIO, "failed to " what)
 #define efail(what) error(SCHED_EFAIL, "failed to " what)
+#define einval(what) error(SCHED_EINVAL, "failed to" what)
 #define eparse(what) error(SCHED_EPARSE, "failed to " what)
 
 #endif

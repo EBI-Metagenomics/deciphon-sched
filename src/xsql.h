@@ -42,6 +42,7 @@ enum sched_rc xsql_prepare(struct sqlite3 *db, char const *sql,
                            struct sqlite3_stmt **stmt);
 enum sched_rc xsql_reset(struct sqlite3_stmt *stmt);
 enum sched_rc xsql_step(struct sqlite3_stmt *stmt);
+enum sched_rc xsql_finalize(struct sqlite3_stmt *stmt);
 
 int64_t xsql_last_id(struct sqlite3 *db);
 

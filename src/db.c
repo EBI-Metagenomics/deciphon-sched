@@ -3,12 +3,13 @@
 #include "sched/db.h"
 #include "sched/rc.h"
 #include "sched/sched.h"
+#include "sqlite3/sqlite3.h"
 #include "stmt.h"
 #include "strlcpy.h"
 #include "xfile.h"
 #include "xsql.h"
-#include <sqlite3.h>
 #include <stdlib.h>
+#include <string.h>
 
 extern struct sqlite3 *sched;
 
@@ -30,7 +31,7 @@ cleanup:
 static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
                                    enum stmt select_stmt)
 {
-    struct sqlite3_stmt *st = stmt[select_stmt];
+    struct sqlite3_stmt *st = stmt[select_stmt].st;
     if (xsql_reset(st)) return efail("reset");
 
     if (xsql_bind_i64(st, 0, by_value)) return efail("bind");
@@ -51,7 +52,7 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
 static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
                                    enum stmt select_stmt)
 {
-    struct sqlite3_stmt *st = stmt[select_stmt];
+    struct sqlite3_stmt *st = stmt[select_stmt].st;
     if (xsql_reset(st)) return efail("reset");
 
     if (xsql_bind_str(st, 0, by_value)) return efail("bind");
@@ -71,23 +72,38 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
 
 static enum sched_rc add_db(char const *filename, struct sched_db *db)
 {
-    struct sqlite3_stmt *st = stmt[DB_INSERT];
+    struct sqlite3_stmt *st = stmt[DB_INSERT].st;
 
     enum sched_rc rc = init_db(db, filename);
     if (rc) return rc;
 
-    if (xsql_reset(st)) return efail("reset");
+    rc = xsql_reset(st);
+    if (rc == SCHED_EINVAL)
+    {
+        xsql_finalize(stmt[DB_INSERT].st);
+        xsql_prepare(sched, stmt[DB_INSERT].query, &stmt[DB_INSERT].st);
+        rc = SCHED_OK;
+    }
+    if (rc) return efail("reset");
 
     if (xsql_bind_i64(st, 0, db->xxh64)) return efail("bind");
     if (xsql_bind_str(st, 1, filename)) return efail("bind");
 
-    if (xsql_step(st) != SCHED_END) return efail("add db");
+    rc = xsql_step(st);
+    if (rc == SCHED_EINVAL) return einval("add db");
+    if (rc != SCHED_END) return efail("add db");
+
     db->id = xsql_last_id(sched);
     return SCHED_OK;
 }
 
 enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
 {
+    char really_filename[FILENAME_SIZE] = {0};
+    xfile_basename(really_filename, filename);
+    if (strcmp(filename, really_filename))
+        return error(SCHED_EINVAL, "invalid db filename");
+
     struct sched_db tmp = {0};
     enum sched_rc rc = select_db_str(&tmp, filename, DB_SELECT_BY_FILENAME);
 
@@ -103,7 +119,7 @@ static enum sched_rc db_next(struct sched_db *db)
 {
 #define ecpy efail("copy txt")
 
-    struct sqlite3_stmt *st = stmt[DB_SELECT_NEXT];
+    struct sqlite3_stmt *st = stmt[DB_SELECT_NEXT].st;
     int rc = SCHED_OK;
     if (xsql_reset(st)) return efail("reset");
 
