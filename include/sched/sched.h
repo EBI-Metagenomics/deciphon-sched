@@ -5,6 +5,7 @@
 #include "sched/export.h"
 #include "sched/job.h"
 #include "sched/limits.h"
+#include "sched/logger.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
 #include "sched/seq.h"

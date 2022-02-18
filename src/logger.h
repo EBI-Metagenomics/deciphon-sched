@@ -2,10 +2,8 @@
 #define LOGGER_H
 
 #include "compiler.h"
+#include "sched/logger.h"
 #include "sched/rc.h"
-
-typedef void logger_print_t(char const *msg, void *arg);
-void logger_setup(logger_print_t *print, void *arg);
 
 #define __WARN_FMT(rc, msg) LOCAL(__LINE__) ":" #rc ": " msg
 enum sched_rc __logger_warn(enum sched_rc rc, char const *msg);
