@@ -27,9 +27,9 @@ jobs:
         shell: bash
         run: $SUDO apt install xxd --yes
 
-      - name: Install xxd
+      - name: Install xxd via vim
         if: runner.os == 'macOS'
-        run: brew install xxd
+        run: brew install vim
 
       - name: Install dependencies
         shell: bash
