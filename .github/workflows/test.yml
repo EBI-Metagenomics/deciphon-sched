@@ -23,8 +23,13 @@ jobs:
           echo "SUDO=$SUDO" >> $GITHUB_ENV
 
       - name: Install xxd
+        if: runner.os == 'Linux'
         shell: bash
         run: $SUDO apt install xxd --yes
+
+      - name: Install xxd
+        if: runner.os == 'macOS'
+        run: brew install xxd
 
       - name: Install dependencies
         shell: bash
