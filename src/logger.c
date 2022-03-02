@@ -3,6 +3,7 @@
 
 static void default_print(char const *msg, void *arg)
 {
+    unused(arg);
     fprintf(stderr, "%s\n", msg);
 }
 

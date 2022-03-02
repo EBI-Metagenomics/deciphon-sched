@@ -98,6 +98,9 @@ cleanup:
 static int is_empty_cb(void *empty, int argc, char **argv, char **cols)
 {
     *((bool *)empty) = false;
+    unused(argc);
+    unused(argv);
+    unused(cols);
     return 0;
 }
 

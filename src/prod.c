@@ -26,7 +26,6 @@ enum
 
 extern struct sqlite3 *sched;
 static TOK_DECLARE(tok);
-static unsigned nthreads = 0;
 static struct xfile_tmp prod_file[MAX_NUM_THREADS] = {0};
 
 void sched_prod_init(struct sched_prod *prod, int64_t job_id)
@@ -46,13 +45,6 @@ void sched_prod_init(struct sched_prod *prod, int64_t job_id)
     prod->version[0] = 0;
 
     prod->match[0] = 0;
-}
-
-static void cleanup(void)
-{
-    for (unsigned i = 0; i < nthreads; ++i)
-        xfile_tmp_del(prod_file + i);
-    nthreads = 0;
 }
 
 enum sched_rc sched_prod_write_begin(struct sched_prod const *prod,

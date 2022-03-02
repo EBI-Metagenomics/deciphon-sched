@@ -266,7 +266,7 @@ void sched_job_add_seq(struct sched_job *job, char const *name,
     seq_queue_add(job->id, name, data);
 }
 
-enum sched_rc sched_job_rollback_submission(struct sched_job *job)
+enum sched_rc sched_job_rollback_submission(void)
 {
     return xsql_rollback_transaction(sched);
 }

@@ -53,7 +53,7 @@ enum sched_rc sched_job_set_done(int64_t job_id);
 enum sched_rc sched_job_begin_submission(struct sched_job *job);
 void sched_job_add_seq(struct sched_job *job, char const *name,
                        char const *data);
-enum sched_rc sched_job_rollback_submission(struct sched_job *job);
+enum sched_rc sched_job_rollback_submission(void);
 enum sched_rc sched_job_end_submission(struct sched_job *job);
 
 enum sched_rc sched_job_next_pend(struct sched_job *job);

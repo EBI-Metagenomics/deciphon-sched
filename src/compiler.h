@@ -25,4 +25,6 @@
 /* Are two types/vars the same type (ignoring qualifiers)? */
 #define same_type(a, b) __builtin_types_compatible_p(typeof(a), typeof(b))
 
+#define unused(arg) (void)arg;
+
 #endif
