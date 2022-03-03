@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <inttypes.h>
 #include <stdlib.h>
+#include <string.h>
 
 enum
 {
@@ -172,10 +173,38 @@ enum sched_rc prod_next(struct sched_prod *prod)
         goto cleanup;                                                          \
     } while (1)
 
+static enum sched_rc expect_word(FILE *fp, char const *field)
+{
+    if (tok_next(&tok, fp)) return eparse("parse prods file");
+    if (tok_id(&tok) != TOK_WORD) return eparse("parse prods file");
+    if (strcmp(tok.value, field)) return eparse("parse prods file");
+    return SCHED_OK;
+}
+
+static enum sched_rc parse_prod_file_header(FILE *fp)
+{
+    enum sched_rc rc = SCHED_OK;
+    if ((rc = expect_word(fp, "job_id"))) return rc;
+    if ((rc = expect_word(fp, "seq_id"))) return rc;
+    if ((rc = expect_word(fp, "profile_name"))) return rc;
+    if ((rc = expect_word(fp, "abc_name"))) return rc;
+    if ((rc = expect_word(fp, "alt_loglik"))) return rc;
+    if ((rc = expect_word(fp, "null_loglik"))) return rc;
+    if ((rc = expect_word(fp, "profile_typeid"))) return rc;
+    if ((rc = expect_word(fp, "version"))) return rc;
+    if ((rc = expect_word(fp, "match"))) return rc;
+
+    if (tok_next(&tok, fp)) return eparse("parse prods file");
+    if (tok_id(&tok) != TOK_NL) return eparse("parse prods file");
+    return rc;
+}
+
 enum sched_rc sched_prod_add_file(FILE *fp)
 {
     enum sched_rc rc = SCHED_OK;
     if (xsql_begin_transaction(sched)) CLEANUP(efail("submit prod"));
+
+    if ((rc = parse_prod_file_header(fp))) goto cleanup;
 
     do
     {
