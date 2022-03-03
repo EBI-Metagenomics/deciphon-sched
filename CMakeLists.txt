@@ -88,6 +88,10 @@ target_compile_definitions(${PROJECT_NAME}
                            PRIVATE $<$<BOOL:${HAVE_STRLCPY}>:HAVE_STRLCPY>)
 target_compile_definitions(${PROJECT_NAME} PRIVATE XXH_STATIC_LINKING_ONLY)
 target_compile_definitions(${PROJECT_NAME} PRIVATE XXH_IMPLEMENTATION)
+target_compile_definitions(${PROJECT_NAME} PRIVATE SQLITE_OMIT_COMPILEOPTION_DIAGS)
+target_compile_definitions(${PROJECT_NAME} PRIVATE SQLITE_OMIT_DEPRECATED)
+target_compile_definitions(${PROJECT_NAME} PRIVATE SQLITE_OMIT_LOAD_EXTENSION)
+target_compile_definitions(${PROJECT_NAME} PRIVATE SQLITE_OMIT_EXPLAIN)
 
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets)
 
