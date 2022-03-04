@@ -9,10 +9,10 @@ extern struct sqlite3 *sched;
 /* clang-format off */
 static char const *const queries[] =
 {
-    [DB_INSERT] = "INSERT INTO db (xxh64, filename) VALUES (?, ?);",
+    [DB_INSERT] = "INSERT INTO db (xxh3_64, filename) VALUES (?, ?);",
 
     [DB_SELECT_BY_ID]       = "SELECT * FROM db WHERE       id = ?;",
-    [DB_SELECT_BY_XXH64]    = "SELECT * FROM db WHERE    xxh64 = ?;",
+    [DB_SELECT_BY_XXH3_64]  = "SELECT * FROM db WHERE    xxh3_64 = ?;",
     [DB_SELECT_BY_FILENAME] = "SELECT * FROM db WHERE filename = ?;",
     [DB_SELECT_NEXT]        = "SELECT * FROM db WHERE id > ? ORDER BY id ASC LIMIT 1;",
 

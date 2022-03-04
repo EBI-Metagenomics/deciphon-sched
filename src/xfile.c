@@ -61,13 +61,13 @@ enum sched_rc xfile_dsize(int fd, int64_t *size)
 enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
 {
     int rc = SCHED_EFAIL;
-    XXH64_state_t *const state = XXH64_createState();
+    XXH3_state_t *state = XXH3_createState();
     if (!state)
     {
         rc = error(SCHED_EFAIL, "failed to create state");
         goto cleanup;
     }
-    XXH64_reset(state, 0);
+    XXH3_64bits_reset(state);
 
     size_t n = 0;
     unsigned char buffer[BUFFSIZE] = {0};
@@ -79,7 +79,7 @@ enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
             goto cleanup;
         }
 
-        XXH64_update(state, buffer, n);
+        XXH3_64bits_update(state, buffer, n);
     }
     if (ferror(fp))
     {
@@ -88,10 +88,10 @@ enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
     }
 
     rc = SCHED_OK;
-    *hash = XXH64_digest(state);
+    *hash = XXH3_64bits_digest(state);
 
 cleanup:
-    XXH64_freeState(state);
+    XXH3_freeState(state);
     return rc;
 }
 

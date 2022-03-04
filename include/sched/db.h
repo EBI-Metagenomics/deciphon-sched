@@ -8,7 +8,7 @@
 struct sched_db
 {
     int64_t id;
-    int64_t xxh64;
+    int64_t xxh3_64;
     char filename[FILENAME_SIZE];
 };
 

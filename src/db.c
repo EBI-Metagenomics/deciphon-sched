@@ -18,7 +18,7 @@ static enum sched_rc init_db(struct sched_db *db, char const *filename)
     FILE *fp = fopen(filename, "rb");
     if (!fp) return eio("fopen");
 
-    enum sched_rc rc = xfile_hash(fp, (uint64_t *)&db->xxh64);
+    enum sched_rc rc = xfile_hash(fp, (uint64_t *)&db->xxh3_64);
     if (rc) goto cleanup;
 
     strlcpy(db->filename, filename, ARRAY_SIZE_OF(*db, filename));
@@ -41,7 +41,7 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
     if (rc != SCHED_OK) return efail("get db");
 
     db->id = sqlite3_column_int64(st, 0);
-    db->xxh64 = sqlite3_column_int64(st, 1);
+    db->xxh3_64 = sqlite3_column_int64(st, 1);
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename)))
         return efail("copy txt");
 
@@ -62,7 +62,7 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
     if (rc != SCHED_OK) return efail("get db");
 
     db->id = sqlite3_column_int64(st, 0);
-    db->xxh64 = sqlite3_column_int64(st, 1);
+    db->xxh3_64 = sqlite3_column_int64(st, 1);
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename)))
         return efail("copy txt");
 
@@ -78,7 +78,7 @@ static enum sched_rc add_db(char const *filename, struct sched_db *db)
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[DB_INSERT]);
     if (!st) return efail("get fresh statement");
 
-    if (xsql_bind_i64(st, 0, db->xxh64)) return efail("bind");
+    if (xsql_bind_i64(st, 0, db->xxh3_64)) return efail("bind");
     if (xsql_bind_str(st, 1, filename)) return efail("bind");
 
     rc = xsql_step(st);
@@ -121,7 +121,7 @@ static enum sched_rc db_next(struct sched_db *db)
     if (rc != SCHED_OK) return efail("step");
 
     db->id = sqlite3_column_int64(st, 0);
-    db->xxh64 = sqlite3_column_int64(st, 1);
+    db->xxh3_64 = sqlite3_column_int64(st, 1);
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ecpy;
     if (xsql_step(st) != SCHED_END) return efail("step");
     return SCHED_OK;
@@ -144,32 +144,33 @@ enum sched_rc db_has(char const *filename, struct sched_db *db)
 {
     enum sched_rc rc = init_db(db, filename);
     if (rc) return rc;
-    return db_get_by_xxh64(db, db->xxh64);
+    return db_get_by_xxh64(db, db->xxh3_64);
 }
 
-enum sched_rc db_get_by_xxh64(struct sched_db *db, int64_t xxh64)
+enum sched_rc db_get_by_xxh64(struct sched_db *db, int64_t xxh3_64)
 {
-    return select_db_i64(db, xxh64, DB_SELECT_BY_XXH64);
+    return select_db_i64(db, xxh3_64, DB_SELECT_BY_XXH3_64);
 }
 
-enum sched_rc db_hash(char const *filename, int64_t *xxh64)
+enum sched_rc db_hash(char const *filename, int64_t *xxh3_64)
 {
     struct sched_db db = {0};
     enum sched_rc rc = init_db(&db, filename);
-    *xxh64 = db.xxh64;
+    *xxh3_64 = db.xxh3_64;
     return rc;
 }
 
 void sched_db_init(struct sched_db *db)
 {
     db->id = 0;
-    db->xxh64 = 0;
+    db->xxh3_64 = 0;
     db->filename[0] = 0;
 }
 
 enum sched_rc sched_db_get(struct sched_db *db)
 {
     if (db->id) return select_db_i64(db, db->id, DB_SELECT_BY_ID);
-    if (db->xxh64) return select_db_i64(db, db->xxh64, DB_SELECT_BY_XXH64);
+    if (db->xxh3_64)
+        return select_db_i64(db, db->xxh3_64, DB_SELECT_BY_XXH3_64);
     return select_db_str(db, db->filename, DB_SELECT_BY_FILENAME);
 }
