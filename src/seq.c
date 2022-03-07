@@ -31,6 +31,14 @@ enum sched_rc seq_submit(struct sched_seq *seq)
     return SCHED_OK;
 }
 
+enum sched_rc seq_delete(void)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[SEQ_DELETE]);
+    if (!st) return efail("get fresh statement");
+
+    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
+}
+
 static int next_seq_id(int64_t job_id, int64_t *seq_id)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[SEQ_SELECT_NEXT]);

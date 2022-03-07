@@ -158,6 +158,14 @@ enum sched_rc job_set_done(int64_t job_id, int64_t exec_ended)
     return SCHED_OK;
 }
 
+enum sched_rc job_delete(void)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[JOB_DELETE]);
+    if (!st) return efail("get fresh statement");
+
+    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
+}
+
 static enum sched_job_state resolve_job_state(char const *state)
 {
     if (strcmp("pend", state) == 0)

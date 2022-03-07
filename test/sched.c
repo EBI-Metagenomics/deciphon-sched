@@ -9,6 +9,7 @@ void test_sched_add_db(void);
 void test_sched_submit_job(void);
 void test_sched_submit_and_fetch_job(void);
 void test_sched_submit_and_fetch_seq(void);
+void test_sched_wipe(void);
 
 int main(void)
 {
@@ -17,6 +18,7 @@ int main(void)
     test_sched_submit_job();
     test_sched_submit_and_fetch_job();
     test_sched_submit_and_fetch_seq();
+    test_sched_wipe();
     return hope_status();
 }
 
@@ -206,5 +208,36 @@ void test_sched_submit_and_fetch_seq()
     EQ(seq.data, "ACTTGCCG");
     EQ(sched_seq_next(&seq), SCHED_END);
 
+    EQ(sched_close(), SCHED_OK);
+}
+
+void test_sched_wipe(void)
+{
+    char const sched_path[] = TMPDIR "/wipe.sched";
+    char const db_filename[] = "wipe.dcp";
+
+    remove(sched_path);
+    create_file1(db_filename);
+
+    EQ(sched_setup(sched_path), SCHED_OK);
+    EQ(sched_open(), SCHED_OK);
+
+    struct sched_db db = {0};
+    EQ(sched_db_add(&db, db_filename), SCHED_OK);
+    EQ(db.id, 1);
+
+    sched_job_init(&job, db.id, true, false);
+    EQ(sched_job_begin_submission(&job), SCHED_OK);
+    sched_job_add_seq(&job, "seq0", "ACAAGCAG");
+    sched_job_add_seq(&job, "seq1", "ACTTGCCG");
+    EQ(sched_job_end_submission(&job), SCHED_OK);
+
+    sched_job_init(&job, db.id, true, true);
+    EQ(sched_job_begin_submission(&job), SCHED_OK);
+    sched_job_add_seq(&job, "seq0_2", "XXGG");
+    sched_job_add_seq(&job, "seq1_2", "YXYX");
+    EQ(sched_job_end_submission(&job), SCHED_OK);
+
+    EQ(sched_wipe(), SCHED_OK);
     EQ(sched_close(), SCHED_OK);
 }

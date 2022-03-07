@@ -9,5 +9,6 @@ enum sched_rc db_has(char const *filename, struct sched_db *db);
 enum sched_rc db_hash(char const *filename, int64_t *xxh64);
 enum sched_rc db_get_by_id(struct sched_db *db, int64_t id);
 enum sched_rc db_get_by_xxh64(struct sched_db *db, int64_t xxh64);
+enum sched_rc db_delete(void);
 
 #endif

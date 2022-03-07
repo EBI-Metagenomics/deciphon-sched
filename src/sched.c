@@ -70,6 +70,39 @@ enum sched_rc sched_close(void)
     return xsql_close(sched);
 }
 
+enum sched_rc sched_wipe(void)
+{
+
+    enum sched_rc rc = xsql_begin_transaction(sched);
+    if (rc)
+    {
+        rc = efail("begin wipe");
+        goto cleanup;
+    }
+
+    rc = prod_delete();
+    if (rc) goto cleanup;
+
+    rc = seq_delete();
+    if (rc) goto cleanup;
+
+    rc = job_delete();
+    if (rc) goto cleanup;
+
+    rc = db_delete();
+    if (rc) goto cleanup;
+
+    rc = xsql_end_transaction(sched);
+    if (rc) return efail("end wipe");
+
+    return rc;
+
+cleanup:
+    rc = xsql_rollback_transaction(sched);
+    if (rc) return efail("rollback wipe");
+    return rc;
+}
+
 enum sched_rc sched_job_next_pend(struct sched_job *job)
 {
     return job_next_pend(job);

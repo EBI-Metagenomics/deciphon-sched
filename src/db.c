@@ -152,6 +152,14 @@ enum sched_rc db_get_by_xxh64(struct sched_db *db, int64_t xxh3_64)
     return select_db_i64(db, xxh3_64, DB_SELECT_BY_XXH3_64);
 }
 
+enum sched_rc db_delete(void)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[DB_DELETE]);
+    if (!st) return efail("get fresh statement");
+
+    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
+}
+
 enum sched_rc db_hash(char const *filename, int64_t *xxh3_64)
 {
     struct sched_db db = {0};

@@ -16,6 +16,8 @@ static char const *const queries[] =
     [DB_SELECT_BY_FILENAME] = "SELECT * FROM db WHERE filename = ?;",
     [DB_SELECT_NEXT]        = "SELECT * FROM db WHERE id > ? ORDER BY id ASC LIMIT 1;",
 
+    [DB_DELETE]            = "DELETE FROM db;",
+
     [JOB_INSERT] = "INSERT INTO job (db_id, multi_hits, hmmer3_compat, state, error, submission, exec_started, exec_ended)"
                    "VALUES          (    ?,          ?,             ?,     ?,     ?,          ?,            ?,          ?);",
 
@@ -27,16 +29,22 @@ static char const *const queries[] =
     [JOB_SET_ERROR] = "UPDATE job SET state = 'fail', error        = ?, exec_ended = ? WHERE id = ?;",
     [JOB_SET_DONE]  = "UPDATE job SET state = 'done', exec_ended   = ?                 WHERE id = ?;",
 
+    [JOB_DELETE]            = "DELETE FROM job;",
+
     [PROD_INSERT] = "INSERT INTO prod (job_id, seq_id, profile_name, abc_name, alt_loglik, null_loglik, profile_typeid, version, match)"
                     "VALUES           (     ?,      ?,            ?,        ?,          ?,           ?,              ?,       ?,     ?);",
 
     [PROD_SELECT]      = "SELECT  * FROM prod WHERE id = ?;",
     [PROD_SELECT_NEXT] = "SELECT id FROM prod WHERE id > ? AND job_id = ? ORDER BY id ASC LIMIT 1;",
 
+    [PROD_DELETE]            = "DELETE FROM prod;",
+
     [SEQ_INSERT] = "INSERT INTO seq (job_id, name, data) VALUES (?, ?, ?);",
 
     [SEQ_SELECT]      = "SELECT id, job_id, name, upper(data) FROM seq WHERE id = ?;",
-    [SEQ_SELECT_NEXT] = "SELECT id                            FROM seq WHERE id > ? AND job_id = ? ORDER BY id ASC LIMIT 1;"
+    [SEQ_SELECT_NEXT] = "SELECT id                            FROM seq WHERE id > ? AND job_id = ? ORDER BY id ASC LIMIT 1;",
+
+    [SEQ_DELETE]            = "DELETE FROM seq;",
 };
 /* clang-format on */
 

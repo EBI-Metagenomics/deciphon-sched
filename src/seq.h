@@ -5,6 +5,6 @@
 #include <stdint.h>
 
 enum sched_rc seq_submit(struct sched_seq *seq);
-enum sched_rc seq_get(struct sched_seq *seq);
+enum sched_rc seq_delete(void);
 
 #endif
