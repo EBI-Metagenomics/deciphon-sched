@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern struct sqlite3 *sched;
-
 static enum sched_rc init_db(struct sched_db *db, char const *filename)
 {
     FILE *fp = fopen(filename, "rb");
@@ -31,7 +29,9 @@ cleanup:
 static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
                                    enum stmt select_stmt)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[select_stmt]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(select_stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, by_value)) return efail("bind");
@@ -52,7 +52,9 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
 static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
                                    enum stmt select_stmt)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[select_stmt]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(select_stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_str(st, 0, by_value)) return efail("bind");
@@ -72,10 +74,12 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
 
 static enum sched_rc add_db(char const *filename, struct sched_db *db)
 {
+    struct sqlite3 *sched = sched_handle();
     enum sched_rc rc = init_db(db, filename);
     if (rc) return rc;
 
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[DB_INSERT]);
+    struct xsql_stmt *stmt = stmt_get(DB_INSERT);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, db->xxh3_64)) return efail("bind");
@@ -111,7 +115,9 @@ static enum sched_rc db_next(struct sched_db *db)
 {
 #define ecpy efail("copy txt")
 
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[DB_SELECT_NEXT]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(DB_SELECT_NEXT);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, db->id)) return efail("bind");
@@ -154,7 +160,9 @@ enum sched_rc db_get_by_xxh64(struct sched_db *db, int64_t xxh3_64)
 
 enum sched_rc db_delete(void)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[DB_DELETE]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(DB_DELETE);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");

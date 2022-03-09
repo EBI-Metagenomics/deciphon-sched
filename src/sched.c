@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 
-struct sqlite3 *sched = NULL;
+static struct sqlite3 *sched = NULL;
 char sched_filepath[PATH_SIZE] = {0};
 
 #define MIN_SQLITE_VERSION 3031001
@@ -102,6 +102,8 @@ cleanup:
     if (rc) return efail("rollback wipe");
     return rc;
 }
+
+struct sqlite3 *sched_handle(void) { return sched; }
 
 enum sched_rc sched_job_next_pend(struct sched_job *job)
 {

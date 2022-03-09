@@ -1,10 +1,9 @@
 #include "stmt.h"
 #include "compiler.h"
 #include "logger.h"
+#include "sched/sched.h"
 #include "sqlite3/sqlite3.h"
 #include "xsql.h"
-
-extern struct sqlite3 *sched;
 
 /* clang-format off */
 static char const *const queries[] =
@@ -50,10 +49,12 @@ static char const *const queries[] =
 
 static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};
 
-struct xsql_stmt stmt[ARRAY_SIZE(queries)] = {0};
+static struct xsql_stmt stmt[ARRAY_SIZE(queries)] = {0};
 
 enum sched_rc stmt_init(void)
 {
+    struct sqlite3 *sched = sched_handle();
+
     for (unsigned i = 0; i < ARRAY_SIZE(queries); ++i)
     {
         stmt[i].st = stmts[i];
@@ -63,6 +64,8 @@ enum sched_rc stmt_init(void)
     }
     return SCHED_OK;
 }
+
+struct xsql_stmt *stmt_get(int idx) { return stmt + idx; }
 
 void stmt_del(void)
 {

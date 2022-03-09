@@ -11,8 +11,15 @@ void test_sched_submit_and_fetch_job(void);
 void test_sched_submit_and_fetch_seq(void);
 void test_sched_wipe(void);
 
+static void default_print(char const *msg, void *arg)
+{
+    (void)arg;
+    fprintf(stderr, "%s\n", msg);
+}
+
 int main(void)
 {
+    sched_logger_setup(default_print, 0);
     test_sched_reopen();
     test_sched_add_db();
     test_sched_submit_job();

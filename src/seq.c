@@ -1,12 +1,11 @@
 #include "seq.h"
 #include "logger.h"
 #include "sched/rc.h"
+#include "sched/sched.h"
 #include "sqlite3/sqlite3.h"
 #include "stmt.h"
 #include "strlcpy.h"
 #include "xsql.h"
-
-extern struct sqlite3 *sched;
 
 void sched_seq_init(struct sched_seq *seq, int64_t job_id, char const *name,
                     char const *data)
@@ -19,7 +18,9 @@ void sched_seq_init(struct sched_seq *seq, int64_t job_id, char const *name,
 
 enum sched_rc seq_submit(struct sched_seq *seq)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[SEQ_INSERT]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(SEQ_INSERT);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, seq->job_id)) return efail("bind");
@@ -33,7 +34,9 @@ enum sched_rc seq_submit(struct sched_seq *seq)
 
 enum sched_rc seq_delete(void)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[SEQ_DELETE]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(SEQ_DELETE);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
@@ -41,7 +44,9 @@ enum sched_rc seq_delete(void)
 
 static int next_seq_id(int64_t job_id, int64_t *seq_id)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[SEQ_SELECT_NEXT]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(SEQ_SELECT_NEXT);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, *seq_id)) return efail("bind");
@@ -60,7 +65,9 @@ enum sched_rc sched_seq_get(struct sched_seq *seq)
 {
 #define ecpy efail("copy txt")
 
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[SEQ_SELECT]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(SEQ_SELECT);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, seq->id)) return efail("bind");

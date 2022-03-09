@@ -1,14 +1,13 @@
 #include "logger.h"
-#include <stdio.h>
 
 static void default_print(char const *msg, void *arg)
 {
+    unused(msg);
     unused(arg);
-    fprintf(stderr, "%s\n", msg);
 }
 
 static sched_logger_print_t *__log_print = default_print;
-static void *__log_arg = NULL;
+static void *__log_arg = 0;
 
 void sched_logger_setup(sched_logger_print_t *print, void *arg)
 {

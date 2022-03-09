@@ -33,9 +33,8 @@ enum stmt
 struct sqlite3_stmt;
 struct xsql_stmt;
 
-extern struct xsql_stmt stmt[];
-
 enum sched_rc stmt_init(void);
+struct xsql_stmt *stmt_get(int idx);
 void stmt_del(void);
 
 #endif

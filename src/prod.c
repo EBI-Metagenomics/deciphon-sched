@@ -25,7 +25,6 @@ enum
                  COL_TYPE_TEXT,  COL_TYPE_DOUBLE, COL_TYPE_DOUBLE,
                  COL_TYPE_TEXT,  COL_TYPE_TEXT,   COL_TYPE_TEXT};
 
-extern struct sqlite3 *sched;
 static TOK_DECLARE(tok);
 static struct xfile_tmp prod_file[MAX_NUM_THREADS] = {0};
 
@@ -115,7 +114,9 @@ enum sched_rc sched_prod_write_end(unsigned thread_num)
 
 static enum sched_rc get_prod(struct sched_prod *prod)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_SELECT]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(PROD_SELECT);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
@@ -150,7 +151,9 @@ static enum sched_rc get_prod(struct sched_prod *prod)
 
 enum sched_rc prod_next(struct sched_prod *prod)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_SELECT_NEXT]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(PROD_SELECT_NEXT);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
@@ -168,7 +171,9 @@ enum sched_rc prod_next(struct sched_prod *prod)
 
 enum sched_rc prod_delete(void)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_DELETE]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(PROD_DELETE);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
@@ -209,6 +214,7 @@ static enum sched_rc parse_prod_file_header(FILE *fp)
 
 enum sched_rc sched_prod_add_file(FILE *fp)
 {
+    struct sqlite3 *sched = sched_handle();
     enum sched_rc rc = SCHED_OK;
     if (xsql_begin_transaction(sched)) CLEANUP(efail("submit prod"));
 
@@ -216,7 +222,8 @@ enum sched_rc sched_prod_add_file(FILE *fp)
 
     do
     {
-        struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_INSERT]);
+        struct xsql_stmt *stmt = stmt_get(PROD_INSERT);
+        struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
         if (!st) CLEANUP(efail("submit prod"));
         if (tok_next(&tok, fp)) CLEANUP(eparse("parse prods file"));
         if (tok_id(&tok) == TOK_EOF) break;
@@ -267,7 +274,9 @@ enum sched_rc sched_prod_get(struct sched_prod *prod)
 {
 #define ecpy efail("copy txt")
 
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_SELECT]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(PROD_SELECT);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
@@ -299,7 +308,9 @@ enum sched_rc sched_prod_get(struct sched_prod *prod)
 
 enum sched_rc sched_prod_add(struct sched_prod *prod)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, &stmt[PROD_INSERT]);
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(PROD_INSERT);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, prod->job_id)) return efail("bind");
