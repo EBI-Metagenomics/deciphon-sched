@@ -47,6 +47,7 @@ add_library(
   src/xfile.c
   src/xsql.c)
 add_library(SCHED::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 set(EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/export.h)
 include(GenerateExportHeader)
