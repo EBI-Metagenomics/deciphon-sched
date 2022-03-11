@@ -272,7 +272,7 @@ enum sched_rc sched_job_get_seqs(int64_t job_id, sched_seq_set_cb cb,
     {
         cb(seq, arg);
     }
-    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
+    return rc == SCHED_END ? SCHED_OK : rc;
 }
 
 enum sched_rc sched_job_begin_submission(struct sched_job *job)
