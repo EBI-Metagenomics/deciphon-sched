@@ -1,8 +1,14 @@
 #ifndef COMPILER_H
 #define COMPILER_H
 
-#define __STRINGIFY(n) #n
-#define LOCAL(n) __FILE__ ":" __STRINGIFY(n)
+#define STRINGIFY(s) __STRINGIFY(s)
+#define __STRINGIFY(s) #s
+
+#ifdef __FILE_NAME__
+#define LOCAL __FILE_NAME__ ":" STRINGIFY(__LINE__)
+#else
+#define LOCAL __FILE__ ":" STRINGIFY(__LINE__)
+#endif
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define MEMBER_REF(var, member) ((__typeof__(var) *)0)->member

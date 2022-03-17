@@ -253,12 +253,11 @@ enum sched_rc sched_prod_add_file(FILE *fp)
         }
         if (tok_id(&tok) != TOK_NL)
         {
-            rc = error(SCHED_EPARSE, "expected newline");
+            rc = eparse("expected newline");
             goto cleanup;
         }
         rc = xsql_step(st);
-        if (rc == SCHED_EINVAL)
-            CLEANUP(error(SCHED_EINVAL, "constraint violation"));
+        if (rc == SCHED_EINVAL) CLEANUP(einval("constraint violation"));
         if (rc != SCHED_END) CLEANUP(efail("submit prod"));
     } while (true);
 

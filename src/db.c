@@ -97,14 +97,12 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
 {
     char really_filename[FILENAME_SIZE] = {0};
     xfile_basename(really_filename, filename);
-    if (strcmp(filename, really_filename))
-        return error(SCHED_EINVAL, "invalid db filename");
+    if (strcmp(filename, really_filename)) return einval("invalid db filename");
 
     struct sched_db tmp = {0};
     enum sched_rc rc = select_db_str(&tmp, filename, DB_SELECT_BY_FILENAME);
 
-    if (rc == SCHED_OK)
-        return error(SCHED_EFAIL, "db with same filename already exist");
+    if (rc == SCHED_OK) return einval("db with same filename already exist");
 
     if (rc == SCHED_NOTFOUND) return add_db(filename, db);
 

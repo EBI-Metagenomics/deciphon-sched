@@ -32,7 +32,7 @@ enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
     XXH3_state_t *state = XXH3_createState();
     if (!state)
     {
-        rc = error(SCHED_EFAIL, "failed to create state");
+        rc = efail("failed to create state");
         goto cleanup;
     }
     XXH3_64bits_reset(state);

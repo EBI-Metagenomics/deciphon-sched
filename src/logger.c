@@ -1,30 +1,29 @@
 #include "logger.h"
+#include <stdio.h>
 
-static void default_print(char const *msg, void *arg)
+static void default_print(char const *ctx, char const *msg, void *arg)
 {
-    unused(msg);
+    fputs(ctx, stderr);
+    fputs(": ", stderr);
+    fputs(msg, stderr);
+    fputc('\n', stderr);
     unused(arg);
 }
 
-static sched_logger_print_t *__log_print = default_print;
-static void *__log_arg = 0;
-
-void sched_logger_setup(sched_logger_print_t *print, void *arg)
+static struct
 {
-    __log_print = print;
-    __log_arg = arg;
+    sched_logger_print_func_t print;
+    void *arg;
+} local = {default_print, 0};
+
+void logger_setup(sched_logger_print_func_t print, void *arg)
+{
+    local.print = print;
+    local.arg = arg;
 }
 
-static void log_print(char const *msg) { __log_print(msg, __log_arg); }
-
-enum sched_rc __logger_error(enum sched_rc rc, char const *msg)
+enum sched_rc __logger_error(enum sched_rc rc, char const *ctx, char const *msg)
 {
-    log_print(msg);
-    return rc;
-}
-
-enum sched_rc __logger_warn(enum sched_rc rc, char const *msg)
-{
-    log_print(msg);
+    local.print(ctx, msg, local.arg);
     return rc;
 }
