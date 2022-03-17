@@ -2,7 +2,6 @@
 #define SCHED_SCHED_H
 
 #include "sched/db.h"
-#include "sched/export.h"
 #include "sched/job.h"
 #include "sched/limits.h"
 #include "sched/logger.h"

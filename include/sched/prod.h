@@ -1,7 +1,6 @@
 #ifndef SCHED_PROD_H
 #define SCHED_PROD_H
 
-#include "sched/export.h"
 #include "sched/limits.h"
 #include <stdint.h>
 #include <stdio.h>

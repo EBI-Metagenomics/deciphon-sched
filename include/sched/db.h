@@ -1,7 +1,6 @@
 #ifndef SCHED_DB_H
 #define SCHED_DB_H
 
-#include "sched/export.h"
 #include "sched/limits.h"
 #include <stdint.h>
 

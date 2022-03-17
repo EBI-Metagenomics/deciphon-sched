@@ -16,7 +16,7 @@ static struct
     void *arg;
 } local = {default_print, 0};
 
-void logger_setup(sched_logger_print_func_t print, void *arg)
+void sched_logger_setup(sched_logger_print_func_t print, void *arg)
 {
     local.print = print;
     local.arg = arg;

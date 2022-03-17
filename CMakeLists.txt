@@ -49,19 +49,6 @@ add_library(
 add_library(SCHED::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-set(EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/export.h)
-include(GenerateExportHeader)
-generate_export_header(
-  ${PROJECT_NAME}
-  BASE_NAME
-  SCHED
-  INCLUDE_GUARD_NAME
-  SCHED_EXPORT_H
-  EXPORT_MACRO_NAME
-  SCHED_API
-  EXPORT_FILE_NAME
-  ${EXPORT_FILE})
-
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   include(CheckIPOSupported)
   check_ipo_supported()
@@ -103,8 +90,6 @@ install(
   DESTINATION lib/cmake/${PROJECT_NAME})
 
 install(DIRECTORY include/ DESTINATION include)
-
-install(FILES ${EXPORT_FILE} DESTINATION include/${PROJECT_NAME})
 
 enable_testing()
 add_subdirectory(test)
