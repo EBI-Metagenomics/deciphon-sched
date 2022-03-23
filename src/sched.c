@@ -45,7 +45,8 @@ enum sched_rc sched_setup(char const *filepath)
     if (rc) return rc;
 
     bool empty = false;
-    if (is_empty(filepath, &empty)) BUG();
+    rc = is_empty(filepath, &empty);
+    if (rc) return rc;
 
     if (empty && emerge_db(filepath)) return efail("emerge db");
 
@@ -54,14 +55,8 @@ enum sched_rc sched_setup(char const *filepath)
 
 enum sched_rc sched_open(void)
 {
-    if (xsql_open(sched_filepath, &sched)) goto cleanup;
-    if (stmt_init()) goto cleanup;
-
-    return SCHED_OK;
-
-cleanup:
-    xsql_close(sched);
-    return SCHED_EFAIL;
+    if (xsql_open(sched_filepath, &sched)) return EOPENSCHED;
+    return stmt_init() ? (xsql_close(sched), EEXEC) : SCHED_OK;
 }
 
 enum sched_rc sched_close(void)
@@ -92,35 +87,26 @@ enum sched_rc sched_wipe(void)
     rc = db_delete();
     if (rc) goto cleanup;
 
-    rc = xsql_end_transaction(sched);
-    if (rc) return efail("end wipe");
-
-    return rc;
+    return xsql_end_transaction(sched) ? efail("end wipe") : SCHED_OK;
 
 cleanup:
-    rc = xsql_rollback_transaction(sched);
-    if (rc) return efail("rollback wipe");
-    return rc;
+    return xsql_rollback_transaction(sched) ? efail("rollback wipe") : rc;
 }
 
 struct sqlite3 *sched_handle(void) { return sched; }
 
 enum sched_rc emerge_db(char const *filepath)
 {
-    int rc = 0;
     struct sqlite3 *db = NULL;
-    if ((rc = xsql_open(filepath, &db))) goto cleanup;
+    if (xsql_open(filepath, &db)) return EOPENSCHED;
 
-    if ((rc = xsql_exec(db, (char const *)schema, 0, 0))) goto cleanup;
+    if (xsql_exec(db, (char const *)schema, 0, 0))
+        return (xsql_close(db), EEXEC);
 
-    return xsql_close(db);
-
-cleanup:
-    xsql_close(sched);
-    return rc;
+    return xsql_close(db) ? efail("failed to close sched") : SCHED_OK;
 }
 
-static int is_empty_cb(void *empty, int argc, char **argv, char **cols)
+static int is_empty_fn(void *empty, int argc, char **argv, char **cols)
 {
     *((bool *)empty) = false;
     unused(argc);
@@ -131,17 +117,12 @@ static int is_empty_cb(void *empty, int argc, char **argv, char **cols)
 
 enum sched_rc is_empty(char const *filepath, bool *empty)
 {
-    int rc = 0;
     struct sqlite3 *db = NULL;
-    if ((rc = xsql_open(filepath, &db))) goto cleanup;
+    if (xsql_open(filepath, &db)) return EOPENSCHED;
 
     *empty = true;
     static char const *const sql = "SELECT name FROM sqlite_master;";
-    if ((rc = xsql_exec(db, sql, is_empty_cb, empty))) goto cleanup;
+    if (xsql_exec(db, sql, is_empty_fn, empty)) return (xsql_close(db), EEXEC);
 
-    return xsql_close(db);
-
-cleanup:
-    xsql_close(sched);
-    return rc;
+    return xsql_close(db) ? efail("failed to close sched") : SCHED_OK;
 }

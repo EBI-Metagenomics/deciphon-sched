@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
-typedef int(xsql_callback)(void *, int, char **, char **);
+typedef int(xsql_func_t)(void *, int, char **, char **);
 
 struct sqlite3;
 struct sqlite3_stmt;
@@ -34,13 +34,13 @@ enum sched_rc xsql_bind_txt(struct sqlite3_stmt *stmt, int col,
 
 int xsql_get_int(struct sqlite3_stmt *stmt, int col);
 int64_t xsql_get_i64(struct sqlite3_stmt *stmt, int col);
+double xsql_get_dbl(struct sqlite3_stmt *stmt, int col);
 enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
                            struct xsql_txt txt);
 
 enum sched_rc xsql_open(char const *filepath, struct sqlite3 **db);
 enum sched_rc xsql_close(struct sqlite3 *db);
-enum sched_rc xsql_exec(struct sqlite3 *db, char const *, xsql_callback,
-                        void *);
+enum sched_rc xsql_exec(struct sqlite3 *db, char const *, xsql_func_t, void *);
 
 enum sched_rc xsql_begin_transaction(struct sqlite3 *db);
 enum sched_rc xsql_end_transaction(struct sqlite3 *db);

@@ -31,7 +31,7 @@ enum sched_rc sched_scan_get_seqs(int64_t scan_id, sched_seq_set_func_t fn,
                                   struct sched_seq *seq, void *arg)
 {
     struct sched_scan scan = {0};
-    enum sched_rc rc = sched_scan_get_by_scan_id(&scan, scan_id);
+    enum sched_rc rc = sched_scan_get_by_id(&scan, scan_id);
     if (rc) return rc;
 
     seq->id = 0;
@@ -47,7 +47,7 @@ enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
                                    struct sched_prod *prod, void *arg)
 {
     struct sched_scan scan = {0};
-    enum sched_rc rc = sched_scan_get_by_scan_id(&scan, scan_id);
+    enum sched_rc rc = sched_scan_get_by_id(&scan, scan_id);
     if (rc) return rc;
 
     sched_prod_init(prod, scan_id);
@@ -63,9 +63,9 @@ static enum sched_rc get_scan(struct sched_scan *scan, enum stmt stmt,
 {
     struct sqlite3 *sched = sched_handle();
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(stmt));
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
@@ -78,12 +78,11 @@ static enum sched_rc get_scan(struct sched_scan *scan, enum stmt stmt,
     scan->hmmer3_compat = xsql_get_int(st, 3);
     scan->job_id = xsql_get_i64(st, 4);
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;
 }
 
-enum sched_rc sched_scan_get_by_scan_id(struct sched_scan *scan,
-                                        int64_t scan_id)
+enum sched_rc sched_scan_get_by_id(struct sched_scan *scan, int64_t scan_id)
 {
     return get_scan(scan, SCAN_GET_BY_SCAN_ID, scan_id);
 }
@@ -98,14 +97,14 @@ static enum sched_rc submit(struct sched_scan *scan)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(SCAN_INSERT);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, scan->db_id)) return efail("bind");
-    if (xsql_bind_i64(st, 1, scan->multi_hits)) return efail("bind");
-    if (xsql_bind_i64(st, 2, scan->hmmer3_compat)) return efail("bind");
-    if (xsql_bind_i64(st, 3, scan->job_id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, scan->db_id)) return EBIND;
+    if (xsql_bind_i64(st, 1, scan->multi_hits)) return EBIND;
+    if (xsql_bind_i64(st, 2, scan->hmmer3_compat)) return EBIND;
+    if (xsql_bind_i64(st, 3, scan->job_id)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     scan->id = xsql_last_id(sched);
     return SCHED_OK;
 }
@@ -142,23 +141,7 @@ enum sched_rc scan_delete(void)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(SCAN_DELETE);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
 }
-//
-// enum sched_rc sched_scan_end_submission(struct sched_scan *scan)
-// {
-//     enum sched_rc rc = scan_submit(scan);
-//     if (rc) return rc;
-//
-//     for (unsigned i = 0; i < seq_queue_size(); ++i)
-//     {
-//         struct sched_seq *seq = seq_queue_get(i);
-//         seq->scan_id = scan->id;
-//         if ((rc = seq_submit(seq))) break;
-//     }
-//
-//     seq_queue_init();
-//     return rc;
-// }

@@ -13,10 +13,10 @@ enum sched_job_type
 
 enum sched_job_state
 {
-    SCHED_JOB_PEND,
-    SCHED_JOB_RUN,
-    SCHED_JOB_DONE,
-    SCHED_JOB_FAIL
+    SCHED_PEND,
+    SCHED_RUN,
+    SCHED_DONE,
+    SCHED_FAIL
 };
 
 struct sched_job
@@ -35,8 +35,8 @@ struct sched_job
 
 void sched_job_init(struct sched_job *, enum sched_job_type);
 
-enum sched_rc sched_job_get(struct sched_job *);
-enum sched_rc sched_job_next_pend(struct sched_job *job);
+enum sched_rc sched_job_get_by_id(struct sched_job *, int64_t id);
+enum sched_rc sched_job_next_pend(struct sched_job *);
 
 enum sched_rc sched_job_set_run(int64_t id);
 enum sched_rc sched_job_set_fail(int64_t id, char const *msg);

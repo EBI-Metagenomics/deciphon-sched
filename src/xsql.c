@@ -47,6 +47,11 @@ int64_t xsql_get_i64(struct sqlite3_stmt *stmt, int col)
     return sqlite3_column_int64(stmt, col);
 }
 
+double xsql_get_dbl(struct sqlite3_stmt *stmt, int col)
+{
+    return sqlite3_column_double(stmt, col);
+}
+
 enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
                            struct xsql_txt txt)
 {
@@ -70,15 +75,13 @@ enum sched_rc xsql_open(char const *filepath, struct sqlite3 **db)
 
 enum sched_rc xsql_close(struct sqlite3 *db)
 {
-    if (sqlite3_close(db)) return SCHED_EFAIL;
-    return SCHED_OK;
+    return sqlite3_close(db) ? SCHED_EFAIL : SCHED_OK;
 }
 
-enum sched_rc xsql_exec(struct sqlite3 *db, char const *sql, xsql_callback cb,
-                        void *cb_arg)
+enum sched_rc xsql_exec(struct sqlite3 *db, char const *sql, xsql_func_t fn,
+                        void *arg)
 {
-    if (sqlite3_exec(db, sql, cb, cb_arg, 0)) return SCHED_EFAIL;
-    return SCHED_OK;
+    return sqlite3_exec(db, sql, fn, arg, 0) ? SCHED_EFAIL : SCHED_OK;
 }
 
 enum sched_rc xsql_begin_transaction(struct sqlite3 *db)

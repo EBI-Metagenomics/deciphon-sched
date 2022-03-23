@@ -31,14 +31,14 @@ void sched_job_init(struct sched_job *job, enum sched_job_type type)
     job->exec_ended = 0;
 }
 
-enum sched_rc sched_job_get(struct sched_job *job)
+enum sched_rc sched_job_get_by_id(struct sched_job *job, int64_t id)
 {
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(JOB_SELECT);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, job->id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
@@ -47,15 +47,15 @@ enum sched_rc sched_job_get(struct sched_job *job)
     job->id = xsql_get_i64(st, 0);
     job->type = xsql_get_int(st, 1);
 
-    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*job, state))) efail("copy txt");
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*job, state))) ECPYTXT;
     job->progress = xsql_get_int(st, 3);
-    if (xsql_cpy_txt(st, 4, XSQL_TXT_OF(*job, error))) efail("copy txt");
+    if (xsql_cpy_txt(st, 4, XSQL_TXT_OF(*job, error))) ECPYTXT;
 
     job->submission = xsql_get_i64(st, 6);
     job->exec_started = xsql_get_i64(st, 7);
     job->exec_ended = xsql_get_i64(st, 8);
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;
 }
 
@@ -64,7 +64,7 @@ static enum sched_rc next_pend_job_id(int64_t *id)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(JOB_GET_PEND);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
@@ -80,7 +80,7 @@ enum sched_rc sched_job_next_pend(struct sched_job *job)
     enum sched_rc rc = next_pend_job_id(&job->id);
     if (rc == SCHED_NOTFOUND) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) efail("get next pend job");
-    return sched_job_get(job);
+    return sched_job_get_by_id(job, job->id);
 }
 
 enum sched_rc sched_job_set_run(int64_t id)
@@ -116,19 +116,19 @@ static enum sched_rc submit_job(struct sched_job *job)
     struct xsql_stmt *stmt = stmt_get(JOB_INSERT);
     job->submission = utc_now();
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, job->type)) return efail("bind");
+    if (xsql_bind_i64(st, 0, job->type)) return EBIND;
 
-    if (xsql_bind_str(st, 1, job->state)) return efail("bind");
-    if (xsql_bind_i64(st, 2, job->progress)) return efail("bind");
-    if (xsql_bind_str(st, 3, job->error)) return efail("bind");
+    if (xsql_bind_str(st, 1, job->state)) return EBIND;
+    if (xsql_bind_i64(st, 2, job->progress)) return EBIND;
+    if (xsql_bind_str(st, 3, job->error)) return EBIND;
 
-    if (xsql_bind_i64(st, 4, job->submission)) return efail("bind");
-    if (xsql_bind_i64(st, 5, job->exec_started)) return efail("bind");
-    if (xsql_bind_i64(st, 6, job->exec_ended)) return efail("bind");
+    if (xsql_bind_i64(st, 4, job->submission)) return EBIND;
+    if (xsql_bind_i64(st, 5, job->exec_started)) return EBIND;
+    if (xsql_bind_i64(st, 6, job->exec_ended)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     job->id = xsql_last_id(sched);
     return SCHED_OK;
 }
@@ -159,12 +159,12 @@ enum sched_rc job_set_run(int64_t id, int64_t exec_started)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(JOB_SET_RUN);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, exec_started)) return efail("bind");
-    if (xsql_bind_i64(st, 1, id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, exec_started)) return EBIND;
+    if (xsql_bind_i64(st, 1, id)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;
 }
 
@@ -173,13 +173,13 @@ enum sched_rc job_set_error(int64_t id, char const *error, int64_t exec_ended)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(JOB_SET_ERROR);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_str(st, 0, error)) return efail("bind");
-    if (xsql_bind_i64(st, 1, exec_ended)) return efail("bind");
-    if (xsql_bind_i64(st, 2, id)) return efail("bind");
+    if (xsql_bind_str(st, 0, error)) return EBIND;
+    if (xsql_bind_i64(st, 1, exec_ended)) return EBIND;
+    if (xsql_bind_i64(st, 2, id)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;
 }
 
@@ -188,12 +188,12 @@ enum sched_rc job_set_done(int64_t id, int64_t exec_ended)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(JOB_SET_DONE);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, exec_ended)) return efail("bind");
-    if (xsql_bind_i64(st, 1, id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, exec_ended)) return EBIND;
+    if (xsql_bind_i64(st, 1, id)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;
 }
 
@@ -202,7 +202,7 @@ enum sched_rc job_delete(void)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(JOB_DELETE);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
 }
@@ -210,13 +210,13 @@ enum sched_rc job_delete(void)
 static enum sched_job_state resolve_job_state(char const *state)
 {
     if (strcmp("pend", state) == 0)
-        return SCHED_JOB_PEND;
+        return SCHED_PEND;
     else if (strcmp("run", state) == 0)
-        return SCHED_JOB_RUN;
+        return SCHED_RUN;
     else if (strcmp("done", state) == 0)
-        return SCHED_JOB_DONE;
+        return SCHED_DONE;
     else if (strcmp("fail", state) == 0)
-        return SCHED_JOB_FAIL;
+        return SCHED_FAIL;
 
     BUG();
 }
@@ -226,9 +226,9 @@ enum sched_rc sched_job_state(int64_t id, enum sched_job_state *state)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(JOB_GET_STATE);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
@@ -236,9 +236,9 @@ enum sched_rc sched_job_state(int64_t id, enum sched_job_state *state)
 
     char tmp[JOB_STATE_SIZE] = {0};
     rc = xsql_cpy_txt(st, 0, (struct xsql_txt){JOB_STATE_SIZE, tmp});
-    if (rc) efail("copy txt");
+    if (rc) ECPYTXT;
     *state = resolve_job_state(tmp);
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;
 }

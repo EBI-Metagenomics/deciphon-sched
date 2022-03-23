@@ -16,4 +16,11 @@
 enum sched_rc __logger_error(enum sched_rc rc, char const *ctx,
                              char const *msg);
 
+#define EBIND efail("bind")
+#define ECPYTXT efail("copy txt")
+#define ESTEP efail("step")
+#define EFRESH efail("get fresh statement")
+#define EOPENSCHED efail("failed to open sched")
+#define EEXEC efail("failed to exec")
+
 #endif

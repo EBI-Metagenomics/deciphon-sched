@@ -10,11 +10,11 @@
 static char const *const queries[] =
 {
     /* --- DB queries --- */
-    [DB_INSERT] = "INSERT INTO db (xxh3_64, filename, hmm_id) VALUES (?, ?, ?);",
+    [DB_INSERT] = "INSERT INTO db (xxh3, filename, hmm_id) VALUES (?, ?, ?);",
 
-    [DB_SELECT_BY_ID]       = "SELECT * FROM db WHERE       id = ?;  ",
-    [DB_SELECT_BY_XXH3_64]  = "SELECT * FROM db WHERE    xxh3_64 = ?;",
-    [DB_SELECT_BY_FILENAME] = "SELECT * FROM db WHERE filename = ?;  ",
+    [DB_SELECT_BY_ID]       = "SELECT * FROM db WHERE       id = ?;",
+    [DB_SELECT_BY_XXH3]     = "SELECT * FROM db WHERE    xxh3 = ?; ",
+    [DB_SELECT_BY_FILENAME] = "SELECT * FROM db WHERE filename = ?;",
     [DB_SELECT_NEXT]        = "SELECT * FROM db WHERE id > ? ORDER BY id ASC LIMIT 1;",
 
     [DB_DELETE] = "DELETE FROM db;",
@@ -31,7 +31,7 @@ static char const *const queries[] =
     [JOB_SET_ERROR] = "UPDATE job SET state = 'fail', error        = ?, exec_ended = ? WHERE id = ?;",
     [JOB_SET_DONE]  = "UPDATE job SET state = 'done', exec_ended   = ?                 WHERE id = ?;",
 
-    [JOB_DELETE]    = "DELETE FROM job;",
+    [JOB_DELETE] = "DELETE FROM job;",
 
     /* --- SCAN queries --- */
     [SCAN_INSERT] = "INSERT INTO scan (db_id, multi_hits, hmmer3_compat, job_id) "
@@ -49,7 +49,7 @@ static char const *const queries[] =
     [PROD_SELECT]      = "SELECT  * FROM prod WHERE id = ?;",
     [PROD_SELECT_NEXT] = "SELECT id FROM prod WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
 
-    [PROD_DELETE]            = "DELETE FROM prod;",
+    [PROD_DELETE] = "DELETE FROM prod;",
 
     /* --- SEQ queries --- */
     [SEQ_INSERT] = "INSERT INTO seq (scan_id, name, data) VALUES (?, ?, ?);",
@@ -57,7 +57,7 @@ static char const *const queries[] =
     [SEQ_SELECT]      = "SELECT id, scan_id, name, upper(data) FROM seq WHERE id = ?;",
     [SEQ_SELECT_NEXT] = "SELECT id                             FROM seq WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
 
-    [SEQ_DELETE]            = "DELETE FROM seq;",
+    [SEQ_DELETE] = "DELETE FROM seq;",
 };
 static_assert(ARRAY_SIZE(queries) == SEQ_DELETE + 1, "Cover all enum cases");
 /* clang-format on */

@@ -4,7 +4,6 @@
 #include "sched/prod.h"
 #include "sched/rc.h"
 #include "sched/sched.h"
-#include "sqlite3/sqlite3.h"
 #include "stmt.h"
 #include "to.h"
 #include "tok.h"
@@ -94,10 +93,10 @@ enum sched_rc sched_prod_write_begin(struct sched_prod const *prod,
  *                      ---------------
  */
 
-enum sched_rc sched_prod_write_match(sched_prod_write_match_cb *cb,
+enum sched_rc sched_prod_write_match(sched_prod_write_match_func_t *fn,
                                      void const *match, unsigned thread_num)
 {
-    return cb(prod_file[thread_num].fp, match);
+    return fn(prod_file[thread_num].fp, match);
 }
 
 enum sched_rc sched_prod_write_match_sep(unsigned thread_num)
@@ -117,36 +116,33 @@ static enum sched_rc get_prod(struct sched_prod *prod)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(PROD_SELECT);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) return efail("get db");
 
     int i = 0;
-    prod->id = sqlite3_column_int64(st, i++);
-    prod->scan_id = sqlite3_column_int64(st, i++);
-    prod->seq_id = sqlite3_column_int64(st, i++);
+    prod->id = xsql_get_i64(st, i++);
+    prod->scan_id = xsql_get_i64(st, i++);
+    prod->seq_id = xsql_get_i64(st, i++);
 
-#define ecpy efail("copy txt")
+    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, profile_name))) return ECPYTXT;
+    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, abc_name))) return ECPYTXT;
 
-    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, profile_name))) return ecpy;
-    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, abc_name))) return ecpy;
+    prod->alt_loglik = xsql_get_dbl(st, i++);
+    prod->null_loglik = xsql_get_dbl(st, i++);
 
-    prod->alt_loglik = sqlite3_column_double(st, i++);
-    prod->null_loglik = sqlite3_column_double(st, i++);
+    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, profile_typeid)))
+        return ECPYTXT;
+    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, version))) return ECPYTXT;
 
-    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, profile_typeid))) return ecpy;
-    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, version))) return ecpy;
+    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, match))) return ECPYTXT;
 
-    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, match))) return ecpy;
-
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;
-
-#undef ecpy
 }
 
 enum sched_rc prod_next(struct sched_prod *prod)
@@ -154,17 +150,17 @@ enum sched_rc prod_next(struct sched_prod *prod)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(PROD_SELECT_NEXT);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
-    if (xsql_bind_i64(st, 1, prod->scan_id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
+    if (xsql_bind_i64(st, 1, prod->scan_id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_OK) return efail("step");
+    if (rc != SCHED_OK) return ESTEP;
 
-    prod->id = sqlite3_column_int64(st, 0);
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    prod->id = xsql_get_i64(st, 0);
+    if (xsql_step(st) != SCHED_END) return ESTEP;
 
     return get_prod(prod);
 }
@@ -174,7 +170,7 @@ enum sched_rc prod_delete(void)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(PROD_DELETE);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
 }
@@ -269,40 +265,36 @@ cleanup:
     return rc;
 }
 
-enum sched_rc sched_prod_get(struct sched_prod *prod)
+enum sched_rc sched_prod_get_by_id(struct sched_prod *prod, int64_t id)
 {
-#define ecpy efail("copy txt")
-
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(PROD_SELECT);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) efail("get prod");
 
-    prod->id = sqlite3_column_int64(st, 0);
-    prod->scan_id = sqlite3_column_int64(st, 1);
-    prod->seq_id = sqlite3_column_int64(st, 2);
+    prod->id = xsql_get_i64(st, 0);
+    prod->scan_id = xsql_get_i64(st, 1);
+    prod->seq_id = xsql_get_i64(st, 2);
 
-    if (xsql_cpy_txt(st, 3, XSQL_TXT_OF(*prod, profile_name))) return ecpy;
-    if (xsql_cpy_txt(st, 4, XSQL_TXT_OF(*prod, abc_name))) return ecpy;
+    if (xsql_cpy_txt(st, 3, XSQL_TXT_OF(*prod, profile_name))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 4, XSQL_TXT_OF(*prod, abc_name))) return ECPYTXT;
 
-    prod->alt_loglik = sqlite3_column_double(st, 5);
-    prod->null_loglik = sqlite3_column_double(st, 6);
+    prod->alt_loglik = xsql_get_dbl(st, 5);
+    prod->null_loglik = xsql_get_dbl(st, 6);
 
-    if (xsql_cpy_txt(st, 7, XSQL_TXT_OF(*prod, profile_typeid))) return ecpy;
-    if (xsql_cpy_txt(st, 8, XSQL_TXT_OF(*prod, version))) return ecpy;
+    if (xsql_cpy_txt(st, 7, XSQL_TXT_OF(*prod, profile_typeid))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 8, XSQL_TXT_OF(*prod, version))) return ECPYTXT;
 
-    if (xsql_cpy_txt(st, 9, XSQL_TXT_OF(*prod, match))) return ecpy;
+    if (xsql_cpy_txt(st, 9, XSQL_TXT_OF(*prod, match))) return ECPYTXT;
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;
-
-#undef ecpy
 }
 
 enum sched_rc sched_prod_add(struct sched_prod *prod)
@@ -310,23 +302,23 @@ enum sched_rc sched_prod_add(struct sched_prod *prod)
     struct sqlite3 *sched = sched_handle();
     struct xsql_stmt *stmt = stmt_get(PROD_INSERT);
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return efail("get fresh statement");
+    if (!st) return EFRESH;
 
-    if (xsql_bind_i64(st, 0, prod->scan_id)) return efail("bind");
-    if (xsql_bind_i64(st, 1, prod->seq_id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, prod->scan_id)) return EBIND;
+    if (xsql_bind_i64(st, 1, prod->seq_id)) return EBIND;
 
-    if (xsql_bind_str(st, 2, prod->profile_name)) return efail("bind");
-    if (xsql_bind_str(st, 3, prod->abc_name)) return efail("bind");
+    if (xsql_bind_str(st, 2, prod->profile_name)) return EBIND;
+    if (xsql_bind_str(st, 3, prod->abc_name)) return EBIND;
 
-    if (xsql_bind_dbl(st, 4, prod->alt_loglik)) return efail("bind");
-    if (xsql_bind_dbl(st, 5, prod->null_loglik)) return efail("bind");
+    if (xsql_bind_dbl(st, 4, prod->alt_loglik)) return EBIND;
+    if (xsql_bind_dbl(st, 5, prod->null_loglik)) return EBIND;
 
-    if (xsql_bind_str(st, 6, prod->profile_typeid)) return efail("bind");
-    if (xsql_bind_str(st, 7, prod->version)) return efail("bind");
+    if (xsql_bind_str(st, 6, prod->profile_typeid)) return EBIND;
+    if (xsql_bind_str(st, 7, prod->version)) return EBIND;
 
-    if (xsql_bind_str(st, 8, prod->match)) return efail("bind");
+    if (xsql_bind_str(st, 8, prod->match)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return efail("step");
+    if (xsql_step(st) != SCHED_END) return ESTEP;
     prod->id = xsql_last_id(sched);
     return SCHED_OK;
 }
