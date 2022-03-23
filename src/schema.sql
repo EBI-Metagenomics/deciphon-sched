@@ -8,7 +8,7 @@ CREATE TABLE job (
     type INTEGER CHECK(type IN (0, 1)) NOT NULL,
 
     state TEXT CHECK(state IN ('pend', 'run', 'done', 'fail')) NOT NULL,
-    progress INTEGER NOT NULL,
+    progress INTEGER CHECK(0 <= progress AND progress <= 100) NOT NULL,
     error TEXT NOT NULL,
 
     submission INTEGER NOT NULL,
