@@ -5,6 +5,7 @@
 #include "job.h"
 #include "logger.h"
 #include "prod.h"
+#include "scan.h"
 #include "sched/rc.h"
 #include "schema.h"
 #include "seq.h"
@@ -67,7 +68,6 @@ enum sched_rc sched_close(void)
 
 enum sched_rc sched_wipe(void)
 {
-
     enum sched_rc rc = xsql_begin_transaction(sched);
     if (rc)
     {
@@ -79,6 +79,9 @@ enum sched_rc sched_wipe(void)
     if (rc) goto cleanup;
 
     rc = seq_delete();
+    if (rc) goto cleanup;
+
+    rc = scan_delete();
     if (rc) goto cleanup;
 
     rc = job_delete();
