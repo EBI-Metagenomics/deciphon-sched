@@ -33,7 +33,7 @@ static_assert(SQLITE_VERSION_NUMBER >= MIN_SQLITE_VERSION,
 enum sched_rc emerge_db(char const *filepath);
 enum sched_rc is_empty(char const *filepath, bool *empty);
 
-enum sched_rc sched_setup(char const *filepath)
+enum sched_rc sched_init(char const *filepath)
 {
     strlcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath));
 
@@ -51,16 +51,11 @@ enum sched_rc sched_setup(char const *filepath)
 
     if (empty && emerge_db(filepath)) return efail("emerge db");
 
-    return SCHED_OK;
-}
-
-enum sched_rc sched_open(void)
-{
     if (xsql_open(sched_filepath, &sched)) return EOPENSCHED;
     return stmt_init() ? (xsql_close(sched), EEXEC) : SCHED_OK;
 }
 
-enum sched_rc sched_close(void)
+enum sched_rc sched_cleanup(void)
 {
     stmt_del();
     return xsql_close(sched);

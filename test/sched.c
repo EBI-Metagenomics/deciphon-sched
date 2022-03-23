@@ -27,12 +27,11 @@ int main(void)
 void test_sched_reopen()
 {
     remove(TMPDIR "/reopen.sched");
-    EQ(sched_setup(TMPDIR "/reopen.sched"), SCHED_OK);
-    EQ(sched_open(), SCHED_OK);
-    EQ(sched_close(), SCHED_OK);
+    EQ(sched_init(TMPDIR "/reopen.sched"), SCHED_OK);
+    EQ(sched_cleanup(), SCHED_OK);
 
-    EQ(sched_open(), SCHED_OK);
-    EQ(sched_close(), SCHED_OK);
+    EQ(sched_init(TMPDIR "/reopen.sched"), SCHED_OK);
+    EQ(sched_cleanup(), SCHED_OK);
 }
 
 static void create_file(char const *path, int seed)
@@ -66,8 +65,7 @@ void test_sched_add_db(void)
 
     remove(sched_path);
 
-    EQ(sched_setup(sched_path), SCHED_OK);
-    EQ(sched_open(), SCHED_OK);
+    EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     EQ(sched_db_add(&db, nonfilename), SCHED_EINVAL);
@@ -81,7 +79,7 @@ void test_sched_add_db(void)
 
     EQ(sched_db_add(&db, file3), SCHED_EIO);
 
-    EQ(sched_close(), SCHED_OK);
+    EQ(sched_cleanup(), SCHED_OK);
 }
 
 void test_sched_submit_scan_job(void)
@@ -92,8 +90,7 @@ void test_sched_submit_scan_job(void)
     create_file(db_filename, 0);
     remove(sched_path);
 
-    EQ(sched_setup(sched_path), SCHED_OK);
-    EQ(sched_open(), SCHED_OK);
+    EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     EQ(sched_db_add(&db, db_filename), SCHED_OK);
@@ -113,7 +110,7 @@ void test_sched_submit_scan_job(void)
     sched_job_init(&job, SCHED_SCAN);
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
 
-    EQ(sched_close(), SCHED_OK);
+    EQ(sched_cleanup(), SCHED_OK);
 }
 
 void test_sched_submit_and_fetch_scan_job()
@@ -124,8 +121,7 @@ void test_sched_submit_and_fetch_scan_job()
     remove(sched_path);
     create_file(db_filename, 0);
 
-    EQ(sched_setup(sched_path), SCHED_OK);
-    EQ(sched_open(), SCHED_OK);
+    EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     EQ(sched_db_add(&db, db_filename), SCHED_OK);
@@ -155,7 +151,7 @@ void test_sched_submit_and_fetch_scan_job()
 
     EQ(sched_job_next_pend(&job), SCHED_NOTFOUND);
 
-    EQ(sched_close(), SCHED_OK);
+    EQ(sched_cleanup(), SCHED_OK);
 }
 
 void test_sched_submit_and_fetch_seq()
@@ -166,8 +162,7 @@ void test_sched_submit_and_fetch_seq()
     remove(sched_path);
     create_file(db_filename, 0);
 
-    EQ(sched_setup(sched_path), SCHED_OK);
-    EQ(sched_open(), SCHED_OK);
+    EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     EQ(sched_db_add(&db, db_filename), SCHED_OK);
@@ -205,7 +200,7 @@ void test_sched_submit_and_fetch_seq()
     EQ(seq.data, "ACTTGCCG");
     EQ(sched_seq_next(&seq), SCHED_END);
 
-    EQ(sched_close(), SCHED_OK);
+    EQ(sched_cleanup(), SCHED_OK);
 }
 
 void test_sched_wipe(void)
@@ -216,8 +211,7 @@ void test_sched_wipe(void)
     remove(sched_path);
     create_file(db_filename, 0);
 
-    EQ(sched_setup(sched_path), SCHED_OK);
-    EQ(sched_open(), SCHED_OK);
+    EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     EQ(sched_db_add(&db, db_filename), SCHED_OK);
@@ -238,5 +232,5 @@ void test_sched_wipe(void)
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
 
     EQ(sched_wipe(), SCHED_OK);
-    EQ(sched_close(), SCHED_OK);
+    EQ(sched_cleanup(), SCHED_OK);
 }

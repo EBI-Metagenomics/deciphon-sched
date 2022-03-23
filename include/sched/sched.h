@@ -12,9 +12,8 @@
 
 struct sqlite3;
 
-enum sched_rc sched_setup(char const *filepath);
-enum sched_rc sched_open(void);
-enum sched_rc sched_close(void);
+enum sched_rc sched_init(char const *filepath);
+enum sched_rc sched_cleanup(void);
 enum sched_rc sched_wipe(void);
 struct sqlite3 *sched_handle(void);
 
