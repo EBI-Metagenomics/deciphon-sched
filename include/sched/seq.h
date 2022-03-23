@@ -7,7 +7,7 @@
 struct sched_seq
 {
     int64_t id;
-    int64_t job_id;
+    int64_t scan_id;
     char name[SEQ_NAME_SIZE];
     char data[SEQ_SIZE];
 };

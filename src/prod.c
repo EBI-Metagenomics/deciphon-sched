@@ -28,11 +28,11 @@ enum
 static TOK_DECLARE(tok);
 static struct xfile_tmp prod_file[MAX_NUM_THREADS] = {0};
 
-void sched_prod_init(struct sched_prod *prod, int64_t job_id)
+void sched_prod_init(struct sched_prod *prod, int64_t scan_id)
 {
     prod->id = 0;
 
-    prod->job_id = job_id;
+    prod->scan_id = scan_id;
     prod->seq_id = 0;
 
     prod->profile_name[0] = 0;
@@ -56,7 +56,7 @@ enum sched_rc sched_prod_write_begin(struct sched_prod const *prod,
 #define Fs "%s" TAB
 #define Fg "%.17g" TAB
 
-    if (echo(Fd64, job_id)) efail("write prod");
+    if (echo(Fd64, scan_id)) efail("write prod");
     if (echo(Fd64, seq_id)) efail("write prod");
 
     if (echo(Fs, profile_name)) efail("write prod");
@@ -127,7 +127,7 @@ static enum sched_rc get_prod(struct sched_prod *prod)
 
     int i = 0;
     prod->id = sqlite3_column_int64(st, i++);
-    prod->job_id = sqlite3_column_int64(st, i++);
+    prod->scan_id = sqlite3_column_int64(st, i++);
     prod->seq_id = sqlite3_column_int64(st, i++);
 
 #define ecpy efail("copy txt")
@@ -157,7 +157,7 @@ enum sched_rc prod_next(struct sched_prod *prod)
     if (!st) return efail("get fresh statement");
 
     if (xsql_bind_i64(st, 0, prod->id)) return efail("bind");
-    if (xsql_bind_i64(st, 1, prod->job_id)) return efail("bind");
+    if (xsql_bind_i64(st, 1, prod->scan_id)) return efail("bind");
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
@@ -285,7 +285,7 @@ enum sched_rc sched_prod_get(struct sched_prod *prod)
     if (rc != SCHED_OK) efail("get prod");
 
     prod->id = sqlite3_column_int64(st, 0);
-    prod->job_id = sqlite3_column_int64(st, 1);
+    prod->scan_id = sqlite3_column_int64(st, 1);
     prod->seq_id = sqlite3_column_int64(st, 2);
 
     if (xsql_cpy_txt(st, 3, XSQL_TXT_OF(*prod, profile_name))) return ecpy;
@@ -312,7 +312,7 @@ enum sched_rc sched_prod_add(struct sched_prod *prod)
     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
     if (!st) return efail("get fresh statement");
 
-    if (xsql_bind_i64(st, 0, prod->job_id)) return efail("bind");
+    if (xsql_bind_i64(st, 0, prod->scan_id)) return efail("bind");
     if (xsql_bind_i64(st, 1, prod->seq_id)) return efail("bind");
 
     if (xsql_bind_str(st, 2, prod->profile_name)) return efail("bind");

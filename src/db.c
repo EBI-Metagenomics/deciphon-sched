@@ -3,7 +3,6 @@
 #include "sched/db.h"
 #include "sched/rc.h"
 #include "sched/sched.h"
-#include "sqlite3/sqlite3.h"
 #include "stmt.h"
 #include "strlcpy.h"
 #include "xfile.h"
@@ -40,10 +39,11 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
     if (rc == SCHED_END) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) return efail("get db");
 
-    db->id = sqlite3_column_int64(st, 0);
-    db->xxh3_64 = sqlite3_column_int64(st, 1);
+    db->id = xsql_get_i64(st, 0);
+    db->xxh3_64 = xsql_get_i64(st, 1);
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename)))
         return efail("copy txt");
+    db->hmm_id = xsql_get_i64(st, 3);
 
     if (xsql_step(st) != SCHED_END) return efail("step");
     return SCHED_OK;
@@ -63,10 +63,11 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
     if (rc == SCHED_END) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) return efail("get db");
 
-    db->id = sqlite3_column_int64(st, 0);
-    db->xxh3_64 = sqlite3_column_int64(st, 1);
+    db->id = xsql_get_i64(st, 0);
+    db->xxh3_64 = xsql_get_i64(st, 1);
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename)))
         return efail("copy txt");
+    db->hmm_id = xsql_get_i64(st, 3);
 
     if (xsql_step(st) != SCHED_END) return efail("step");
     return SCHED_OK;
@@ -84,6 +85,7 @@ static enum sched_rc add_db(char const *filename, struct sched_db *db)
 
     if (xsql_bind_i64(st, 0, db->xxh3_64)) return efail("bind");
     if (xsql_bind_str(st, 1, filename)) return efail("bind");
+    if (xsql_bind_i64(st, 2, db->hmm_id)) return efail("bind");
 
     rc = xsql_step(st);
     if (rc == SCHED_EINVAL) return einval("add db");
@@ -124,8 +126,8 @@ static enum sched_rc db_next(struct sched_db *db)
     if (rc == SCHED_END) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) return efail("step");
 
-    db->id = sqlite3_column_int64(st, 0);
-    db->xxh3_64 = sqlite3_column_int64(st, 1);
+    db->id = xsql_get_i64(st, 0);
+    db->xxh3_64 = xsql_get_i64(st, 1);
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ecpy;
     if (xsql_step(st) != SCHED_END) return efail("step");
     return SCHED_OK;
@@ -179,6 +181,7 @@ void sched_db_init(struct sched_db *db)
     db->id = 0;
     db->xxh3_64 = 0;
     db->filename[0] = 0;
+    db->hmm_id = 0;
 }
 
 enum sched_rc sched_db_get(struct sched_db *db)

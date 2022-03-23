@@ -36,6 +36,7 @@ add_library(
   src/job.c
   src/logger.c
   src/prod.c
+  src/scan.c
   src/sched.c
   src/seq.c
   src/seq_queue.c

@@ -105,16 +105,6 @@ cleanup:
 
 struct sqlite3 *sched_handle(void) { return sched; }
 
-enum sched_rc sched_job_next_pend(struct sched_job *job)
-{
-    return job_next_pend(job);
-}
-
-enum sched_rc sched_next_pending_job(struct sched_job *job)
-{
-    return job_next_pending(job);
-}
-
 enum sched_rc emerge_db(char const *filepath)
 {
     int rc = 0;

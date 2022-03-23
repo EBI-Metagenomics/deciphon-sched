@@ -9,7 +9,7 @@ struct sched_prod
 {
     int64_t id;
 
-    int64_t job_id;
+    int64_t scan_id;
     int64_t seq_id;
 
     char profile_name[PROFILE_NAME_SIZE];
@@ -26,7 +26,7 @@ struct sched_prod
 
 typedef int(sched_prod_write_match_cb)(FILE *fp, void const *match);
 
-void sched_prod_init(struct sched_prod *prod, int64_t job_id);
+void sched_prod_init(struct sched_prod *prod, int64_t scan_id);
 enum sched_rc sched_prod_get(struct sched_prod *prod);
 enum sched_rc sched_prod_add(struct sched_prod *prod);
 enum sched_rc sched_prod_add_file(FILE *fp);

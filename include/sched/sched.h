@@ -7,6 +7,7 @@
 #include "sched/logger.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
+#include "sched/scan.h"
 #include "sched/seq.h"
 
 struct sqlite3;

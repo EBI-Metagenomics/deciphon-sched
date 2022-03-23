@@ -37,6 +37,16 @@ enum sched_rc xsql_bind_txt(struct sqlite3_stmt *stmt, int col,
     return SCHED_OK;
 }
 
+int xsql_get_int(struct sqlite3_stmt *stmt, int col)
+{
+    return sqlite3_column_int(stmt, col);
+}
+
+int64_t xsql_get_i64(struct sqlite3_stmt *stmt, int col)
+{
+    return sqlite3_column_int64(stmt, col);
+}
+
 enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
                            struct xsql_txt txt)
 {
