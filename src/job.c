@@ -51,9 +51,9 @@ enum sched_rc sched_job_get_by_id(struct sched_job *job, int64_t id)
     job->progress = xsql_get_int(st, 3);
     if (xsql_cpy_txt(st, 4, XSQL_TXT_OF(*job, error))) ECPYTXT;
 
-    job->submission = xsql_get_i64(st, 6);
-    job->exec_started = xsql_get_i64(st, 7);
-    job->exec_ended = xsql_get_i64(st, 8);
+    job->submission = xsql_get_i64(st, 5);
+    job->exec_started = xsql_get_i64(st, 6);
+    job->exec_ended = xsql_get_i64(st, 7);
 
     if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;
