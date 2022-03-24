@@ -5,6 +5,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 
+#define XSQL_REQUIRED_VERSION 3031001
+
 typedef int(xsql_func_t)(void *, int, char **, char **);
 
 struct sqlite3;
@@ -24,6 +26,9 @@ struct xsql_stmt
 
 #define XSQL_TXT_OF(var, member)                                               \
     (struct xsql_txt) { ARRAY_SIZE_OF((var), member) - 1, (var).member }
+
+bool xsql_is_thread_safe(void);
+int xsql_version(void);
 
 enum sched_rc xsql_bind_dbl(struct sqlite3_stmt *stmt, int col, double val);
 enum sched_rc xsql_bind_i64(struct sqlite3_stmt *stmt, int col, int64_t val);

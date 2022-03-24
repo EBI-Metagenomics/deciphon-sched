@@ -10,7 +10,6 @@
 #include "schema.h"
 #include "seq.h"
 #include "seq_queue.h"
-#include "sqlite3/sqlite3.h"
 #include "stmt.h"
 #include "strlcpy.h"
 #include "utc.h"
@@ -25,11 +24,6 @@
 static struct sqlite3 *sched = NULL;
 char sched_filepath[PATH_SIZE] = {0};
 
-#define MIN_SQLITE_VERSION 3031001
-
-static_assert(SQLITE_VERSION_NUMBER >= MIN_SQLITE_VERSION,
-              "Minimum sqlite requirement.");
-
 enum sched_rc emerge_db(char const *filepath);
 enum sched_rc is_empty(char const *filepath, bool *empty);
 
@@ -37,10 +31,8 @@ enum sched_rc sched_init(char const *filepath)
 {
     strlcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath));
 
-    int thread_safe = sqlite3_threadsafe();
-    if (thread_safe == 0) return efail("not thread safe");
-    if (sqlite3_libversion_number() < MIN_SQLITE_VERSION)
-        return efail("old sqlite3");
+    if (!xsql_is_thread_safe()) return efail("not thread safe");
+    if (xsql_version() < XSQL_REQUIRED_VERSION) return efail("old sqlite3");
 
     enum sched_rc rc = xfile_touch(filepath);
     if (rc) return rc;

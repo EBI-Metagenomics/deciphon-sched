@@ -12,7 +12,7 @@ struct sched_db
     int64_t hmm_id;
 };
 
-typedef void(sched_db_set_func_t)(struct sched_db *db, void *arg);
+typedef void(sched_db_set_func_t)(struct sched_db *, void *arg);
 
 void sched_db_init(struct sched_db *);
 

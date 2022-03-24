@@ -5,6 +5,13 @@
 #include <assert.h>
 #include <stdlib.h>
 
+static_assert(SQLITE_VERSION_NUMBER >= XSQL_REQUIRED_VERSION,
+              "Minimum sqlite requirement.");
+
+bool xsql_is_thread_safe(void) { return sqlite3_threadsafe(); }
+
+int xsql_version(void) { return sqlite3_libversion_number(); }
+
 enum sched_rc xsql_bind_dbl(struct sqlite3_stmt *stmt, int col, double val)
 {
     assert(col >= 0);

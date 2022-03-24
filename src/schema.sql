@@ -29,8 +29,7 @@ CREATE TABLE db (
     xxh3 INTEGER UNIQUE NOT NULL,
     filename TEXT UNIQUE NOT NULL,
 
-    -- hmm_id INTEGER REFERENCES hmm (id) NOT NULL
-    hmm_id INTEGER NOT NULL
+    hmm_id INTEGER REFERENCES hmm (id) NOT NULL
 );
 
 CREATE TABLE scan (

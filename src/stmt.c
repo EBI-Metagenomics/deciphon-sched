@@ -1,14 +1,23 @@
 #include "stmt.h"
 #include "compiler.h"
 #include "logger.h"
+#include "sched.h"
 #include "sched/sched.h"
-#include "sqlite3/sqlite3.h"
 #include "xsql.h"
 #include <assert.h>
 
 /* clang-format off */
 static char const *const queries[] =
 {
+    /* --- HMM queries --- */
+    [HMM_INSERT] = "INSERT INTO hmm (xxh3, filename, job_id) VALUES (?, ?, ?);",
+
+    [HMM_SELECT_BY_ID]       = "SELECT * FROM hmm WHERE       id = ?;",
+    [HMM_SELECT_BY_XXH3]     = "SELECT * FROM hmm WHERE    xxh3  = ?; ",
+    [HMM_SELECT_BY_FILENAME] = "SELECT * FROM hmm WHERE filename = ?;",
+
+    [HMM_DELETE] = "DELETE FROM hmm;",
+
     /* --- DB queries --- */
     [DB_INSERT] = "INSERT INTO db (xxh3, filename, hmm_id) VALUES (?, ?, ?);",
 
