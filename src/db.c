@@ -24,8 +24,7 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
                                    enum stmt select_stmt)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(select_stmt);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(select_stmt));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, by_value)) return EBIND;
@@ -45,20 +44,19 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
 
 enum sched_rc sched_db_get_by_id(struct sched_db *db, int64_t id)
 {
-    return select_db_i64(db, id, DB_SELECT_BY_ID);
+    return select_db_i64(db, id, DB_GET_BY_ID);
 }
 
 enum sched_rc sched_db_get_by_xxh3(struct sched_db *db, int64_t xxh3)
 {
-    return select_db_i64(db, xxh3, DB_SELECT_BY_XXH3);
+    return select_db_i64(db, xxh3, DB_GET_BY_XXH3);
 }
 
 static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
                                    enum stmt select_stmt)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(select_stmt);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(select_stmt));
     if (!st) return EFRESH;
 
     if (xsql_bind_str(st, 0, by_value)) return EBIND;
@@ -79,14 +77,13 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
 enum sched_rc sched_db_get_by_filename(struct sched_db *db,
                                        char const *filename)
 {
-    return select_db_str(db, filename, DB_SELECT_BY_FILENAME);
+    return select_db_str(db, filename, DB_GET_BY_FILENAME);
 }
 
 static enum sched_rc db_next(struct sched_db *db)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(DB_SELECT_NEXT);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(DB_GET_NEXT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, db->id)) return EBIND;
@@ -134,8 +131,7 @@ static enum sched_rc add_db(char const *filename, struct sched_db *db)
     enum sched_rc rc = init_db(db, filename);
     if (rc) return rc;
 
-    struct xsql_stmt *stmt = stmt_get(DB_INSERT);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(DB_INSERT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, db->xxh3)) return EBIND;
@@ -170,7 +166,7 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
         return einval("incompatible filenames");
 
     struct sched_db tmp = {0};
-    rc = select_db_str(&tmp, filename, DB_SELECT_BY_FILENAME);
+    rc = select_db_str(&tmp, filename, DB_GET_BY_FILENAME);
 
     if (rc == SCHED_OK) return einval("db with same filename already exist");
 
@@ -183,8 +179,7 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
 enum sched_rc db_delete(void)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(DB_DELETE);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(DB_DELETE));
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");

@@ -16,8 +16,7 @@ static enum sched_rc select_hmm_i64(struct sched_hmm *hmm, int64_t by_value,
                                     enum stmt select_stmt)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(select_stmt);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(select_stmt));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, by_value)) return EBIND;
@@ -39,8 +38,7 @@ static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
                                     enum stmt select_stmt)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(select_stmt);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(select_stmt));
     if (!st) return EFRESH;
 
     if (xsql_bind_str(st, 0, by_value)) return EBIND;
@@ -95,25 +93,24 @@ enum sched_rc sched_hmm_set_file(struct sched_hmm *hmm, char const *filename)
 
 enum sched_rc sched_hmm_get_by_id(struct sched_hmm *hmm, int64_t id)
 {
-    return select_hmm_i64(hmm, id, HMM_SELECT_BY_ID);
+    return select_hmm_i64(hmm, id, HMM_GET_BY_ID);
 }
 
 enum sched_rc sched_hmm_get_by_xxh3(struct sched_hmm *hmm, int64_t xxh3)
 {
-    return select_hmm_i64(hmm, xxh3, HMM_SELECT_BY_XXH3);
+    return select_hmm_i64(hmm, xxh3, HMM_GET_BY_XXH3);
 }
 
 enum sched_rc sched_hmm_get_by_filename(struct sched_hmm *hmm,
                                         char const *filename)
 {
-    return select_hmm_str(hmm, filename, HMM_SELECT_BY_FILENAME);
+    return select_hmm_str(hmm, filename, HMM_GET_BY_FILENAME);
 }
 
 static enum sched_rc submit(struct sched_hmm *hmm)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(HMM_INSERT);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(HMM_INSERT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, hmm->xxh3)) return EBIND;
@@ -142,8 +139,7 @@ enum sched_rc hmm_submit(void *hmm, int64_t job_id)
 enum sched_rc hmm_delete(void)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(HMM_DELETE);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(HMM_DELETE));
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete hmm");

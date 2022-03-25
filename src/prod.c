@@ -115,8 +115,7 @@ enum sched_rc sched_prod_write_end(unsigned thread_num)
 static enum sched_rc get_prod(struct sched_prod *prod)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(PROD_SELECT);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_GET));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
@@ -149,8 +148,7 @@ static enum sched_rc get_prod(struct sched_prod *prod)
 enum sched_rc prod_next(struct sched_prod *prod)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(PROD_SELECT_NEXT);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_GET_NEXT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
@@ -169,8 +167,7 @@ enum sched_rc prod_next(struct sched_prod *prod)
 enum sched_rc prod_delete(void)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(PROD_DELETE);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_DELETE));
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
@@ -219,8 +216,7 @@ enum sched_rc sched_prod_add_file(FILE *fp)
 
     do
     {
-        struct xsql_stmt *stmt = stmt_get(PROD_INSERT);
-        struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+        struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_INSERT));
         if (!st) CLEANUP(efail("submit prod"));
         if (tok_next(&tok, fp)) CLEANUP(eparse("parse prods file"));
         if (tok_id(&tok) == TOK_EOF) break;
@@ -269,8 +265,7 @@ cleanup:
 enum sched_rc sched_prod_get_by_id(struct sched_prod *prod, int64_t id)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(PROD_SELECT);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_GET));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, id)) return EBIND;
@@ -301,8 +296,7 @@ enum sched_rc sched_prod_get_by_id(struct sched_prod *prod, int64_t id)
 enum sched_rc sched_prod_add(struct sched_prod *prod)
 {
     struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(PROD_INSERT);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_INSERT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, prod->scan_id)) return EBIND;

@@ -12,19 +12,19 @@ static char const *const queries[] =
     /* --- HMM queries --- */
     [HMM_INSERT] = "INSERT INTO hmm (xxh3, filename, job_id) VALUES (?, ?, ?);",
 
-    [HMM_SELECT_BY_ID]       = "SELECT * FROM hmm WHERE       id = ?;",
-    [HMM_SELECT_BY_XXH3]     = "SELECT * FROM hmm WHERE    xxh3  = ?; ",
-    [HMM_SELECT_BY_FILENAME] = "SELECT * FROM hmm WHERE filename = ?;",
+    [HMM_GET_BY_ID]       = "SELECT * FROM hmm WHERE       id = ?;",
+    [HMM_GET_BY_XXH3]     = "SELECT * FROM hmm WHERE    xxh3  = ?; ",
+    [HMM_GET_BY_FILENAME] = "SELECT * FROM hmm WHERE filename = ?;",
 
     [HMM_DELETE] = "DELETE FROM hmm;",
 
     /* --- DB queries --- */
     [DB_INSERT] = "INSERT INTO db (xxh3, filename, hmm_id) VALUES (?, ?, ?);",
 
-    [DB_SELECT_BY_ID]       = "SELECT * FROM db WHERE       id = ?;",
-    [DB_SELECT_BY_XXH3]     = "SELECT * FROM db WHERE    xxh3 = ?; ",
-    [DB_SELECT_BY_FILENAME] = "SELECT * FROM db WHERE filename = ?;",
-    [DB_SELECT_NEXT]        = "SELECT * FROM db WHERE id > ? ORDER BY id ASC LIMIT 1;",
+    [DB_GET_BY_ID]       = "SELECT * FROM db WHERE       id = ?;",
+    [DB_GET_BY_XXH3]     = "SELECT * FROM db WHERE    xxh3 = ?; ",
+    [DB_GET_BY_FILENAME] = "SELECT * FROM db WHERE filename = ?;",
+    [DB_GET_NEXT]        = "SELECT * FROM db WHERE id > ? ORDER BY id ASC LIMIT 1;",
 
     [DB_DELETE] = "DELETE FROM db;",
 
@@ -34,7 +34,7 @@ static char const *const queries[] =
 
     [JOB_GET_PEND]  = "SELECT    id FROM job WHERE state = 'pend' ORDER BY id LIMIT 1;",
     [JOB_GET_STATE] = "SELECT state FROM job WHERE    id = ?;",
-    [JOB_SELECT]    = "SELECT     * FROM job WHERE    id = ?;",
+    [JOB_GET]    = "SELECT     * FROM job WHERE    id = ?;",
 
     [JOB_SET_RUN]   = "UPDATE job SET state =  'run', exec_started = ?                 WHERE id = ? AND state = 'pend';",
     [JOB_SET_ERROR] = "UPDATE job SET state = 'fail', error        = ?, exec_ended = ? WHERE id = ?;",
@@ -55,16 +55,16 @@ static char const *const queries[] =
     [PROD_INSERT] = "INSERT INTO prod (scan_id, seq_id, profile_name, abc_name, alt_loglik, null_loglik, profile_typeid, version, match) "
                     "VALUES           (      ?,      ?,            ?,        ?,          ?,           ?,              ?,       ?,     ?);",
 
-    [PROD_SELECT]      = "SELECT  * FROM prod WHERE id = ?;",
-    [PROD_SELECT_NEXT] = "SELECT id FROM prod WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
+    [PROD_GET]      = "SELECT  * FROM prod WHERE id = ?;",
+    [PROD_GET_NEXT] = "SELECT id FROM prod WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
 
     [PROD_DELETE] = "DELETE FROM prod;",
 
     /* --- SEQ queries --- */
     [SEQ_INSERT] = "INSERT INTO seq (scan_id, name, data) VALUES (?, ?, ?);",
 
-    [SEQ_SELECT]      = "SELECT id, scan_id, name, upper(data) FROM seq WHERE id = ?;",
-    [SEQ_SELECT_NEXT] = "SELECT id                             FROM seq WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
+    [SEQ_GET]      = "SELECT id, scan_id, name, upper(data) FROM seq WHERE id = ?;",
+    [SEQ_GET_NEXT] = "SELECT id                             FROM seq WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
 
     [SEQ_DELETE] = "DELETE FROM seq;",
 };
