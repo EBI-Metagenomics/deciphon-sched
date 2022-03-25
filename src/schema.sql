@@ -19,7 +19,7 @@ CREATE TABLE job (
 CREATE TABLE hmm (
     id INTEGER PRIMARY KEY UNIQUE NOT NULL,
     xxh3 INTEGER UNIQUE NOT NULL,
-    filename TEXT UNIQUE NOT NULL,
+    filename TEXT UNIQUE CHECK(length(filename) > 4 AND substr(filename, -4) == '.hmm') NOT NULL,
 
     job_id INTEGER REFERENCES job (id) NOT NULL
 );
@@ -27,7 +27,7 @@ CREATE TABLE hmm (
 CREATE TABLE db (
     id INTEGER PRIMARY KEY UNIQUE NOT NULL,
     xxh3 INTEGER UNIQUE NOT NULL,
-    filename TEXT UNIQUE NOT NULL,
+    filename TEXT UNIQUE CHECK(length(filename) > 4 AND substr(filename, -4) == '.dcp') NOT NULL,
 
     hmm_id INTEGER REFERENCES hmm (id) NOT NULL
 );

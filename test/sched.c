@@ -1,14 +1,16 @@
 #include "sched/sched.h"
 #include "hope/hope.h"
 
+struct sched_hmm hmm = {0};
 struct sched_db db = {0};
 struct sched_job job = {0};
 struct sched_scan scan = {0};
 struct sched_seq seq = {0};
 
 void test_sched_reopen(void);
+void test_sched_submit_hmm(void);
 void test_sched_add_db(void);
-void test_sched_submit_scan_job(void);
+void test_sched_submit_scan(void);
 void test_sched_submit_and_fetch_scan_job(void);
 void test_sched_submit_and_fetch_seq(void);
 void test_sched_wipe(void);
@@ -16,11 +18,12 @@ void test_sched_wipe(void);
 int main(void)
 {
     test_sched_reopen();
+    test_sched_submit_hmm();
     test_sched_add_db();
-    test_sched_submit_scan_job();
-    test_sched_submit_and_fetch_scan_job();
-    test_sched_submit_and_fetch_seq();
-    test_sched_wipe();
+    // test_sched_submit_scan();
+    // test_sched_submit_and_fetch_scan_job();
+    // test_sched_submit_and_fetch_seq();
+    // test_sched_wipe();
     return hope_status();
 }
 
@@ -49,16 +52,16 @@ static void create_file(char const *path, int seed)
     EQ(fclose(fp), 0);
 }
 
-void test_sched_add_db(void)
+void test_sched_submit_hmm(void)
 {
     char const sched_path[] = TMPDIR "/file.sched";
-    char const nonfilename[] = TMPDIR "/file1a.dcp";
-    char const file1a[] = "file1a.dcp";
-    char const file1b[] = "file1b.dcp";
-    char const file2[] = "file2.dcp";
-    char const file3[] = "does_not_exist.dcp";
+    char const nofile[] = TMPDIR "/file1a.hmm";
+    char const file1a[] = "file1a.hmm";
+    char const file1b[] = "file1b.hmm";
+    char const file2[] = "file2.hmm";
+    char const file3[] = "does_not_exist.hmm";
 
-    create_file(nonfilename, 0);
+    create_file(nofile, 0);
     create_file(file1a, 0);
     create_file(file1b, 0);
     create_file(file2, 1);
@@ -67,22 +70,85 @@ void test_sched_add_db(void)
 
     EQ(sched_init(sched_path), SCHED_OK);
 
-    sched_db_init(&db);
-    EQ(sched_db_add(&db, nonfilename), SCHED_EINVAL);
-    EQ(sched_db_add(&db, file1a), SCHED_OK);
-    EQ(db.id, 1);
+    EQ(sched_hmm_init(&hmm, nofile), SCHED_EINVAL);
 
-    EQ(sched_db_add(&db, file1b), SCHED_EINVAL);
+    EQ(sched_hmm_init(&hmm, file1a), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
 
-    EQ(sched_db_add(&db, file2), SCHED_OK);
-    EQ(db.id, 2);
+    EQ(sched_hmm_init(&hmm, file1b), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_EINVAL);
 
-    EQ(sched_db_add(&db, file3), SCHED_EIO);
+    EQ(sched_hmm_init(&hmm, file2), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+
+    EQ(sched_hmm_init(&hmm, file3), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_EIO);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
 
-void test_sched_submit_scan_job(void)
+void test_sched_add_db(void)
+{
+    char const sched_path[] = TMPDIR "/file.sched";
+
+    char const nofile_hmm[] = TMPDIR "/file1a.hmm";
+    char const file1a_hmm[] = "file1a.hmm";
+    char const file1b_hmm[] = "file1b.hmm";
+    char const file2_hmm[] = "file2.hmm";
+    char const file3_hmm[] = "does_not_exist.hmm";
+
+    create_file(nofile_hmm, 0);
+    create_file(file1a_hmm, 0);
+    create_file(file1b_hmm, 0);
+    create_file(file2_hmm, 1);
+
+    char const nofile_dcp[] = TMPDIR "/file1a.dcp";
+    char const file1a_dcp[] = "file1a.dcp";
+    char const file1b_dcp[] = "file1b.dcp";
+    char const file2_dcp[] = "file2.dcp";
+    char const file3_dcp[] = "does_not_exist.dcp";
+
+    create_file(nofile_dcp, 0);
+    create_file(file1a_dcp, 0);
+    create_file(file1b_dcp, 0);
+    create_file(file2_dcp, 1);
+
+    create_file(nofile_dcp, 0);
+    create_file(file1a_dcp, 0);
+    create_file(file1b_dcp, 0);
+    create_file(file2_dcp, 1);
+
+    remove(sched_path);
+
+    EQ(sched_init(sched_path), SCHED_OK);
+
+    sched_db_init(&db);
+
+    EQ(sched_hmm_init(&hmm, file1a_hmm), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    EQ(sched_db_add(&db, file1a_dcp, hmm.id), SCHED_OK);
+    EQ(db.id, 1);
+
+    EQ(sched_hmm_init(&hmm, file1b_hmm), SCHED_OK);
+
+    EQ(sched_hmm_init(&hmm, file2_hmm), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    EQ(sched_db_add(&db, file2_dcp, hmm.id), SCHED_OK);
+    EQ(db.id, 2);
+
+    EQ(sched_db_add(&db, file3_dcp, hmm.id), SCHED_EIO);
+
+    EQ(sched_cleanup(), SCHED_OK);
+}
+
+#if 0
+void test_sched_submit_scan(void)
 {
     char const sched_path[] = TMPDIR "/submit_job.sched";
     char const db_filename[] = "submit_job.dcp";
@@ -234,3 +300,4 @@ void test_sched_wipe(void)
     EQ(sched_wipe(), SCHED_OK);
     EQ(sched_cleanup(), SCHED_OK);
 }
+#endif

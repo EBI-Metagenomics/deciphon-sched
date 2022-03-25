@@ -23,6 +23,7 @@ enum sched_rc sched_db_get_by_filename(struct sched_db *, char const *filename);
 enum sched_rc sched_db_get_all(sched_db_set_func_t, struct sched_db *,
                                void *arg);
 
-enum sched_rc sched_db_add(struct sched_db *, char const *filename);
+enum sched_rc sched_db_add(struct sched_db *, char const *filename,
+                           int64_t hmm_id);
 
 #endif

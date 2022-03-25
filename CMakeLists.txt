@@ -33,6 +33,7 @@ add_library(
   ${PROJECT_NAME} STATIC
   schema.c
   src/db.c
+  src/hmm.c
   src/job.c
   src/logger.c
   src/prod.c

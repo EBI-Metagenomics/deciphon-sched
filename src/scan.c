@@ -3,6 +3,7 @@
 #include "compiler.h"
 #include "logger.h"
 #include "prod.h"
+#include "sched.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
 #include "sched/scan.h"
@@ -133,8 +134,6 @@ enum sched_rc scan_submit(void *scan, int64_t job_id)
     seq_queue_init();
     return rc;
 }
-
-void scan_rollback(void) { seq_queue_init(); }
 
 enum sched_rc scan_delete(void)
 {

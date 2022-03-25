@@ -16,7 +16,7 @@ struct xfile_tmp
 };
 
 enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash);
-void xfile_basename(char *filename, char const *path);
+bool xfile_is_name(char const *filename);
 
 bool xfile_exists(char const *filepath);
 enum sched_rc xfile_touch(char const *filepath);

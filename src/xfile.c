@@ -69,10 +69,17 @@ static char *glibc_basename(const char *filename)
     return p ? p + 1 : (char *)filename;
 }
 
-void xfile_basename(char *filename, char const *path)
+static void xfile_basename(char *filename, char const *path)
 {
     char *p = glibc_basename(path);
     strlcpy(filename, p, FILENAME_SIZE);
+}
+
+bool xfile_is_name(char const *filename)
+{
+    char really_filename[FILENAME_SIZE] = {0};
+    xfile_basename(really_filename, filename);
+    return !strcmp(filename, really_filename);
 }
 
 bool xfile_exists(char const *filepath) { return access(filepath, F_OK) == 0; }

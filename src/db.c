@@ -1,5 +1,6 @@
 #include "db.h"
 #include "logger.h"
+#include "sched.h"
 #include "sched/db.h"
 #include "sched/rc.h"
 #include "sched/sched.h"
@@ -178,17 +179,17 @@ enum sched_rc sched_db_get_all(sched_db_set_func_t fn, struct sched_db *db,
     return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
 
-enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
+enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
+                           int64_t hmm_id)
 {
-    char really_filename[FILENAME_SIZE] = {0};
-    xfile_basename(really_filename, filename);
-    if (strcmp(filename, really_filename)) return einval("invalid db filename");
+    if (!xfile_is_name(filename)) return einval("invalid db filename");
 
     struct sched_db tmp = {0};
     enum sched_rc rc = select_db_str(&tmp, filename, DB_SELECT_BY_FILENAME);
 
     if (rc == SCHED_OK) return einval("db with same filename already exist");
 
+    db->hmm_id = hmm_id;
     if (rc == SCHED_NOTFOUND) return add_db(filename, db);
 
     return rc;

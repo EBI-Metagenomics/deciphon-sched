@@ -14,7 +14,7 @@ struct sched_hmm
 
 typedef void(sched_hmm_set_func_t)(struct sched_hmm *, void *arg);
 
-void sched_hmm_init(struct sched_hmm *);
+enum sched_rc sched_hmm_init(struct sched_hmm *, char const *filename);
 
 enum sched_rc sched_hmm_get_by_id(struct sched_hmm *, int64_t id);
 enum sched_rc sched_hmm_get_by_xxh3(struct sched_hmm *, int64_t xxh3);

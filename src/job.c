@@ -1,8 +1,10 @@
 #include "job.h"
 #include "bug.h"
 #include "compiler.h"
+#include "hmm.h"
 #include "logger.h"
 #include "scan.h"
+#include "sched.h"
 #include "sched/job.h"
 #include "sched/rc.h"
 #include "sched/sched.h"
@@ -15,7 +17,8 @@
 
 typedef enum sched_rc (*submit_job_func_t)(void *actual_job, int64_t job_id);
 
-static submit_job_func_t submit_job_func[] = {[SCHED_SCAN] = scan_submit};
+static submit_job_func_t submit_job_func[] = {
+    [SCHED_SCAN] = scan_submit, [SCHED_HMM] = hmm_submit};
 
 void sched_job_init(struct sched_job *job, enum sched_job_type type)
 {
