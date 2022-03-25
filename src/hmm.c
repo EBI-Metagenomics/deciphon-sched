@@ -126,7 +126,7 @@ enum sched_rc sched_hmm_init(struct sched_hmm *hmm, char const *filename)
     if (!xfile_is_name(filename)) return einval("invalid hmm filename");
     hmm->id = 0;
     hmm->xxh3 = 0;
-    if (!xstrcpy(hmm->filename, filename, ARRAY_SIZE_OF(*hmm, filename)))
+    if (!XSTRCPY(hmm, filename, filename))
         return einval("filename is too long");
     hmm->job_id = 0;
     return SCHED_OK;

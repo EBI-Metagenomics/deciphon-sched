@@ -9,9 +9,9 @@
 #include "sched/rc.h"
 #include "sched/sched.h"
 #include "stmt.h"
-#include "strlcpy.h"
 #include "utc.h"
 #include "xsql.h"
+#include "xstrcpy.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,7 +25,7 @@ void sched_job_init(struct sched_job *job, enum sched_job_type type)
     job->id = 0;
     job->type = (int)type;
 
-    strlcpy(job->state, "pend", ARRAY_SIZE_OF(*job, state));
+    XSTRCPY(job, state, "pend");
     job->progress = 0;
     job->error[0] = 0;
 

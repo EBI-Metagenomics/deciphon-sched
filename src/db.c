@@ -5,9 +5,9 @@
 #include "sched/rc.h"
 #include "sched/sched.h"
 #include "stmt.h"
-#include "strlcpy.h"
 #include "xfile.h"
 #include "xsql.h"
+#include "xstrcpy.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -19,7 +19,7 @@ static enum sched_rc init_db(struct sched_db *db, char const *filename)
     enum sched_rc rc = xfile_hash(fp, (uint64_t *)&db->xxh3);
     if (rc) goto cleanup;
 
-    strlcpy(db->filename, filename, ARRAY_SIZE_OF(*db, filename));
+    XSTRCPY(db, filename, filename);
 
 cleanup:
     fclose(fp);

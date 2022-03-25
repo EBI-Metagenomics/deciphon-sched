@@ -4,16 +4,16 @@
 #include "sched/rc.h"
 #include "sched/sched.h"
 #include "stmt.h"
-#include "strlcpy.h"
 #include "xsql.h"
+#include "xstrcpy.h"
 
 void sched_seq_init(struct sched_seq *seq, int64_t scan_id, char const *name,
                     char const *data)
 {
     seq->id = 0;
     seq->scan_id = scan_id;
-    strlcpy(seq->name, name, ARRAY_SIZE_OF(*seq, name));
-    strlcpy(seq->data, data, ARRAY_SIZE_OF(*seq, data));
+    XSTRCPY(seq, name, name);
+    XSTRCPY(seq, data, data);
 }
 
 enum sched_rc seq_submit(struct sched_seq *seq)
