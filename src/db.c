@@ -3,7 +3,6 @@
 #include "sched/db.h"
 #include "sched/hmm.h"
 #include "sched/rc.h"
-#include "sched/sched.h"
 #include "stmt.h"
 #include "xfile.h"
 #include "xsql.h"
@@ -158,6 +157,12 @@ enum sched_rc check_filename(struct sched_hmm *hmm, char const *filename)
     return SCHED_OK;
 }
 
+static enum sched_rc has_db_by_filename(char const *filename)
+{
+    struct sched_db tmp = {0};
+    return select_db_str(&tmp, filename, DB_GET_BY_FILENAME);
+}
+
 enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
                            int64_t hmm_id)
 {
@@ -170,8 +175,7 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
 
     if ((rc = check_filename(&hmm, filename))) return rc;
 
-    struct sched_db tmp = {0};
-    rc = select_db_str(&tmp, filename, DB_GET_BY_FILENAME);
+    rc = has_db_by_filename(filename);
     if (rc == SCHED_OK) return einval("database already exist");
 
     return rc == SCHED_NOTFOUND ? add_db(filename, db) : rc;

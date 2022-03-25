@@ -1,11 +1,8 @@
 #include "hmm.h"
 #include "logger.h"
-#include "sched.h"
 #include "sched/hmm.h"
 #include "sched/rc.h"
-#include "sched/sched.h"
 #include "stmt.h"
-#include "strlcpy.h"
 #include "xfile.h"
 #include "xsql.h"
 #include "xstrcpy.h"
@@ -119,18 +116,24 @@ static enum sched_rc submit(struct sched_hmm *hmm)
     return SCHED_OK;
 }
 
+static enum sched_rc has_hmm_by_xxh3(int64_t xxh3)
+{
+    struct sched_hmm tmp = {0};
+    return sched_hmm_get_by_xxh3(&tmp, xxh3);
+}
+
 enum sched_rc hmm_submit(void *hmm, int64_t job_id)
 {
     struct sched_hmm *h = hmm;
     if (!h->filename[0]) return einval("file has not been set");
     h->job_id = job_id;
 
-    struct sched_hmm tmp = {0};
-    enum sched_rc rc = sched_hmm_get_by_xxh3(&tmp, h->xxh3);
+    enum sched_rc rc = has_hmm_by_xxh3(h->xxh3);
     if (rc == SCHED_OK) return einval("hmm already exists");
+
     if (rc != SCHED_NOTFOUND) return rc;
 
-    return submit(h);
+    return rc == SCHED_NOTFOUND ? submit(h) : rc;
 }
 
 enum sched_rc hmm_delete(void)

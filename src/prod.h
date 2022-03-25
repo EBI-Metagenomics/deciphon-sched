@@ -1,13 +1,7 @@
 #ifndef PROD_H
 #define PROD_H
 
-#include "sched/limits.h"
-#include "sched/prod.h"
-#include "sched/sched.h"
-#include <stdint.h>
-#include <stdio.h>
-
-struct protein_match;
+struct sched_prod;
 
 enum sched_rc prod_begin_submission(unsigned nfiles);
 enum sched_rc prod_end_submission(void);

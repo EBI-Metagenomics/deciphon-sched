@@ -2,6 +2,7 @@
 #define BUG_H
 
 #include "compiler.h"
+#include <stdio.h>
 
 /*
  * Acknowledgement: Linux kernel developers.

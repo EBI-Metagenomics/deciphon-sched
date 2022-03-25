@@ -1,6 +1,6 @@
 #include "seq_queue.h"
 #include "sched/limits.h"
-#include "seq.h"
+#include "sched/seq.h"
 
 struct seq_queue
 {

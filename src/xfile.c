@@ -1,10 +1,6 @@
 #include "xfile.h"
-#include "bug.h"
-#include "compiler.h"
-#include "limits.h"
 #include "logger.h"
 #include "sched/limits.h"
-#include "strlcpy.h"
 #include "xxhash/xxhash.h"
 #include <assert.h>
 #include <fcntl.h>

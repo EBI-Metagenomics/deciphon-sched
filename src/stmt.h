@@ -2,7 +2,6 @@
 #define STMT_H
 
 #include "sched/rc.h"
-#include "xsql.h"
 
 enum stmt
 {

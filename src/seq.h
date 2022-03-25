@@ -1,8 +1,9 @@
 #ifndef SEQ_H
 #define SEQ_H
 
-#include "sched/seq.h"
 #include <stdint.h>
+
+struct sched_seq;
 
 enum sched_rc seq_submit(struct sched_seq *seq);
 enum sched_rc seq_delete(void);

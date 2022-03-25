@@ -1,13 +1,10 @@
 #include "job.h"
 #include "bug.h"
-#include "compiler.h"
 #include "hmm.h"
 #include "logger.h"
 #include "scan.h"
-#include "sched.h"
 #include "sched/job.h"
 #include "sched/rc.h"
-#include "sched/sched.h"
 #include "stmt.h"
 #include "utc.h"
 #include "xsql.h"
@@ -215,10 +212,10 @@ enum sched_rc sched_job_state(int64_t id, enum sched_job_state *state)
     if (rc == SCHED_END) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) return efail("get job state");
 
-    char tmp[JOB_STATE_SIZE] = {0};
-    rc = xsql_cpy_txt(st, 0, (struct xsql_txt){JOB_STATE_SIZE, tmp});
+    char job_state[JOB_STATE_SIZE] = {0};
+    rc = xsql_cpy_txt(st, 0, (struct xsql_txt){JOB_STATE_SIZE, job_state});
     if (rc) ECPYTXT;
-    *state = resolve_job_state(tmp);
+    *state = resolve_job_state(job_state);
 
     if (xsql_step(st) != SCHED_END) return ESTEP;
     return SCHED_OK;

@@ -1,17 +1,12 @@
 #include "prod.h"
-#include "compiler.h"
 #include "logger.h"
-#include "sched.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
-#include "sched/sched.h"
 #include "stmt.h"
 #include "to.h"
 #include "tok.h"
 #include "xfile.h"
 #include "xsql.h"
-#include <assert.h>
-#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 
