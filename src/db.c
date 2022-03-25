@@ -115,18 +115,6 @@ static enum sched_rc db_next(struct sched_db *db)
     return SCHED_OK;
 }
 
-enum sched_rc db_has(char const *filename, struct sched_db *db)
-{
-    enum sched_rc rc = init_db(db, filename);
-    if (rc) return rc;
-    return db_get_by_xxh3(db, db->xxh3);
-}
-
-enum sched_rc db_get_by_xxh3(struct sched_db *db, int64_t xxh3)
-{
-    return select_db_i64(db, xxh3, DB_SELECT_BY_XXH3);
-}
-
 enum sched_rc db_delete(void)
 {
     struct sqlite3 *sched = sched_handle();
@@ -135,14 +123,6 @@ enum sched_rc db_delete(void)
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
-}
-
-enum sched_rc db_hash(char const *filename, int64_t *xxh3)
-{
-    struct sched_db db = {0};
-    enum sched_rc rc = init_db(&db, filename);
-    *xxh3 = db.xxh3;
-    return rc;
 }
 
 void sched_db_init(struct sched_db *db)
