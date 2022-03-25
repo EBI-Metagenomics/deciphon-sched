@@ -1,7 +1,6 @@
 #ifndef XSQL_H
 #define XSQL_H
 
-#include "compiler.h"
 #include <inttypes.h>
 #include <stdbool.h>
 
@@ -43,20 +42,19 @@ double xsql_get_dbl(struct sqlite3_stmt *stmt, int col);
 enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
                            struct xsql_txt txt);
 
-enum sched_rc xsql_open(char const *filepath, struct sqlite3 **db);
-enum sched_rc xsql_close(struct sqlite3 *db);
-enum sched_rc xsql_exec(struct sqlite3 *db, char const *, xsql_func_t, void *);
+enum sched_rc xsql_open(char const *filepath);
+enum sched_rc xsql_close(void);
+enum sched_rc xsql_exec(char const *, xsql_func_t, void *);
 
-enum sched_rc xsql_begin_transaction(struct sqlite3 *db);
-enum sched_rc xsql_end_transaction(struct sqlite3 *db);
-enum sched_rc xsql_rollback_transaction(struct sqlite3 *db);
+enum sched_rc xsql_begin_transaction(void);
+enum sched_rc xsql_end_transaction(void);
+enum sched_rc xsql_rollback_transaction(void);
 
-enum sched_rc xsql_prepare(struct sqlite3 *db, struct xsql_stmt *stmt);
-struct sqlite3_stmt *xsql_fresh_stmt(struct sqlite3 *db,
-                                     struct xsql_stmt *stmt);
+enum sched_rc xsql_prepare(struct xsql_stmt *stmt);
+struct sqlite3_stmt *xsql_fresh_stmt(struct xsql_stmt *stmt);
 enum sched_rc xsql_step(struct sqlite3_stmt *stmt);
 enum sched_rc xsql_finalize(struct sqlite3_stmt *stmt);
 
-int64_t xsql_last_id(struct sqlite3 *db);
+int64_t xsql_last_id(void);
 
 #endif

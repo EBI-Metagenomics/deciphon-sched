@@ -18,8 +18,7 @@ void sched_seq_init(struct sched_seq *seq, int64_t scan_id, char const *name,
 
 enum sched_rc seq_submit(struct sched_seq *seq)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(SEQ_INSERT));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(SEQ_INSERT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, seq->scan_id)) return EBIND;
@@ -27,14 +26,13 @@ enum sched_rc seq_submit(struct sched_seq *seq)
     if (xsql_bind_str(st, 2, seq->data)) return EBIND;
 
     if (xsql_step(st) != SCHED_END) return ESTEP;
-    seq->id = xsql_last_id(sched);
+    seq->id = xsql_last_id();
     return SCHED_OK;
 }
 
 enum sched_rc seq_delete(void)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(SEQ_DELETE));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(SEQ_DELETE));
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
@@ -42,8 +40,7 @@ enum sched_rc seq_delete(void)
 
 static int next_seq_id(int64_t scan_id, int64_t *seq_id)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(SEQ_GET_NEXT));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(SEQ_GET_NEXT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, *seq_id)) return EBIND;
@@ -60,8 +57,7 @@ static int next_seq_id(int64_t scan_id, int64_t *seq_id)
 
 enum sched_rc sched_seq_get_by_id(struct sched_seq *seq, int64_t id)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(SEQ_GET));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(SEQ_GET));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, id)) return EBIND;

@@ -15,8 +15,7 @@
 static enum sched_rc select_hmm_i64(struct sched_hmm *hmm, int64_t by_value,
                                     enum stmt select_stmt)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(select_stmt));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(select_stmt));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, by_value)) return EBIND;
@@ -37,8 +36,7 @@ static enum sched_rc select_hmm_i64(struct sched_hmm *hmm, int64_t by_value,
 static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
                                     enum stmt select_stmt)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(select_stmt));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(select_stmt));
     if (!st) return EFRESH;
 
     if (xsql_bind_str(st, 0, by_value)) return EBIND;
@@ -109,8 +107,7 @@ enum sched_rc sched_hmm_get_by_filename(struct sched_hmm *hmm,
 
 static enum sched_rc submit(struct sched_hmm *hmm)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(HMM_INSERT));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(HMM_INSERT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, hmm->xxh3)) return EBIND;
@@ -118,7 +115,7 @@ static enum sched_rc submit(struct sched_hmm *hmm)
     if (xsql_bind_i64(st, 2, hmm->job_id)) return EBIND;
 
     if (xsql_step(st) != SCHED_END) return ESTEP;
-    hmm->id = xsql_last_id(sched);
+    hmm->id = xsql_last_id();
     return SCHED_OK;
 }
 
@@ -138,8 +135,7 @@ enum sched_rc hmm_submit(void *hmm, int64_t job_id)
 
 enum sched_rc hmm_delete(void)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(HMM_DELETE));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(HMM_DELETE));
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete hmm");

@@ -1,4 +1,5 @@
 #include "xsql.h"
+#include "logger.h"
 #include "sched/rc.h"
 #include "sqlite3/sqlite3.h"
 #include "strlcpy.h"
@@ -7,6 +8,8 @@
 
 static_assert(SQLITE_VERSION_NUMBER >= XSQL_REQUIRED_VERSION,
               "Minimum sqlite requirement.");
+
+static struct sqlite3 *sched = NULL;
 
 bool xsql_is_thread_safe(void) { return sqlite3_threadsafe(); }
 
@@ -69,47 +72,47 @@ enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
     return SCHED_OK;
 }
 
-enum sched_rc xsql_open(char const *filepath, struct sqlite3 **db)
+enum sched_rc xsql_open(char const *filepath)
 {
-    if (sqlite3_open(filepath, db)) return SCHED_EFAIL;
-    if (xsql_exec(*db, "PRAGMA foreign_keys = ON;", 0, 0))
+    if (sqlite3_open(filepath, &sched)) return SCHED_EFAIL;
+    if (xsql_exec("PRAGMA foreign_keys = ON;", 0, 0))
     {
-        sqlite3_close(*db);
+        sqlite3_close(sched);
         return SCHED_EFAIL;
     }
     return SCHED_OK;
 }
 
-enum sched_rc xsql_close(struct sqlite3 *db)
+enum sched_rc xsql_close(void)
 {
-    return sqlite3_close(db) ? SCHED_EFAIL : SCHED_OK;
+    return sqlite3_close(sched) ? SCHED_EFAIL : SCHED_OK;
 }
 
-enum sched_rc xsql_exec(struct sqlite3 *db, char const *sql, xsql_func_t fn,
-                        void *arg)
+enum sched_rc xsql_exec(char const *sql, xsql_func_t fn, void *arg)
 {
-    return sqlite3_exec(db, sql, fn, arg, 0) ? SCHED_EFAIL : SCHED_OK;
+    return sqlite3_exec(sched, sql, fn, arg, 0) ? SCHED_EFAIL : SCHED_OK;
 }
 
-enum sched_rc xsql_begin_transaction(struct sqlite3 *db)
+enum sched_rc xsql_begin_transaction(void)
 {
-    return xsql_exec(db, "BEGIN TRANSACTION;", 0, 0);
+    return xsql_exec("BEGIN TRANSACTION;", 0, 0);
 }
 
-enum sched_rc xsql_end_transaction(struct sqlite3 *db)
+enum sched_rc xsql_end_transaction(void)
 {
-    return xsql_exec(db, "END TRANSACTION;", 0, 0);
+    return xsql_exec("END TRANSACTION;", 0, 0);
 }
 
-enum sched_rc xsql_rollback_transaction(struct sqlite3 *db)
+enum sched_rc xsql_rollback_transaction(void)
 {
-    return xsql_exec(db, "ROLLBACK TRANSACTION;", 0, 0);
+    return xsql_exec("ROLLBACK TRANSACTION;", 0, 0);
 }
 
-enum sched_rc xsql_prepare(struct sqlite3 *db, struct xsql_stmt *stmt)
+enum sched_rc xsql_prepare(struct xsql_stmt *stmt)
 {
-    return sqlite3_prepare_v2(db, stmt->query, -1, &stmt->st, 0) ? SCHED_EFAIL
-                                                                 : SCHED_OK;
+    return sqlite3_prepare_v2(sched, stmt->query, -1, &stmt->st, 0)
+               ? SCHED_EFAIL
+               : SCHED_OK;
 }
 
 static enum sched_rc reset(struct sqlite3_stmt *stmt)
@@ -120,13 +123,13 @@ static enum sched_rc reset(struct sqlite3_stmt *stmt)
     return SCHED_OK;
 }
 
-struct sqlite3_stmt *xsql_fresh_stmt(struct sqlite3 *db, struct xsql_stmt *stmt)
+struct sqlite3_stmt *xsql_fresh_stmt(struct xsql_stmt *stmt)
 {
     int code = sqlite3_reset(stmt->st);
     if (code == SQLITE_CONSTRAINT)
     {
         if (sqlite3_finalize(stmt->st)) return 0;
-        if (sqlite3_prepare_v2(db, stmt->query, -1, &stmt->st, 0)) return 0;
+        if (sqlite3_prepare_v2(sched, stmt->query, -1, &stmt->st, 0)) return 0;
         return reset(stmt->st) ? 0 : stmt->st;
     }
     return code ? 0 : stmt->st;
@@ -146,7 +149,4 @@ enum sched_rc xsql_finalize(struct sqlite3_stmt *stmt)
     return sqlite3_finalize(stmt) ? SCHED_EFAIL : SCHED_OK;
 }
 
-int64_t xsql_last_id(struct sqlite3 *db)
-{
-    return sqlite3_last_insert_rowid(db);
-}
+int64_t xsql_last_id(void) { return sqlite3_last_insert_rowid(sched); }

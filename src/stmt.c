@@ -77,14 +77,12 @@ static struct xsql_stmt stmt[ARRAY_SIZE(queries)] = {0};
 
 enum sched_rc stmt_init(void)
 {
-    struct sqlite3 *sched = sched_handle();
-
     for (unsigned i = 0; i < ARRAY_SIZE(queries); ++i)
     {
         stmt[i].st = stmts[i];
         stmt[i].query = queries[i];
 
-        if (xsql_prepare(sched, stmt + i)) return efail("prepare stmt");
+        if (xsql_prepare(stmt + i)) return efail("prepare stmt");
     }
     return SCHED_OK;
 }

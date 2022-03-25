@@ -1,6 +1,5 @@
 #include "db.h"
 #include "logger.h"
-#include "sched.h"
 #include "sched/db.h"
 #include "sched/hmm.h"
 #include "sched/rc.h"
@@ -23,8 +22,7 @@ void sched_db_init(struct sched_db *db)
 static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
                                    enum stmt select_stmt)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(select_stmt));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(select_stmt));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, by_value)) return EBIND;
@@ -55,8 +53,7 @@ enum sched_rc sched_db_get_by_xxh3(struct sched_db *db, int64_t xxh3)
 static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
                                    enum stmt select_stmt)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(select_stmt));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(select_stmt));
     if (!st) return EFRESH;
 
     if (xsql_bind_str(st, 0, by_value)) return EBIND;
@@ -82,8 +79,7 @@ enum sched_rc sched_db_get_by_filename(struct sched_db *db,
 
 static enum sched_rc db_next(struct sched_db *db)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(DB_GET_NEXT));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_GET_NEXT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, db->id)) return EBIND;
@@ -127,11 +123,10 @@ cleanup:
 
 static enum sched_rc add_db(char const *filename, struct sched_db *db)
 {
-    struct sqlite3 *sched = sched_handle();
     enum sched_rc rc = init_db(db, filename);
     if (rc) return rc;
 
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(DB_INSERT));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_INSERT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, db->xxh3)) return EBIND;
@@ -142,7 +137,7 @@ static enum sched_rc add_db(char const *filename, struct sched_db *db)
     if (rc == SCHED_EINVAL) return einval("add db");
     if (rc != SCHED_END) return efail("add db");
 
-    db->id = xsql_last_id(sched);
+    db->id = xsql_last_id();
     return SCHED_OK;
 }
 
@@ -178,8 +173,7 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
 
 enum sched_rc db_delete(void)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(DB_DELETE));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_DELETE));
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");

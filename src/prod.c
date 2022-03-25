@@ -114,8 +114,7 @@ enum sched_rc sched_prod_write_end(unsigned thread_num)
 
 static enum sched_rc get_prod(struct sched_prod *prod)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_GET));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_GET));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
@@ -147,8 +146,7 @@ static enum sched_rc get_prod(struct sched_prod *prod)
 
 enum sched_rc prod_next(struct sched_prod *prod)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_GET_NEXT));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_GET_NEXT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
@@ -166,8 +164,7 @@ enum sched_rc prod_next(struct sched_prod *prod)
 
 enum sched_rc prod_delete(void)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_DELETE));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_DELETE));
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
@@ -208,15 +205,14 @@ static enum sched_rc parse_prod_file_header(FILE *fp)
 
 enum sched_rc sched_prod_add_file(FILE *fp)
 {
-    struct sqlite3 *sched = sched_handle();
     enum sched_rc rc = SCHED_OK;
-    if (xsql_begin_transaction(sched)) CLEANUP(efail("submit prod"));
+    if (xsql_begin_transaction()) CLEANUP(efail("submit prod"));
 
     if ((rc = parse_prod_file_header(fp))) goto cleanup;
 
     do
     {
-        struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_INSERT));
+        struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_INSERT));
         if (!st) CLEANUP(efail("submit prod"));
         if (tok_next(&tok, fp)) CLEANUP(eparse("parse prods file"));
         if (tok_id(&tok) == TOK_EOF) break;
@@ -254,18 +250,17 @@ enum sched_rc sched_prod_add_file(FILE *fp)
         if (rc != SCHED_END) CLEANUP(efail("submit prod"));
     } while (true);
 
-    if (xsql_end_transaction(sched)) CLEANUP(efail("submit prod"));
+    if (xsql_end_transaction()) CLEANUP(efail("submit prod"));
     return SCHED_OK;
 
 cleanup:
-    xsql_rollback_transaction(sched);
+    xsql_rollback_transaction();
     return rc;
 }
 
 enum sched_rc sched_prod_get_by_id(struct sched_prod *prod, int64_t id)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_GET));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_GET));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, id)) return EBIND;
@@ -295,8 +290,7 @@ enum sched_rc sched_prod_get_by_id(struct sched_prod *prod, int64_t id)
 
 enum sched_rc sched_prod_add(struct sched_prod *prod)
 {
-    struct sqlite3 *sched = sched_handle();
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt_get(PROD_INSERT));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_INSERT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, prod->scan_id)) return EBIND;
@@ -314,7 +308,7 @@ enum sched_rc sched_prod_add(struct sched_prod *prod)
     if (xsql_bind_str(st, 8, prod->match)) return EBIND;
 
     if (xsql_step(st) != SCHED_END) return ESTEP;
-    prod->id = xsql_last_id(sched);
+    prod->id = xsql_last_id();
     return SCHED_OK;
 }
 
