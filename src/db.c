@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "sched.h"
 #include "sched/db.h"
+#include "sched/hmm.h"
 #include "sched/rc.h"
 #include "sched/sched.h"
 #include "stmt.h"
@@ -183,9 +184,23 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
                            int64_t hmm_id)
 {
     if (!xfile_is_name(filename)) return einval("invalid db filename");
+    if (!xfile_exists(filename)) return eio("file not found");
+
+    size_t len = strlen(filename);
+    if (len < 5) return einval("filename is too short");
+    if (strncmp(&filename[len - 4], ".dcp", 4))
+        return einval("invalid extension");
+
+    struct sched_hmm hmm = {0};
+    enum sched_rc rc = sched_hmm_get_by_id(&hmm, hmm_id);
+    if (rc == SCHED_NOTFOUND) return einval("hmm not found");
+    if (rc) return rc;
+
+    if (len != strlen(hmm.filename) || strncmp(filename, hmm.filename, len - 4))
+        return einval("incompatible filenames");
 
     struct sched_db tmp = {0};
-    enum sched_rc rc = select_db_str(&tmp, filename, DB_SELECT_BY_FILENAME);
+    rc = select_db_str(&tmp, filename, DB_SELECT_BY_FILENAME);
 
     if (rc == SCHED_OK) return einval("db with same filename already exist");
 

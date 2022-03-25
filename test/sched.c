@@ -9,6 +9,9 @@ struct sched_seq seq = {0};
 
 void test_sched_reopen(void);
 void test_sched_submit_hmm(void);
+void test_sched_submit_hmm_nofile(void);
+void test_sched_submit_hmm_same_file(void);
+void test_sched_submit_hmm_wrong_extension(void);
 void test_sched_add_db(void);
 void test_sched_submit_scan(void);
 void test_sched_submit_and_fetch_scan_job(void);
@@ -19,6 +22,9 @@ int main(void)
 {
     test_sched_reopen();
     test_sched_submit_hmm();
+    test_sched_submit_hmm_nofile();
+    test_sched_submit_hmm_same_file();
+    test_sched_submit_hmm_wrong_extension();
     test_sched_add_db();
     // test_sched_submit_scan();
     // test_sched_submit_and_fetch_scan_job();
@@ -55,38 +61,83 @@ static void create_file(char const *path, int seed)
 void test_sched_submit_hmm(void)
 {
     char const sched_path[] = TMPDIR "/file.sched";
-    char const nofile[] = TMPDIR "/file1a.hmm";
-    char const file1a[] = "file1a.hmm";
-    char const file1b[] = "file1b.hmm";
+    char const file1[] = "file1.hmm";
     char const file2[] = "file2.hmm";
-    char const file3[] = "does_not_exist.hmm";
 
-    create_file(nofile, 0);
-    create_file(file1a, 0);
-    create_file(file1b, 0);
+    create_file(file1, 0);
     create_file(file2, 1);
 
     remove(sched_path);
 
     EQ(sched_init(sched_path), SCHED_OK);
+    sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_init(&hmm, nofile), SCHED_EINVAL);
-
-    EQ(sched_hmm_init(&hmm, file1a), SCHED_OK);
+    EQ(sched_hmm_set_file(&hmm, file1), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
     EQ(sched_job_submit(&job, &hmm), SCHED_OK);
 
-    EQ(sched_hmm_init(&hmm, file1b), SCHED_OK);
+    EQ(sched_hmm_set_file(&hmm, file2), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+
+    EQ(sched_cleanup(), SCHED_OK);
+}
+
+void test_sched_submit_hmm_nofile(void)
+{
+    char const sched_path[] = TMPDIR "/file.sched";
+    char const nofile[] = TMPDIR "/file.hmm";
+
+    create_file(nofile, 0);
+
+    remove(sched_path);
+
+    EQ(sched_init(sched_path), SCHED_OK);
+    sched_hmm_init(&hmm);
+
+    EQ(sched_hmm_set_file(&hmm, nofile), SCHED_EINVAL);
+
+    EQ(sched_cleanup(), SCHED_OK);
+}
+
+void test_sched_submit_hmm_same_file(void)
+{
+    char const sched_path[] = TMPDIR "/file.sched";
+    char const file1a[] = "file1a.hmm";
+    char const file1b[] = "file1b.hmm";
+
+    create_file(file1a, 0);
+    create_file(file1b, 0);
+
+    remove(sched_path);
+
+    EQ(sched_init(sched_path), SCHED_OK);
+    sched_hmm_init(&hmm);
+
+    EQ(sched_hmm_set_file(&hmm, file1a), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+
+    EQ(sched_hmm_set_file(&hmm, file1b), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
     EQ(sched_job_submit(&job, &hmm), SCHED_EINVAL);
 
-    EQ(sched_hmm_init(&hmm, file2), SCHED_OK);
-    sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    EQ(sched_cleanup(), SCHED_OK);
+}
 
-    EQ(sched_hmm_init(&hmm, file3), SCHED_OK);
-    sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_EIO);
+void test_sched_submit_hmm_wrong_extension(void)
+{
+    char const sched_path[] = TMPDIR "/file.sched";
+    char const file[] = "file.hm";
+
+    create_file(file, 0);
+
+    remove(sched_path);
+
+    EQ(sched_init(sched_path), SCHED_OK);
+    sched_hmm_init(&hmm);
+
+    EQ(sched_hmm_set_file(&hmm, file), SCHED_EINVAL);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
@@ -99,7 +150,6 @@ void test_sched_add_db(void)
     char const file1a_hmm[] = "file1a.hmm";
     char const file1b_hmm[] = "file1b.hmm";
     char const file2_hmm[] = "file2.hmm";
-    char const file3_hmm[] = "does_not_exist.hmm";
 
     create_file(nofile_hmm, 0);
     create_file(file1a_hmm, 0);
@@ -127,16 +177,17 @@ void test_sched_add_db(void)
     EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
+    sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_init(&hmm, file1a_hmm), SCHED_OK);
+    EQ(sched_hmm_set_file(&hmm, file1a_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
     EQ(sched_job_submit(&job, &hmm), SCHED_OK);
     EQ(sched_db_add(&db, file1a_dcp, hmm.id), SCHED_OK);
     EQ(db.id, 1);
 
-    EQ(sched_hmm_init(&hmm, file1b_hmm), SCHED_OK);
+    EQ(sched_hmm_set_file(&hmm, file1b_hmm), SCHED_OK);
 
-    EQ(sched_hmm_init(&hmm, file2_hmm), SCHED_OK);
+    EQ(sched_hmm_set_file(&hmm, file2_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
     EQ(sched_job_submit(&job, &hmm), SCHED_OK);
     EQ(sched_db_add(&db, file2_dcp, hmm.id), SCHED_OK);

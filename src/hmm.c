@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static enum sched_rc set_hash(struct sched_hmm *hmm)
+static enum sched_rc hash_setup(struct sched_hmm *hmm)
 {
     FILE *fp = fopen(hmm->filename, "rb");
     if (!fp) return eio("fopen");
@@ -72,7 +72,7 @@ static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
 // static enum sched_rc add_hmm(char const *filename, struct sched_hmm *hmm)
 // {
 //     struct sqlite3 *sched = sched_handle();
-//     enum sched_rc rc = set_hash(hmm, filename);
+//     enum sched_rc rc = hash_setup(hmm, filename);
 //     if (rc) return rc;
 //
 //     struct xsql_stmt *stmt = stmt_get(HMM_INSERT);
@@ -93,15 +93,15 @@ static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
 
 // enum sched_rc hmm_has(char const *filename, struct sched_hmm *hmm)
 // {
-//     enum sched_rc rc = set_hash(hmm, filename);
+//     enum sched_rc rc = hash_setup(hmm, filename);
 //     if (rc) return rc;
 //     return hmm_get_by_xxh3(hmm, hmm->xxh3);
 // }
 
-enum sched_rc hmm_get_by_xxh3(struct sched_hmm *hmm, int64_t xxh3)
-{
-    return select_hmm_i64(hmm, xxh3, HMM_SELECT_BY_XXH3);
-}
+// enum sched_rc hmm_get_by_xxh3(struct sched_hmm *hmm, int64_t xxh3)
+// {
+//     return select_hmm_i64(hmm, xxh3, HMM_SELECT_BY_XXH3);
+// }
 
 enum sched_rc hmm_delete(void)
 {
@@ -116,20 +116,33 @@ enum sched_rc hmm_delete(void)
 // enum sched_rc hmm_hash(char const *filename, int64_t *xxh3)
 // {
 //     struct sched_hmm hmm = {0};
-//     enum sched_rc rc = set_hash(&hmm, filename);
+//     enum sched_rc rc = hash_setup(&hmm, filename);
 //     *xxh3 = hmm.xxh3;
 //     return rc;
 // }
 
-enum sched_rc sched_hmm_init(struct sched_hmm *hmm, char const *filename)
+enum sched_rc sched_hmm_init(struct sched_hmm *hmm)
 {
-    if (!xfile_is_name(filename)) return einval("invalid hmm filename");
     hmm->id = 0;
     hmm->xxh3 = 0;
-    if (!XSTRCPY(hmm, filename, filename))
-        return einval("filename is too long");
+    hmm->filename[0] = 0;
     hmm->job_id = 0;
     return SCHED_OK;
+}
+
+enum sched_rc sched_hmm_set_file(struct sched_hmm *hmm, char const *filename)
+{
+    if (!xfile_is_name(filename)) return einval("invalid hmm filename");
+
+    size_t len = strlen(filename);
+    if (len < 5) return einval("filename is too short");
+    if (strncmp(&filename[len - 4], ".hmm", 4))
+        return einval("invalid extension");
+
+    if (!XSTRCPY(hmm, filename, filename))
+        return einval("filename is too long");
+
+    return hash_setup(hmm);
 }
 
 enum sched_rc sched_hmm_get_by_id(struct sched_hmm *hmm, int64_t id)
@@ -167,13 +180,11 @@ static enum sched_rc submit(struct sched_hmm *hmm)
 enum sched_rc hmm_submit(void *hmm, int64_t job_id)
 {
     struct sched_hmm *h = hmm;
+    if (!h->filename[0]) return einval("file has not been set");
     h->job_id = job_id;
 
-    enum sched_rc rc = set_hash(h);
-    if (rc) return rc;
-
     struct sched_hmm tmp = {0};
-    rc = sched_hmm_get_by_xxh3(&tmp, h->xxh3);
+    enum sched_rc rc = sched_hmm_get_by_xxh3(&tmp, h->xxh3);
     if (rc == SCHED_OK) return einval("hmm already exists");
     if (rc != SCHED_NOTFOUND) return rc;
 
