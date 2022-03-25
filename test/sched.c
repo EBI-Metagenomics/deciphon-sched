@@ -26,10 +26,10 @@ int main(void)
     test_sched_submit_hmm_same_file();
     test_sched_submit_hmm_wrong_extension();
     test_sched_add_db();
-    // test_sched_submit_scan();
-    // test_sched_submit_and_fetch_scan_job();
-    // test_sched_submit_and_fetch_seq();
-    // test_sched_wipe();
+    test_sched_submit_scan();
+    test_sched_submit_and_fetch_scan_job();
+    test_sched_submit_and_fetch_seq();
+    test_sched_wipe();
     return hope_status();
 }
 
@@ -182,6 +182,8 @@ void test_sched_add_db(void)
     EQ(sched_hmm_set_file(&hmm, file1a_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
     EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    EQ(sched_job_set_run(job.id), SCHED_OK);
+    EQ(sched_job_set_done(job.id), SCHED_OK);
     EQ(sched_db_add(&db, file1a_dcp, hmm.id), SCHED_OK);
     EQ(db.id, 1);
 
@@ -190,6 +192,8 @@ void test_sched_add_db(void)
     EQ(sched_hmm_set_file(&hmm, file2_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
     EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    EQ(sched_job_set_run(job.id), SCHED_OK);
+    EQ(sched_job_set_done(job.id), SCHED_OK);
     EQ(sched_db_add(&db, file2_dcp, hmm.id), SCHED_OK);
     EQ(db.id, 2);
 
@@ -198,19 +202,27 @@ void test_sched_add_db(void)
     EQ(sched_cleanup(), SCHED_OK);
 }
 
-#if 0
 void test_sched_submit_scan(void)
 {
     char const sched_path[] = TMPDIR "/submit_job.sched";
-    char const db_filename[] = "submit_job.dcp";
+    char const file_hmm[] = "submit_job.hmm";
+    char const file_dcp[] = "submit_job.dcp";
 
-    create_file(db_filename, 0);
+    create_file(file_hmm, 0);
+    create_file(file_dcp, 1);
     remove(sched_path);
 
     EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
-    EQ(sched_db_add(&db, db_filename), SCHED_OK);
+    sched_hmm_init(&hmm);
+
+    EQ(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    EQ(sched_job_set_run(job.id), SCHED_OK);
+    EQ(sched_job_set_done(job.id), SCHED_OK);
+    EQ(sched_db_add(&db, file_dcp, hmm.id), SCHED_OK);
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
@@ -233,15 +245,25 @@ void test_sched_submit_scan(void)
 void test_sched_submit_and_fetch_scan_job()
 {
     char const sched_path[] = TMPDIR "/submit_and_fetch_job.sched";
-    char const db_filename[] = "submit_and_fetch_job.dcp";
+    char const file_hmm[] = "submit_and_fetch_job.hmm";
+    char const file_dcp[] = "submit_and_fetch_job.dcp";
 
     remove(sched_path);
-    create_file(db_filename, 0);
+    create_file(file_hmm, 0);
+    create_file(file_dcp, 0);
 
     EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
-    EQ(sched_db_add(&db, db_filename), SCHED_OK);
+    sched_hmm_init(&hmm);
+
+    EQ(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    EQ(job.id, 1);
+    EQ(sched_job_set_run(job.id), SCHED_OK);
+    EQ(sched_job_set_done(job.id), SCHED_OK);
+    EQ(sched_db_add(&db, file_dcp, hmm.id), SCHED_OK);
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
@@ -259,11 +281,11 @@ void test_sched_submit_and_fetch_scan_job()
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
 
     EQ(sched_job_next_pend(&job), SCHED_OK);
-    EQ(job.id, 1);
+    EQ(job.id, 2);
     EQ(sched_job_set_run(job.id), SCHED_OK);
 
     EQ(sched_job_next_pend(&job), SCHED_OK);
-    EQ(job.id, 2);
+    EQ(job.id, 3);
     EQ(sched_job_set_run(job.id), SCHED_OK);
 
     EQ(sched_job_next_pend(&job), SCHED_NOTFOUND);
@@ -274,15 +296,25 @@ void test_sched_submit_and_fetch_scan_job()
 void test_sched_submit_and_fetch_seq()
 {
     char const sched_path[] = TMPDIR "/submit_and_fetch_seq.sched";
-    char const db_filename[] = "submit_and_fetch_seq.dcp";
+    char const file_hmm[] = "submit_and_fetch_seq.hmm";
+    char const file_dcp[] = "submit_and_fetch_seq.dcp";
 
     remove(sched_path);
-    create_file(db_filename, 0);
+    create_file(file_hmm, 0);
+    create_file(file_dcp, 0);
 
     EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
-    EQ(sched_db_add(&db, db_filename), SCHED_OK);
+    sched_hmm_init(&hmm);
+
+    EQ(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    EQ(job.id, 1);
+    EQ(sched_job_set_run(job.id), SCHED_OK);
+    EQ(sched_job_set_done(job.id), SCHED_OK);
+    EQ(sched_db_add(&db, file_dcp, hmm.id), SCHED_OK);
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
@@ -300,7 +332,7 @@ void test_sched_submit_and_fetch_seq()
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
 
     EQ(sched_job_next_pend(&job), SCHED_OK);
-    EQ(job.id, 1);
+    EQ(job.id, 2);
 
     EQ(sched_scan_get_by_job_id(&scan, job.id), SCHED_OK);
 
@@ -323,15 +355,25 @@ void test_sched_submit_and_fetch_seq()
 void test_sched_wipe(void)
 {
     char const sched_path[] = TMPDIR "/wipe.sched";
-    char const db_filename[] = "wipe.dcp";
+    char const file_hmm[] = "wipe.hmm";
+    char const file_dcp[] = "wipe.dcp";
 
     remove(sched_path);
-    create_file(db_filename, 0);
+    create_file(file_hmm, 0);
+    create_file(file_dcp, 0);
 
     EQ(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
-    EQ(sched_db_add(&db, db_filename), SCHED_OK);
+    sched_hmm_init(&hmm);
+
+    EQ(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    EQ(job.id, 1);
+    EQ(sched_job_set_run(job.id), SCHED_OK);
+    EQ(sched_job_set_done(job.id), SCHED_OK);
+    EQ(sched_db_add(&db, file_dcp, hmm.id), SCHED_OK);
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
@@ -351,4 +393,3 @@ void test_sched_wipe(void)
     EQ(sched_wipe(), SCHED_OK);
     EQ(sched_cleanup(), SCHED_OK);
 }
-#endif

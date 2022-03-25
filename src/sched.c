@@ -2,6 +2,7 @@
 #include "bug.h"
 #include "compiler.h"
 #include "db.h"
+#include "hmm.h"
 #include "job.h"
 #include "logger.h"
 #include "prod.h"
@@ -71,10 +72,13 @@ enum sched_rc sched_wipe(void)
     rc = scan_delete();
     if (rc) goto cleanup;
 
-    rc = job_delete();
+    rc = db_delete();
     if (rc) goto cleanup;
 
-    rc = db_delete();
+    rc = hmm_delete();
+    if (rc) goto cleanup;
+
+    rc = job_delete();
     if (rc) goto cleanup;
 
     return xsql_end_transaction(sched) ? efail("end wipe") : SCHED_OK;
