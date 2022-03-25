@@ -141,8 +141,7 @@ static enum sched_rc add_db(char const *filename, struct sched_db *db)
     return SCHED_OK;
 }
 
-enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
-                           int64_t hmm_id)
+enum sched_rc check_filename(struct sched_hmm *hmm, char const *filename)
 {
     if (!xfile_is_name(filename)) return einval("invalid db filename");
     if (!xfile_exists(filename)) return eio("file not found");
@@ -152,23 +151,30 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
     if (strncmp(&filename[len - 4], ".dcp", 4))
         return einval("invalid extension");
 
+    if (len != strlen(hmm->filename) ||
+        strncmp(filename, hmm->filename, len - 4))
+        return einval("incompatible filenames");
+
+    return SCHED_OK;
+}
+
+enum sched_rc sched_db_add(struct sched_db *db, char const *filename,
+                           int64_t hmm_id)
+{
+    db->hmm_id = hmm_id;
+
     struct sched_hmm hmm = {0};
     enum sched_rc rc = sched_hmm_get_by_id(&hmm, hmm_id);
     if (rc == SCHED_NOTFOUND) return einval("hmm not found");
     if (rc) return rc;
 
-    if (len != strlen(hmm.filename) || strncmp(filename, hmm.filename, len - 4))
-        return einval("incompatible filenames");
+    if ((rc = check_filename(&hmm, filename))) return rc;
 
     struct sched_db tmp = {0};
     rc = select_db_str(&tmp, filename, DB_GET_BY_FILENAME);
+    if (rc == SCHED_OK) return einval("database already exist");
 
-    if (rc == SCHED_OK) return einval("db with same filename already exist");
-
-    db->hmm_id = hmm_id;
-    if (rc == SCHED_NOTFOUND) return add_db(filename, db);
-
-    return rc;
+    return rc == SCHED_NOTFOUND ? add_db(filename, db) : rc;
 }
 
 enum sched_rc db_delete(void)

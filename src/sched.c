@@ -12,10 +12,10 @@
 #include "seq.h"
 #include "seq_queue.h"
 #include "stmt.h"
-#include "strlcpy.h"
 #include "utc.h"
 #include "xfile.h"
 #include "xsql.h"
+#include "xstrcpy.h"
 #include <assert.h>
 #include <limits.h>
 #include <stdbool.h>
@@ -29,7 +29,8 @@ enum sched_rc is_empty(char const *filepath, bool *empty);
 
 enum sched_rc sched_init(char const *filepath)
 {
-    strlcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath));
+    if (!strlcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath)))
+        return eio("filepath is too long");
 
     if (!xsql_is_thread_safe()) return efail("not thread safe");
     if (xsql_version() < XSQL_REQUIRED_VERSION) return efail("old sqlite3");
