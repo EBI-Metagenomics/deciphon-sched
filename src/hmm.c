@@ -12,17 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static enum sched_rc hash_setup(struct sched_hmm *hmm)
-{
-    FILE *fp = fopen(hmm->filename, "rb");
-    if (!fp) return eio("fopen");
-
-    enum sched_rc rc = xfile_hash(fp, (uint64_t *)&hmm->xxh3);
-
-    fclose(fp);
-    return rc;
-}
-
 static enum sched_rc select_hmm_i64(struct sched_hmm *hmm, int64_t by_value,
                                     enum stmt select_stmt)
 {
@@ -69,58 +58,6 @@ static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
     return SCHED_OK;
 }
 
-// static enum sched_rc add_hmm(char const *filename, struct sched_hmm *hmm)
-// {
-//     struct sqlite3 *sched = sched_handle();
-//     enum sched_rc rc = hash_setup(hmm, filename);
-//     if (rc) return rc;
-//
-//     struct xsql_stmt *stmt = stmt_get(HMM_INSERT);
-//     struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-//     if (!st) return EFRESH;
-//
-//     if (xsql_bind_i64(st, 0, hmm->xxh3)) return EBIND;
-//     if (xsql_bind_str(st, 1, filename)) return EBIND;
-//     if (xsql_bind_i64(st, 2, hmm->job_id)) return EBIND;
-//
-//     rc = xsql_step(st);
-//     if (rc == SCHED_EINVAL) return einval("add hmm");
-//     if (rc != SCHED_END) return efail("add hmm");
-//
-//     hmm->id = xsql_last_id(sched);
-//     return SCHED_OK;
-// }
-
-// enum sched_rc hmm_has(char const *filename, struct sched_hmm *hmm)
-// {
-//     enum sched_rc rc = hash_setup(hmm, filename);
-//     if (rc) return rc;
-//     return hmm_get_by_xxh3(hmm, hmm->xxh3);
-// }
-
-// enum sched_rc hmm_get_by_xxh3(struct sched_hmm *hmm, int64_t xxh3)
-// {
-//     return select_hmm_i64(hmm, xxh3, HMM_SELECT_BY_XXH3);
-// }
-
-enum sched_rc hmm_delete(void)
-{
-    struct sqlite3 *sched = sched_handle();
-    struct xsql_stmt *stmt = stmt_get(HMM_DELETE);
-    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
-    if (!st) return EFRESH;
-
-    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete hmm");
-}
-
-// enum sched_rc hmm_hash(char const *filename, int64_t *xxh3)
-// {
-//     struct sched_hmm hmm = {0};
-//     enum sched_rc rc = hash_setup(&hmm, filename);
-//     *xxh3 = hmm.xxh3;
-//     return rc;
-// }
-
 enum sched_rc sched_hmm_init(struct sched_hmm *hmm)
 {
     hmm->id = 0;
@@ -128,6 +65,17 @@ enum sched_rc sched_hmm_init(struct sched_hmm *hmm)
     hmm->filename[0] = 0;
     hmm->job_id = 0;
     return SCHED_OK;
+}
+
+static enum sched_rc hash_setup(struct sched_hmm *hmm)
+{
+    FILE *fp = fopen(hmm->filename, "rb");
+    if (!fp) return eio("fopen");
+
+    enum sched_rc rc = xfile_hash(fp, (uint64_t *)&hmm->xxh3);
+
+    fclose(fp);
+    return rc;
 }
 
 enum sched_rc sched_hmm_set_file(struct sched_hmm *hmm, char const *filename)
@@ -191,21 +139,12 @@ enum sched_rc hmm_submit(void *hmm, int64_t job_id)
     return submit(h);
 }
 
-// enum sched_rc sched_hmm_add(struct sched_hmm *hmm, char const *filename)
-// {
-//     char really_filename[FILENAME_SIZE] = {0};
-//     xfile_basename(really_filename, filename);
-//     if (strcmp(filename, really_filename))
-//         return einval("invalid hmm filename");
-//
-//     struct sched_hmm tmp = {0};
-//     enum sched_rc rc = select_hmm_str(&tmp, filename,
-//     HMM_SELECT_BY_FILENAME);
-//
-//     if (rc == SCHED_OK) return einval("hmm with same filename already
-//     exist");
-//
-//     if (rc == SCHED_NOTFOUND) return add_hmm(filename, hmm);
-//
-//     return rc;
-// }
+enum sched_rc hmm_delete(void)
+{
+    struct sqlite3 *sched = sched_handle();
+    struct xsql_stmt *stmt = stmt_get(HMM_DELETE);
+    struct sqlite3_stmt *st = xsql_fresh_stmt(sched, stmt);
+    if (!st) return EFRESH;
+
+    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete hmm");
+}
