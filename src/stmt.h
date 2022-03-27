@@ -9,6 +9,7 @@ enum stmt
     HMM_GET_BY_ID,
     HMM_GET_BY_XXH3,
     HMM_GET_BY_FILENAME,
+    HMM_GET_NEXT,
     HMM_DELETE,
     DB_INSERT,
     DB_GET_BY_ID,

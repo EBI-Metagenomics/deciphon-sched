@@ -103,7 +103,7 @@ enum sched_rc sched_hmm_get_by_filename(struct sched_hmm *hmm,
 
 static enum sched_rc hmm_next(struct sched_hmm *hmm)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_GET_NEXT));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(HMM_GET_NEXT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, hmm->id)) return EBIND;

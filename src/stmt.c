@@ -15,6 +15,7 @@ static char const *const queries[] =
     [HMM_GET_BY_ID]       = "SELECT * FROM hmm WHERE       id = ?;",
     [HMM_GET_BY_XXH3]     = "SELECT * FROM hmm WHERE    xxh3  = ?; ",
     [HMM_GET_BY_FILENAME] = "SELECT * FROM hmm WHERE filename = ?;",
+    [HMM_GET_NEXT]        = "SELECT * FROM hmm WHERE id > ? ORDER BY id ASC LIMIT 1;",
 
     [HMM_DELETE] = "DELETE FROM hmm;",
 
