@@ -2,7 +2,7 @@
 #include "logger.h"
 #include "sched/rc.h"
 #include "sqlite3/sqlite3.h"
-#include "strlcpy.h"
+#include "xstrcpy.h"
 #include <assert.h>
 #include <stdlib.h>
 
@@ -68,8 +68,7 @@ enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
     char const *str = (char const *)sqlite3_column_text(stmt, col);
     if (!str) return SCHED_EFAIL;
     sqlite3_column_bytes(stmt, col);
-    strlcpy((char *)txt.str, str, txt.len + 1);
-    return SCHED_OK;
+    return xstrcpy((char *)txt.str, str, txt.len + 1) ? SCHED_OK : SCHED_EFAIL;
 }
 
 enum sched_rc xsql_open(char const *filepath)

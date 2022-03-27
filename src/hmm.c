@@ -51,13 +51,12 @@ static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
     return SCHED_OK;
 }
 
-enum sched_rc sched_hmm_init(struct sched_hmm *hmm)
+void sched_hmm_init(struct sched_hmm *hmm)
 {
     hmm->id = 0;
     hmm->xxh3 = 0;
     hmm->filename[0] = 0;
     hmm->job_id = 0;
-    return SCHED_OK;
 }
 
 static enum sched_rc hash_setup(struct sched_hmm *hmm)
@@ -100,6 +99,36 @@ enum sched_rc sched_hmm_get_by_filename(struct sched_hmm *hmm,
                                         char const *filename)
 {
     return select_hmm_str(hmm, filename, HMM_GET_BY_FILENAME);
+}
+
+static enum sched_rc hmm_next(struct sched_hmm *hmm)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_GET_NEXT));
+    if (!st) return EFRESH;
+
+    if (xsql_bind_i64(st, 0, hmm->id)) return EBIND;
+
+    enum sched_rc rc = xsql_step(st);
+    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc != SCHED_OK) return ESTEP;
+
+    hmm->id = xsql_get_i64(st, 0);
+    hmm->xxh3 = xsql_get_i64(st, 1);
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*hmm, filename))) return ECPYTXT;
+    hmm->job_id = xsql_get_i64(st, 3);
+
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
+}
+
+enum sched_rc sched_hmm_get_all(sched_hmm_set_func_t fn, struct sched_hmm *hmm,
+                                void *arg)
+{
+    enum sched_rc rc = SCHED_OK;
+
+    sched_hmm_init(hmm);
+    while ((rc = hmm_next(hmm)) == SCHED_OK)
+        fn(hmm, arg);
+    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
 
 static enum sched_rc submit(struct sched_hmm *hmm)

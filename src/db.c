@@ -90,8 +90,9 @@ static enum sched_rc db_next(struct sched_db *db)
     db->id = xsql_get_i64(st, 0);
     db->xxh3 = xsql_get_i64(st, 1);
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ECPYTXT;
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    db->hmm_id = xsql_get_i64(st, 3);
+
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc sched_db_get_all(sched_db_set_func_t fn, struct sched_db *db,
