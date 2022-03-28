@@ -66,6 +66,18 @@ enum sched_rc sched_cleanup(void)
     return xsql_close();
 }
 
+static void delete_db_file(struct sched_db *db, void *arg)
+{
+    (void)arg;
+    if (remove(db->filename)) eio("failed to remove file");
+}
+
+static void delete_hmm_file(struct sched_hmm *hmm, void *arg)
+{
+    (void)arg;
+    if (remove(hmm->filename)) eio("failed to remove file");
+}
+
 enum sched_rc sched_wipe(void)
 {
     enum sched_rc rc = xsql_begin_transaction();
@@ -84,7 +96,15 @@ enum sched_rc sched_wipe(void)
     rc = scan_delete();
     if (rc) goto cleanup;
 
+    struct sched_db db = {0};
+    rc = sched_db_get_all(delete_db_file, &db, 0);
+    if (rc) goto cleanup;
+
     rc = db_delete();
+    if (rc) goto cleanup;
+
+    struct sched_hmm hmm = {0};
+    rc = sched_hmm_get_all(delete_hmm_file, &hmm, 0);
     if (rc) goto cleanup;
 
     rc = hmm_delete();
