@@ -15,7 +15,7 @@ struct xfile_tmp
     FILE *fp;
 };
 
-enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash);
+enum sched_rc xfile_hash(FILE *restrict fp, int64_t *hash);
 bool xfile_is_name(char const *filename);
 
 bool xfile_exists(char const *filepath);

@@ -64,7 +64,7 @@ static enum sched_rc hash_setup(struct sched_hmm *hmm)
     FILE *fp = fopen(hmm->filename, "rb");
     if (!fp) return eio("fopen");
 
-    enum sched_rc rc = xfile_hash(fp, (uint64_t *)&hmm->xxh3);
+    enum sched_rc rc = xfile_hash(fp, &hmm->xxh3);
 
     fclose(fp);
     return rc;

@@ -22,7 +22,7 @@
 
 static_assert(same_type(XXH64_hash_t, uint64_t), "XXH64_hash_t is uint64_t");
 
-enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
+enum sched_rc xfile_hash(FILE *restrict fp, int64_t *hash)
 {
     int rc = SCHED_EFAIL;
     XXH3_state_t *state = XXH3_createState();
@@ -50,9 +50,14 @@ enum sched_rc xfile_hash(FILE *restrict fp, uint64_t *hash)
         rc = eio("fread");
         goto cleanup;
     }
-
     rc = SCHED_OK;
-    *hash = XXH3_64bits_digest(state);
+
+    union
+    {
+        int64_t const i;
+        uint64_t const u;
+    } const h = {.u = XXH3_64bits_digest(state)};
+    *hash = h.i;
 
 cleanup:
     XXH3_freeState(state);

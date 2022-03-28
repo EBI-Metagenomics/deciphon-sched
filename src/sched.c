@@ -8,6 +8,7 @@
 #include "prod.h"
 #include "scan.h"
 #include "sched/rc.h"
+#include "sched_health.h"
 #include "schema.h"
 #include "seq.h"
 #include "seq_queue.h"
@@ -29,7 +30,7 @@ enum sched_rc is_empty(char const *filepath, bool *empty);
 
 enum sched_rc sched_init(char const *filepath)
 {
-    if (!strlcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath)))
+    if (!xstrcpy(sched_filepath, filepath, ARRAY_SIZE(sched_filepath)))
         return eio("filepath is too long");
 
     if (!xsql_is_thread_safe()) return efail("not thread safe");
@@ -46,6 +47,17 @@ enum sched_rc sched_init(char const *filepath)
 
     if (xsql_open(sched_filepath)) return EOPENSCHED;
     return stmt_init() ? (xsql_close(), EEXEC) : SCHED_OK;
+}
+
+enum sched_rc sched_health_check(struct sched_health *health)
+{
+    struct sched_db db = {0};
+    struct sched_hmm hmm = {0};
+
+    enum sched_rc rc = sched_db_get_all(health_check_db, &db, health);
+    if (rc) return rc;
+
+    return sched_hmm_get_all(health_check_hmm, &hmm, &health);
 }
 
 enum sched_rc sched_cleanup(void)

@@ -111,7 +111,7 @@ static enum sched_rc init_db(struct sched_db *db, char const *filename)
     FILE *fp = fopen(filename, "rb");
     if (!fp) return eio("fopen");
 
-    enum sched_rc rc = xfile_hash(fp, (uint64_t *)&db->xxh3);
+    enum sched_rc rc = xfile_hash(fp, &db->xxh3);
     if (rc) goto cleanup;
 
     XSTRCPY(db, filename, filename);
