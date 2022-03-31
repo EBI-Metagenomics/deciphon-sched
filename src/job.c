@@ -225,8 +225,7 @@ enum sched_rc job_set_error(int64_t id, char const *error, int64_t exec_ended)
     if (xsql_bind_i64(st, 1, exec_ended)) return EBIND;
     if (xsql_bind_i64(st, 2, id)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc job_set_done(int64_t id, int64_t exec_ended)
@@ -237,8 +236,7 @@ enum sched_rc job_set_done(int64_t id, int64_t exec_ended)
     if (xsql_bind_i64(st, 0, exec_ended)) return EBIND;
     if (xsql_bind_i64(st, 1, id)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc job_delete(void)
@@ -279,6 +277,5 @@ enum sched_rc sched_job_state(int64_t id, enum sched_job_state *state)
     if (rc) ECPYTXT;
     *state = resolve_job_state(job_state);
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }

@@ -141,8 +141,7 @@ static enum sched_rc get_prod(struct sched_prod *prod)
 
     if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, match))) return ECPYTXT;
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc prod_next(struct sched_prod *prod)
@@ -285,8 +284,7 @@ enum sched_rc sched_prod_get_by_id(struct sched_prod *prod, int64_t id)
 
     if (xsql_cpy_txt(st, 9, XSQL_TXT_OF(*prod, match))) return ECPYTXT;
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc sched_prod_add(struct sched_prod *prod)

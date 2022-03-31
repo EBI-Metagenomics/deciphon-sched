@@ -35,8 +35,7 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ECPYTXT;
     db->hmm_id = xsql_get_i64(st, 3);
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc sched_db_get_by_id(struct sched_db *db, int64_t id)
@@ -66,8 +65,7 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ECPYTXT;
     db->hmm_id = xsql_get_i64(st, 3);
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc sched_db_get_by_filename(struct sched_db *db,

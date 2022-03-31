@@ -26,8 +26,7 @@ static enum sched_rc select_hmm_i64(struct sched_hmm *hmm, int64_t by_value,
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*hmm, filename))) return ECPYTXT;
     hmm->job_id = xsql_get_i64(st, 3);
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
@@ -47,8 +46,7 @@ static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*hmm, filename))) return ECPYTXT;
     hmm->job_id = xsql_get_i64(st, 3);
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 void sched_hmm_init(struct sched_hmm *hmm)

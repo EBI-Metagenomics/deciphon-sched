@@ -58,8 +58,7 @@ static int next_seq_id(int64_t scan_id, int64_t *seq_id)
     if (rc != SCHED_OK) return efail("get next seq id");
     *seq_id = xsql_get_i64(st, 0);
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc sched_seq_get_by_id(struct sched_seq *seq, int64_t id)
@@ -79,14 +78,13 @@ enum sched_rc sched_seq_get_by_id(struct sched_seq *seq, int64_t id)
     if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*seq, name))) return ECPYTXT;
     if (xsql_cpy_txt(st, 3, XSQL_TXT_OF(*seq, data))) return ECPYTXT;
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc sched_seq_next(struct sched_seq *seq)
 {
     enum sched_rc rc = next_seq_id(seq->scan_id, &seq->id);
-    if (rc == SCHED_NOTFOUND) return SCHED_END;
+    if (rc == SCHED_NOTFOUND) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) return rc;
     return sched_seq_get_by_id(seq, seq->id);
 }

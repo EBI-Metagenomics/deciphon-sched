@@ -347,7 +347,7 @@ void test_sched_submit_and_fetch_seq()
     EQ(seq.scan_id, 1);
     EQ(seq.name, "seq1");
     EQ(seq.data, "ACTTGCCG");
-    EQ(sched_seq_next(&seq), SCHED_END);
+    EQ(sched_seq_next(&seq), SCHED_NOTFOUND);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
