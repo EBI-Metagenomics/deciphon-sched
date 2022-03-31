@@ -17,10 +17,10 @@ typedef enum sched_rc (*submit_job_func_t)(void *actual_job, int64_t job_id);
 static submit_job_func_t submit_job_func[] = {
     [SCHED_SCAN] = scan_submit, [SCHED_HMM] = hmm_submit};
 
-void sched_job_init(struct sched_job *job, enum sched_job_type type)
+static void job_init(struct sched_job *job)
 {
     job->id = 0;
-    job->type = (int)type;
+    job->type = 0;
 
     XSTRCPY(job, state, "pend");
     job->progress = 0;
@@ -29,6 +29,28 @@ void sched_job_init(struct sched_job *job, enum sched_job_type type)
     job->submission = 0;
     job->exec_started = 0;
     job->exec_ended = 0;
+}
+
+void sched_job_init(struct sched_job *job, enum sched_job_type type)
+{
+    job_init(job);
+    job->type = (int)type;
+}
+
+static enum sched_rc set_job(struct sched_job *job, struct sqlite3_stmt *st)
+{
+    job->id = xsql_get_i64(st, 0);
+    job->type = xsql_get_int(st, 1);
+
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*job, state))) ECPYTXT;
+    job->progress = xsql_get_int(st, 3);
+    if (xsql_cpy_txt(st, 4, XSQL_TXT_OF(*job, error))) ECPYTXT;
+
+    job->submission = xsql_get_i64(st, 5);
+    job->exec_started = xsql_get_i64(st, 6);
+    job->exec_ended = xsql_get_i64(st, 7);
+
+    return SCHED_OK;
 }
 
 enum sched_rc sched_job_get_by_id(struct sched_job *job, int64_t id)
@@ -42,19 +64,36 @@ enum sched_rc sched_job_get_by_id(struct sched_job *job, int64_t id)
     if (rc == SCHED_END) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) efail("get job");
 
-    job->id = xsql_get_i64(st, 0);
-    job->type = xsql_get_int(st, 1);
+    if ((rc = set_job(job, st))) return rc;
 
-    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*job, state))) ECPYTXT;
-    job->progress = xsql_get_int(st, 3);
-    if (xsql_cpy_txt(st, 4, XSQL_TXT_OF(*job, error))) ECPYTXT;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
+}
 
-    job->submission = xsql_get_i64(st, 5);
-    job->exec_started = xsql_get_i64(st, 6);
-    job->exec_ended = xsql_get_i64(st, 7);
+static enum sched_rc job_next(struct sched_job *job)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(JOB_GET_NEXT));
+    if (!st) return EFRESH;
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    if (xsql_bind_i64(st, 0, job->id)) return EBIND;
+
+    enum sched_rc rc = xsql_step(st);
+    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc != SCHED_OK) return ESTEP;
+
+    if ((rc = set_job(job, st))) return rc;
+
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
+}
+
+enum sched_rc sched_job_get_all(sched_job_set_func_t fn, struct sched_job *job,
+                                void *arg)
+{
+    enum sched_rc rc = SCHED_OK;
+
+    job_init(job);
+    while ((rc = job_next(job)) == SCHED_OK)
+        fn(job, arg);
+    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
 
 static enum sched_rc next_pend_job_id(int64_t *id)
@@ -142,6 +181,29 @@ cleanup:
     return rc;
 }
 
+enum sched_rc sched_job_add_progress(int64_t id, int progress)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(JOB_ADD_PROGRESS));
+    if (!st) return EFRESH;
+
+    if (xsql_bind_i64(st, 0, progress)) return EBIND;
+    if (xsql_bind_i64(st, 1, id)) return EBIND;
+
+    if (xsql_step(st) != SCHED_END) return ESTEP;
+    return SCHED_OK;
+}
+
+enum sched_rc sched_job_remove(int64_t id)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(JOB_DELETE_BY_ID));
+    if (!st) return EFRESH;
+
+    if (xsql_bind_i64(st, 0, id)) return EBIND;
+
+    if (xsql_step(st) != SCHED_END) return ESTEP;
+    return SCHED_OK;
+}
+
 enum sched_rc job_set_run(int64_t id, int64_t exec_started)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(JOB_SET_RUN));
@@ -184,7 +246,7 @@ enum sched_rc job_delete(void)
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(JOB_DELETE));
     if (!st) return EFRESH;
 
-    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
+    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete job");
 }
 
 static enum sched_job_state resolve_job_state(char const *state)

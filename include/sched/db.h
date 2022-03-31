@@ -25,4 +25,6 @@ enum sched_rc sched_db_get_all(sched_db_set_func_t, struct sched_db *,
 
 enum sched_rc sched_db_add(struct sched_db *, char const *filename);
 
+enum sched_rc sched_db_remove(int64_t id);
+
 #endif

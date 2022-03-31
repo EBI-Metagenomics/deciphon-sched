@@ -180,6 +180,17 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
     return rc == SCHED_NOTFOUND ? add_db(filename, db) : rc;
 }
 
+enum sched_rc sched_db_remove(int64_t id)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_DELETE_BY_ID));
+    if (!st) return EFRESH;
+
+    if (xsql_bind_i64(st, 0, id)) return EBIND;
+
+    if (xsql_step(st) != SCHED_END) return ESTEP;
+    return SCHED_OK;
+}
+
 enum sched_rc db_delete(void)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_DELETE));

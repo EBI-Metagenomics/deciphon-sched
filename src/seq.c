@@ -6,10 +6,18 @@
 #include "xsql.h"
 #include "xstrcpy.h"
 
+void seq_init(struct sched_seq *seq)
+{
+    seq->id = 0;
+    seq->scan_id = 0;
+    seq->name[0] = 0;
+    seq->data[0] = 0;
+}
+
 void sched_seq_init(struct sched_seq *seq, int64_t scan_id, char const *name,
                     char const *data)
 {
-    seq->id = 0;
+    seq_init(seq);
     seq->scan_id = scan_id;
     XSTRCPY(seq, name, name);
     XSTRCPY(seq, data, data);
@@ -81,4 +89,15 @@ enum sched_rc sched_seq_next(struct sched_seq *seq)
     if (rc == SCHED_NOTFOUND) return SCHED_END;
     if (rc != SCHED_OK) return rc;
     return sched_seq_get_by_id(seq, seq->id);
+}
+
+enum sched_rc sched_seq_get_all(sched_seq_set_func_t fn, struct sched_seq *seq,
+                                void *arg)
+{
+    enum sched_rc rc = SCHED_OK;
+
+    seq_init(seq);
+    while ((rc = sched_seq_next(seq)) == SCHED_OK)
+        fn(seq, arg);
+    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }

@@ -23,11 +23,11 @@ enum
 static TOK_DECLARE(tok);
 static struct xfile_tmp prod_file[MAX_NUM_THREADS] = {0};
 
-void sched_prod_init(struct sched_prod *prod, int64_t scan_id)
+static void prod_init(struct sched_prod *prod)
 {
     prod->id = 0;
 
-    prod->scan_id = scan_id;
+    prod->scan_id = 0;
     prod->seq_id = 0;
 
     prod->profile_name[0] = 0;
@@ -40,6 +40,12 @@ void sched_prod_init(struct sched_prod *prod, int64_t scan_id)
     prod->version[0] = 0;
 
     prod->match[0] = 0;
+}
+
+void sched_prod_init(struct sched_prod *prod, int64_t scan_id)
+{
+    prod_init(prod);
+    prod->scan_id = scan_id;
 }
 
 enum sched_rc sched_prod_write_begin(struct sched_prod const *prod,
@@ -305,6 +311,17 @@ enum sched_rc sched_prod_add(struct sched_prod *prod)
     if (xsql_step(st) != SCHED_END) return ESTEP;
     prod->id = xsql_last_id();
     return SCHED_OK;
+}
+
+enum sched_rc sched_prod_get_all(sched_prod_set_func_t fn,
+                                 struct sched_prod *prod, void *arg)
+{
+    enum sched_rc rc = SCHED_OK;
+
+    prod_init(prod);
+    while ((rc = prod_next(prod)) == SCHED_OK)
+        fn(prod, arg);
+    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
 
 #undef CLEANUP

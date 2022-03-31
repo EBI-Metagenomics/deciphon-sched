@@ -13,15 +13,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+void scan_init(struct sched_scan *scan)
+{
+    scan->id = 0;
+    scan->db_id = 0;
+    scan->multi_hits = 0;
+    scan->hmmer3_compat = 0;
+    scan->job_id = 0;
+    seq_queue_init();
+}
+
 void sched_scan_init(struct sched_scan *scan, int64_t db_id, bool multi_hits,
                      bool hmmer3_compat)
 {
-    scan->id = 0;
+    scan_init(scan);
     scan->db_id = db_id;
     scan->multi_hits = multi_hits;
     scan->hmmer3_compat = hmmer3_compat;
-    scan->job_id = 0;
-    seq_queue_init();
 }
 
 enum sched_rc sched_scan_get_seqs(int64_t scan_id, sched_seq_set_func_t fn,
@@ -55,6 +63,18 @@ enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
     return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
 
+static enum sched_rc set_scan(struct sched_scan *scan, struct sqlite3_stmt *st)
+{
+    scan->id = xsql_get_i64(st, 0);
+
+    scan->db_id = xsql_get_i64(st, 1);
+    scan->multi_hits = xsql_get_int(st, 2);
+    scan->hmmer3_compat = xsql_get_int(st, 3);
+    scan->job_id = xsql_get_i64(st, 4);
+
+    return SCHED_OK;
+}
+
 static enum sched_rc get_scan(struct sched_scan *scan, enum stmt stmt,
                               int64_t id)
 {
@@ -67,15 +87,9 @@ static enum sched_rc get_scan(struct sched_scan *scan, enum stmt stmt,
     if (rc == SCHED_END) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) efail("get scan");
 
-    scan->id = xsql_get_i64(st, 0);
+    if ((rc = set_scan(scan, st))) return rc;
 
-    scan->db_id = xsql_get_i64(st, 1);
-    scan->multi_hits = xsql_get_int(st, 2);
-    scan->hmmer3_compat = xsql_get_int(st, 3);
-    scan->job_id = xsql_get_i64(st, 4);
-
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
 enum sched_rc sched_scan_get_by_id(struct sched_scan *scan, int64_t scan_id)
@@ -134,4 +148,31 @@ enum sched_rc scan_delete(void)
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
+}
+
+static enum sched_rc scan_next(struct sched_scan *scan)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(SCAN_GET_NEXT));
+    if (!st) return EFRESH;
+
+    if (xsql_bind_i64(st, 0, scan->id)) return EBIND;
+
+    enum sched_rc rc = xsql_step(st);
+    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc != SCHED_OK) return ESTEP;
+
+    if ((rc = set_scan(scan, st))) return rc;
+
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
+}
+
+enum sched_rc sched_scan_get_all(sched_scan_set_func_t fn,
+                                 struct sched_scan *scan, void *arg)
+{
+    enum sched_rc rc = SCHED_OK;
+
+    scan_init(scan);
+    while ((rc = scan_next(scan)) == SCHED_OK)
+        fn(scan, arg);
+    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }

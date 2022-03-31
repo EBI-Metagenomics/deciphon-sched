@@ -19,8 +19,9 @@ struct sched_scan
 struct sched_prod;
 struct sched_seq;
 
-typedef void(sched_seq_set_func_t)(struct sched_seq *seq, void *arg);
-typedef void(sched_prod_set_func_t)(struct sched_prod *prod, void *arg);
+typedef void(sched_seq_set_func_t)(struct sched_seq *, void *arg);
+typedef void(sched_prod_set_func_t)(struct sched_prod *, void *arg);
+typedef void(sched_scan_set_func_t)(struct sched_scan *, void *arg);
 
 void sched_scan_init(struct sched_scan *, int64_t db_id, bool multi_hits,
                      bool hmmer3_compat);
@@ -36,5 +37,8 @@ enum sched_rc sched_scan_get_by_job_id(struct sched_scan *, int64_t job_id);
 
 void sched_scan_add_seq(struct sched_scan *, char const *name,
                         char const *data);
+
+enum sched_rc sched_scan_get_all(sched_scan_set_func_t, struct sched_scan *,
+                                 void *arg);
 
 #endif

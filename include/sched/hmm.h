@@ -26,4 +26,6 @@ enum sched_rc sched_hmm_get_by_filename(struct sched_hmm *,
 enum sched_rc sched_hmm_get_all(sched_hmm_set_func_t, struct sched_hmm *,
                                 void *arg);
 
+enum sched_rc sched_hmm_remove(int64_t id);
+
 #endif

@@ -18,7 +18,8 @@ static char const *const queries[] =
     [HMM_GET_BY_FILENAME] = "SELECT * FROM hmm WHERE filename = ?;",
     [HMM_GET_NEXT]        = "SELECT * FROM hmm WHERE id > ? ORDER BY id ASC LIMIT 1;",
 
-    [HMM_DELETE] = "DELETE FROM hmm;",
+    [HMM_DELETE_BY_ID]    = "DELETE FROM hmm WHERE id = ?;",
+    [HMM_DELETE]          = "DELETE FROM hmm;",
 
     /* --- DB queries --- */
     [DB_INSERT] = "INSERT INTO db (xxh3, filename, hmm_id) VALUES (?, ?, ?);",
@@ -28,7 +29,8 @@ static char const *const queries[] =
     [DB_GET_BY_FILENAME] = "SELECT * FROM db WHERE filename = ?;",
     [DB_GET_NEXT]        = "SELECT * FROM db WHERE id > ? ORDER BY id ASC LIMIT 1;",
 
-    [DB_DELETE] = "DELETE FROM db;",
+    [DB_DELETE_BY_ID] = "DELETE FROM db WHERE id = ?;",
+    [DB_DELETE]       = "DELETE FROM db;",
 
     /* --- JOB queries --- */
     [JOB_INSERT] = "INSERT INTO job (type, state, progress, error, submission, exec_started, exec_ended) "
@@ -36,20 +38,24 @@ static char const *const queries[] =
 
     [JOB_GET_PEND]  = "SELECT    id FROM job WHERE state = 'pend' ORDER BY id LIMIT 1;",
     [JOB_GET_STATE] = "SELECT state FROM job WHERE    id = ?;",
-    [JOB_GET]    = "SELECT     * FROM job WHERE    id = ?;",
+    [JOB_GET]       = "SELECT     * FROM job WHERE    id = ?;",
+    [JOB_GET_NEXT]  = "SELECT     * FROM job WHERE    id > ? ORDER BY id ASC LIMIT 1;",
 
-    [JOB_SET_RUN]   = "UPDATE job SET state =  'run', exec_started = ?                 WHERE id = ? AND state = 'pend';",
-    [JOB_SET_ERROR] = "UPDATE job SET state = 'fail', error        = ?, exec_ended = ? WHERE id = ?;",
-    [JOB_SET_DONE]  = "UPDATE job SET state = 'done', exec_ended   = ?                 WHERE id = ?;",
+    [JOB_SET_RUN]      = "UPDATE job SET state =  'run', exec_started = ?                 WHERE id = ? AND state = 'pend';",
+    [JOB_SET_ERROR]    = "UPDATE job SET state = 'fail', error        = ?, exec_ended = ? WHERE id = ?;",
+    [JOB_SET_DONE]     = "UPDATE job SET state = 'done', exec_ended   = ?                 WHERE id = ?;",
+    [JOB_ADD_PROGRESS] = "UPDATE job SET progress = MIN(progress + ?, progress)           WHERE id = ?;",
 
-    [JOB_DELETE] = "DELETE FROM job;",
+    [JOB_DELETE_BY_ID] = "DELETE FROM job WHERE id = ?;",
+    [JOB_DELETE]       = "DELETE FROM job;",
 
     /* --- SCAN queries --- */
     [SCAN_INSERT] = "INSERT INTO scan (db_id, multi_hits, hmmer3_compat, job_id) "
                     "VALUES           (    ?,          ?,             ?,      ?);",
 
-    [SCAN_GET_BY_ID]     = "SELECT * FROM scan WHERE     id = ?;",
-    [SCAN_GET_BY_JOB_ID] = "SELECT * FROM scan WHERE job_id = ?;",
+    [SCAN_GET_BY_ID]     = "SELECT     * FROM scan WHERE     id = ?;",
+    [SCAN_GET_BY_JOB_ID] = "SELECT     * FROM scan WHERE job_id = ?;",
+    [SCAN_GET_NEXT]      = "SELECT     * FROM scan WHERE     id > ? ORDER BY id ASC LIMIT 1;",
 
     [SCAN_DELETE] = "DELETE FROM scan;",
 

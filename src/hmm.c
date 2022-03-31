@@ -141,6 +141,17 @@ enum sched_rc sched_hmm_get_all(sched_hmm_set_func_t fn, struct sched_hmm *hmm,
     return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
 
+enum sched_rc sched_hmm_remove(int64_t id)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(HMM_DELETE_BY_ID));
+    if (!st) return EFRESH;
+
+    if (xsql_bind_i64(st, 0, id)) return EBIND;
+
+    if (xsql_step(st) != SCHED_END) return ESTEP;
+    return SCHED_OK;
+}
+
 static enum sched_rc submit(struct sched_hmm *hmm)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(HMM_INSERT));
