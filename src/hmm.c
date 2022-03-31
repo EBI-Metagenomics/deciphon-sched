@@ -70,7 +70,7 @@ static enum sched_rc hash_setup(struct sched_hmm *hmm)
     return rc;
 }
 
-enum sched_rc sched_hmm_set_file(struct sched_hmm *hmm, char const *filename)
+static enum sched_rc check_filename(char const *filename)
 {
     if (!xfile_is_name(filename)) return einval("invalid hmm filename");
 
@@ -79,15 +79,25 @@ enum sched_rc sched_hmm_set_file(struct sched_hmm *hmm, char const *filename)
     if (strncmp(&filename[len - 4], ".hmm", 4))
         return einval("invalid extension");
 
-    if (!XSTRCPY(hmm, filename, filename))
-        return einval("filename is too long");
+    return len >= FILENAME_SIZE ? einval("filename is too long") : SCHED_OK;
+}
 
+enum sched_rc sched_hmm_set_file(struct sched_hmm *hmm, char const *filename)
+{
+    enum sched_rc rc = check_filename(filename);
+    if (rc) return rc;
+    strcpy(hmm->filename, filename);
     return hash_setup(hmm);
 }
 
 enum sched_rc sched_hmm_get_by_id(struct sched_hmm *hmm, int64_t id)
 {
     return select_hmm_i64(hmm, id, HMM_GET_BY_ID);
+}
+
+enum sched_rc sched_hmm_get_by_job_id(struct sched_hmm *hmm, int64_t job_id)
+{
+    return select_hmm_i64(hmm, job_id, HMM_GET_BY_JOB_ID);
 }
 
 enum sched_rc sched_hmm_get_by_xxh3(struct sched_hmm *hmm, int64_t xxh3)
@@ -171,4 +181,12 @@ enum sched_rc hmm_delete(void)
     if (!st) return EFRESH;
 
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete hmm");
+}
+
+void hmm_to_db_filename(char *filename)
+{
+    size_t len = strlen(filename);
+    filename[len - 3] = 'd';
+    filename[len - 2] = 'c';
+    filename[len - 1] = 'p';
 }

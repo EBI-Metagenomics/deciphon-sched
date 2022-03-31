@@ -184,7 +184,7 @@ void test_sched_add_db(void)
     EQ(sched_job_submit(&job, &hmm), SCHED_OK);
     EQ(sched_job_set_run(job.id), SCHED_OK);
     EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file1a_dcp, hmm.id), SCHED_OK);
+    EQ(sched_db_add(&db, file1a_dcp), SCHED_OK);
     EQ(db.id, 1);
 
     EQ(sched_hmm_set_file(&hmm, file1b_hmm), SCHED_OK);
@@ -194,10 +194,10 @@ void test_sched_add_db(void)
     EQ(sched_job_submit(&job, &hmm), SCHED_OK);
     EQ(sched_job_set_run(job.id), SCHED_OK);
     EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file2_dcp, hmm.id), SCHED_OK);
+    EQ(sched_db_add(&db, file2_dcp), SCHED_OK);
     EQ(db.id, 2);
 
-    EQ(sched_db_add(&db, file3_dcp, hmm.id), SCHED_EIO);
+    EQ(sched_db_add(&db, file3_dcp), SCHED_EINVAL);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
@@ -222,7 +222,7 @@ void test_sched_submit_scan(void)
     EQ(sched_job_submit(&job, &hmm), SCHED_OK);
     EQ(sched_job_set_run(job.id), SCHED_OK);
     EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file_dcp, hmm.id), SCHED_OK);
+    EQ(sched_db_add(&db, file_dcp), SCHED_OK);
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
@@ -263,7 +263,7 @@ void test_sched_submit_and_fetch_scan_job()
     EQ(job.id, 1);
     EQ(sched_job_set_run(job.id), SCHED_OK);
     EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file_dcp, hmm.id), SCHED_OK);
+    EQ(sched_db_add(&db, file_dcp), SCHED_OK);
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
@@ -314,7 +314,7 @@ void test_sched_submit_and_fetch_seq()
     EQ(job.id, 1);
     EQ(sched_job_set_run(job.id), SCHED_OK);
     EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file_dcp, hmm.id), SCHED_OK);
+    EQ(sched_db_add(&db, file_dcp), SCHED_OK);
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
@@ -373,7 +373,7 @@ void test_sched_wipe(void)
     EQ(job.id, 1);
     EQ(sched_job_set_run(job.id), SCHED_OK);
     EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file_dcp, hmm.id), SCHED_OK);
+    EQ(sched_db_add(&db, file_dcp), SCHED_OK);
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);

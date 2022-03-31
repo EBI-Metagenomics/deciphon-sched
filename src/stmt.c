@@ -13,7 +13,8 @@ static char const *const queries[] =
     [HMM_INSERT] = "INSERT INTO hmm (xxh3, filename, job_id) VALUES (?, ?, ?);",
 
     [HMM_GET_BY_ID]       = "SELECT * FROM hmm WHERE       id = ?;",
-    [HMM_GET_BY_XXH3]     = "SELECT * FROM hmm WHERE    xxh3  = ?; ",
+    [HMM_GET_BY_JOB_ID]   = "SELECT * FROM hmm WHERE   job_id = ?;",
+    [HMM_GET_BY_XXH3]     = "SELECT * FROM hmm WHERE    xxh3  = ?;",
     [HMM_GET_BY_FILENAME] = "SELECT * FROM hmm WHERE filename = ?;",
     [HMM_GET_NEXT]        = "SELECT * FROM hmm WHERE id > ? ORDER BY id ASC LIMIT 1;",
 
@@ -47,8 +48,8 @@ static char const *const queries[] =
     [SCAN_INSERT] = "INSERT INTO scan (db_id, multi_hits, hmmer3_compat, job_id) "
                     "VALUES           (    ?,          ?,             ?,      ?);",
 
-    [SCAN_GET_BY_SCAN_ID] = "SELECT * FROM scan WHERE id = ?;    ",
-    [SCAN_GET_BY_JOB_ID]  = "SELECT * FROM scan WHERE job_id = ?;",
+    [SCAN_GET_BY_ID]     = "SELECT * FROM scan WHERE     id = ?;",
+    [SCAN_GET_BY_JOB_ID] = "SELECT * FROM scan WHERE job_id = ?;",
 
     [SCAN_DELETE] = "DELETE FROM scan;",
 

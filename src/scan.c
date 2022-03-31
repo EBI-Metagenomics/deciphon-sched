@@ -80,7 +80,7 @@ static enum sched_rc get_scan(struct sched_scan *scan, enum stmt stmt,
 
 enum sched_rc sched_scan_get_by_id(struct sched_scan *scan, int64_t scan_id)
 {
-    return get_scan(scan, SCAN_GET_BY_SCAN_ID, scan_id);
+    return get_scan(scan, SCAN_GET_BY_ID, scan_id);
 }
 
 enum sched_rc sched_scan_get_by_job_id(struct sched_scan *scan, int64_t job_id)

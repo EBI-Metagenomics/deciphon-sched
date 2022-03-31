@@ -7,6 +7,7 @@ enum stmt
 {
     HMM_INSERT,
     HMM_GET_BY_ID,
+    HMM_GET_BY_JOB_ID,
     HMM_GET_BY_XXH3,
     HMM_GET_BY_FILENAME,
     HMM_GET_NEXT,
@@ -26,7 +27,7 @@ enum stmt
     JOB_SET_DONE,
     JOB_DELETE,
     SCAN_INSERT,
-    SCAN_GET_BY_SCAN_ID,
+    SCAN_GET_BY_ID,
     SCAN_GET_BY_JOB_ID,
     SCAN_DELETE,
     PROD_INSERT,
