@@ -56,7 +56,7 @@ enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
     if (rc) return rc;
 
     sched_prod_init(prod, scan_id);
-    while ((rc = prod_next(prod)) == SCHED_OK)
+    while ((rc = prod_scan_next(prod)) == SCHED_OK)
     {
         fn(prod, arg);
     }

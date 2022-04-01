@@ -144,13 +144,30 @@ static enum sched_rc get_prod(struct sched_prod *prod)
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
+enum sched_rc prod_scan_next(struct sched_prod *prod)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_GET_SCAN_NEXT));
+    if (!st) return EFRESH;
+
+    if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
+    if (xsql_bind_i64(st, 1, prod->scan_id)) return EBIND;
+
+    enum sched_rc rc = xsql_step(st);
+    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc != SCHED_OK) return ESTEP;
+
+    prod->id = xsql_get_i64(st, 0);
+    if (xsql_step(st) != SCHED_END) return ESTEP;
+
+    return get_prod(prod);
+}
+
 enum sched_rc prod_next(struct sched_prod *prod)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_GET_NEXT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
-    if (xsql_bind_i64(st, 1, prod->scan_id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;

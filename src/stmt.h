@@ -39,6 +39,7 @@ enum stmt
     PROD_INSERT,
     PROD_GET,
     PROD_GET_NEXT,
+    PROD_GET_SCAN_NEXT,
     PROD_DELETE,
     SEQ_INSERT,
     SEQ_GET,

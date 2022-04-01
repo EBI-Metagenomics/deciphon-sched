@@ -63,8 +63,9 @@ static char const *const queries[] =
     [PROD_INSERT] = "INSERT INTO prod (scan_id, seq_id, profile_name, abc_name, alt_loglik, null_loglik, profile_typeid, version, match) "
                     "VALUES           (      ?,      ?,            ?,        ?,          ?,           ?,              ?,       ?,     ?);",
 
-    [PROD_GET]      = "SELECT  * FROM prod WHERE id = ?;",
-    [PROD_GET_NEXT] = "SELECT id FROM prod WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
+    [PROD_GET]           = "SELECT  * FROM prod WHERE id = ?;",
+    [PROD_GET_NEXT]      = "SELECT id FROM prod WHERE id > ? ORDER BY id ASC LIMIT 1;",
+    [PROD_GET_SCAN_NEXT] = "SELECT id FROM prod WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
 
     [PROD_DELETE] = "DELETE FROM prod;",
 
