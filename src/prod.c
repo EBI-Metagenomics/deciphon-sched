@@ -188,7 +188,7 @@ static enum sched_rc expect_word(FILE *fp, char const *field)
 static enum sched_rc parse_prod_file_header(FILE *fp)
 {
     enum sched_rc rc = SCHED_OK;
-    if ((rc = expect_word(fp, "job_id"))) return rc;
+    if ((rc = expect_word(fp, "scan_id"))) return rc;
     if ((rc = expect_word(fp, "seq_id"))) return rc;
     if ((rc = expect_word(fp, "profile_name"))) return rc;
     if ((rc = expect_word(fp, "abc_name"))) return rc;
