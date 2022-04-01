@@ -45,7 +45,7 @@ enum sched_rc sched_scan_get_seqs(int64_t scan_id, sched_seq_set_func_t fn,
     {
         fn(seq, arg);
     }
-    return rc == SCHED_END ? SCHED_OK : rc;
+    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
 
 enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
