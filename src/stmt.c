@@ -72,8 +72,9 @@ static char const *const queries[] =
     /* --- SEQ queries --- */
     [SEQ_INSERT] = "INSERT INTO seq (scan_id, name, data) VALUES (?, ?, ?);",
 
-    [SEQ_GET]      = "SELECT id, scan_id, name, upper(data) FROM seq WHERE id = ?;",
-    [SEQ_GET_NEXT] = "SELECT id                             FROM seq WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
+    [SEQ_GET]           = "SELECT id, scan_id, name, upper(data) FROM seq WHERE id = ?;",
+    [SEQ_GET_NEXT]      = "SELECT id                             FROM seq WHERE id > ? ORDER BY id ASC LIMIT 1;",
+    [SEQ_GET_SCAN_NEXT] = "SELECT id                             FROM seq WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
 
     [SEQ_DELETE] = "DELETE FROM seq;",
 };

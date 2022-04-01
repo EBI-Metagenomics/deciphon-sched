@@ -337,17 +337,17 @@ void test_sched_submit_and_fetch_seq()
     EQ(sched_scan_get_by_job_id(&scan, job.id), SCHED_OK);
 
     sched_seq_init(&seq, scan.id, "", "");
-    EQ(sched_seq_next(&seq), SCHED_OK);
+    EQ(sched_seq_scan_next(&seq), SCHED_OK);
     EQ(seq.id, 1);
     EQ(seq.scan_id, 1);
     EQ(seq.name, "seq0");
     EQ(seq.data, "ACAAGCAG");
-    EQ(sched_seq_next(&seq), SCHED_OK);
+    EQ(sched_seq_scan_next(&seq), SCHED_OK);
     EQ(seq.id, 2);
     EQ(seq.scan_id, 1);
     EQ(seq.name, "seq1");
     EQ(seq.data, "ACTTGCCG");
-    EQ(sched_seq_next(&seq), SCHED_NOTFOUND);
+    EQ(sched_seq_scan_next(&seq), SCHED_NOTFOUND);
 
     EQ(sched_cleanup(), SCHED_OK);
 }

@@ -44,6 +44,7 @@ enum stmt
     SEQ_INSERT,
     SEQ_GET,
     SEQ_GET_NEXT,
+    SEQ_GET_SCAN_NEXT,
     SEQ_DELETE,
 };
 

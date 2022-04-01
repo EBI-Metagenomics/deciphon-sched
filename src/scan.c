@@ -41,7 +41,7 @@ enum sched_rc sched_scan_get_seqs(int64_t scan_id, sched_seq_set_func_t fn,
 
     seq->id = 0;
     seq->scan_id = scan_id;
-    while ((rc = sched_seq_next(seq)) == SCHED_OK)
+    while ((rc = sched_seq_scan_next(seq)) == SCHED_OK)
     {
         fn(seq, arg);
     }

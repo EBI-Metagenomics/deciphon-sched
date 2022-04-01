@@ -45,13 +45,28 @@ enum sched_rc seq_delete(void)
     return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
 }
 
-static int next_seq_id(int64_t scan_id, int64_t *seq_id)
+static enum sched_rc next_seq_scan_id(int64_t scan_id, int64_t *seq_id)
+{
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(SEQ_GET_SCAN_NEXT));
+    if (!st) return EFRESH;
+
+    if (xsql_bind_i64(st, 0, *seq_id)) return EBIND;
+    if (xsql_bind_i64(st, 1, scan_id)) return EBIND;
+
+    enum sched_rc rc = xsql_step(st);
+    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc != SCHED_OK) return efail("get next seq id");
+    *seq_id = xsql_get_i64(st, 0);
+
+    return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
+}
+
+static enum sched_rc next_seq_id(int64_t *seq_id)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(SEQ_GET_NEXT));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, *seq_id)) return EBIND;
-    if (xsql_bind_i64(st, 1, scan_id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
     if (rc == SCHED_END) return SCHED_NOTFOUND;
@@ -81,9 +96,17 @@ enum sched_rc sched_seq_get_by_id(struct sched_seq *seq, int64_t id)
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
-enum sched_rc sched_seq_next(struct sched_seq *seq)
+enum sched_rc sched_seq_scan_next(struct sched_seq *seq)
 {
-    enum sched_rc rc = next_seq_id(seq->scan_id, &seq->id);
+    enum sched_rc rc = next_seq_scan_id(seq->scan_id, &seq->id);
+    if (rc == SCHED_NOTFOUND) return SCHED_NOTFOUND;
+    if (rc != SCHED_OK) return rc;
+    return sched_seq_get_by_id(seq, seq->id);
+}
+
+static enum sched_rc next_seq(struct sched_seq *seq)
+{
+    enum sched_rc rc = next_seq_id(&seq->id);
     if (rc == SCHED_NOTFOUND) return SCHED_NOTFOUND;
     if (rc != SCHED_OK) return rc;
     return sched_seq_get_by_id(seq, seq->id);
@@ -95,7 +118,7 @@ enum sched_rc sched_seq_get_all(sched_seq_set_func_t fn, struct sched_seq *seq,
     enum sched_rc rc = SCHED_OK;
 
     seq_init(seq);
-    while ((rc = sched_seq_next(seq)) == SCHED_OK)
+    while ((rc = next_seq(seq)) == SCHED_OK)
         fn(seq, arg);
     return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
 }
