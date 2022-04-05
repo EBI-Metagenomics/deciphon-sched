@@ -1,9 +1,6 @@
-find_package(hope REQUIRED)
-
 function(sched_add_test name srcs)
   add_executable(${name} ${srcs})
   target_link_libraries(${name} PRIVATE ${PROJECT_NAME})
-  target_link_libraries(${name} PRIVATE HOPE::hope)
   target_compile_options(${name} PRIVATE ${WARNING_FLAGS})
   target_compile_features(${name} PRIVATE c_std_11)
   add_test(NAME ${name} COMMAND ${name})
