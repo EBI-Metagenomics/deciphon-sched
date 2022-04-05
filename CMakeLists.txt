@@ -11,13 +11,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(cmake/compiler-options.cmake)
 include(cmake/sanitizers.cmake)
 
-find_program(XXD_FOUND "xxd")
-if(XXD_FOUND)
-  message(STATUS "Looking for xxd - found")
-else()
-  message(FATAL_ERROR "Looking for xxd - not found")
-endif()
-
 add_custom_command(
   OUTPUT schema.c
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/embed-file

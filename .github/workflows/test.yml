@@ -22,15 +22,6 @@ jobs:
           if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
           echo "SUDO=$SUDO" >> $GITHUB_ENV
 
-      - name: Install xxd
-        if: runner.os == 'Linux'
-        shell: bash
-        run: $SUDO apt install xxd --yes
-
-      - name: Install xxd via vim
-        if: runner.os == 'macOS'
-        run: brew install vim
-
       - name: Install dependencies
         shell: bash
         run: if [ -f install-deps ]; then $SUDO ./install-deps; fi

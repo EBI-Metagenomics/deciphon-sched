@@ -1,12 +1,6 @@
 #!/bin/bash
 
-if ! type xxd; then
-    echo "Please, install xxd." >&2
-    exit 1
-fi
-
-function show_usage
-{
+function show_usage {
     echo "Usage: embed-file RESOURCE_FILE SYMBOL OUTPUT_FILE"
     echo "  Outputs C file from the contents of RESOURCE_FILE"
     echo "  into OUTPUT_FILE."
@@ -21,10 +15,30 @@ resource_file=$1
 symbol=$2
 output_file=$3
 
-echo "#include <stdlib.h>" >$output_file
-echo "" >>$output_file
-echo "unsigned char const ${symbol}[] = {" >>$output_file
-tmp=$(cat $resource_file <(printf '\0') | xxd -i | sed 's/^  /    /')
-echo "$tmp};" >>$output_file
-echo "" >>$output_file
-echo "size_t const ${symbol}_size = sizeof(${symbol});" >>$output_file
+{
+    echo "#include <stdlib.h>"
+    echo
+    echo "unsigned char const ${symbol}[] = {"
+
+    # Mimics `xxd -i` command.
+    i=0
+    while LANG=C IFS= read -r -d '' -n 1 byte; do
+        printf -v decimal %d "'""$byte"
+
+        if [ "$((i % 12))" == "0" ]; then
+            printf "    "
+        else
+            printf ", "
+        fi
+
+        printf "0x%02x" "$decimal"
+        i=$((i + 1))
+        if [ "$((i % 12))" == "0" ]; then
+            echo ","
+        fi
+    done <"$resource_file"
+
+    echo ", 0x00};"
+    echo
+    echo "size_t const ${symbol}_size = sizeof(${symbol});"
+} >"$output_file"
