@@ -58,6 +58,16 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
                                                    TRUE)
 endif()
 
+option(ERROR_ON_WARNING "Trigger build error on warning" OFF)
+if(ERROR_ON_WARNING)
+  message(STATUS "Build error on warning enabled")
+  if(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options(/WX)
+  else()
+    add_compile_options(-Werror)
+  endif()
+endif()
+
 target_include_directories(
   ${PROJECT_NAME}
   PUBLIC $<INSTALL_INTERFACE:include>
