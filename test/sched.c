@@ -1,5 +1,5 @@
 #include "sched/sched.h"
-#include "hope/hope.h"
+#include "hope.h"
 
 struct sched_hmm hmm = {0};
 struct sched_db db = {0};
