@@ -57,7 +57,7 @@ enum sched_rc sched_health_check(struct sched_health *health)
     enum sched_rc rc = sched_db_get_all(health_check_db, &db, health);
     if (rc) return rc;
 
-    return sched_hmm_get_all(health_check_hmm, &hmm, &health);
+    return sched_hmm_get_all(health_check_hmm, &hmm, health);
 }
 
 enum sched_rc sched_cleanup(void)

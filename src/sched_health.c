@@ -46,7 +46,7 @@ static void check_file(char const *name, char const *filename, int64_t xxh3,
                 put(health, HASH_MISMATCH, name, filename);
             }
         }
-        if (fp) fclose(fp);
+        fclose(fp);
     }
 }
 
