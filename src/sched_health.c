@@ -12,69 +12,50 @@ void put(struct sched_health *health, char const *fmt, ...)
     va_end(args);
 }
 
-#define ACCESS(what) "failed to access " what " %s\n"
-#define OPEN(what) "failed to open " what " for reading %s\n"
-#define CALC_HASH(what) "failed to compute hash of " what " %s\n"
-#define HASH_MISMATCH(what) "hash mismatch for " what " %s\n"
+#define ACCESS "failed to access %s %s\n"
+#define OPEN "failed to open %s for reading %s\n"
+#define CALC_HASH "failed to compute hash of %s %s\n"
+#define HASH_MISMATCH "hash mismatch for %s %s\n"
 
-void health_check_db(struct sched_db *db, void *arg)
+static void check_file(char const *name, char const *filename, int64_t xxh3,
+                       void *arg)
 {
     struct sched_health *health = arg;
-    if (!xfile_exists(db->filename))
+    if (!xfile_exists(filename))
     {
-        put(health, ACCESS("database"), db->filename);
+        put(health, ACCESS, name, filename);
     }
     else
     {
         int64_t hash = 0;
-        FILE *fp = fopen(db->filename, "rb");
+        FILE *fp = fopen(filename, "rb");
         if (!fp)
         {
-            put(health, OPEN("database"), db->filename);
+            put(health, OPEN, name, filename);
+            return;
         }
         enum sched_rc rc = xfile_hash(fp, &hash);
         if (rc)
         {
-            put(health, CALC_HASH("database"), db->filename);
+            put(health, CALC_HASH, name, filename);
         }
         else
         {
-            if (hash != db->xxh3)
+            if (hash != xxh3)
             {
-                put(health, HASH_MISMATCH("database"), db->filename);
+                put(health, HASH_MISMATCH, name, filename);
             }
         }
         if (fp) fclose(fp);
     }
 }
 
+void health_check_db(struct sched_db *db, void *arg)
+{
+    check_file("database", db->filename, db->xxh3, arg);
+}
+
 void health_check_hmm(struct sched_hmm *hmm, void *arg)
 {
-    struct sched_health *health = arg;
-    if (!xfile_exists(hmm->filename))
-    {
-        put(health, ACCESS("hmm"), hmm->filename);
-    }
-    else
-    {
-        int64_t hash = 0;
-        FILE *fp = fopen(hmm->filename, "rb");
-        if (!fp)
-        {
-            put(health, OPEN("hmm"), hmm->filename);
-        }
-        enum sched_rc rc = xfile_hash(fp, &hash);
-        if (rc)
-        {
-            put(health, CALC_HASH("hmm"), hmm->filename);
-        }
-        else
-        {
-            if (hash != hmm->xxh3)
-            {
-                put(health, HASH_MISMATCH("hmm"), hmm->filename);
-            }
-        }
-        if (fp) fclose(fp);
-    }
+    check_file("hmm", hmm->filename, hmm->xxh3, arg);
 }
