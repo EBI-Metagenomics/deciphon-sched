@@ -54,6 +54,7 @@ enum sched_rc xsql_prepare(struct xsql_stmt *stmt);
 struct sqlite3_stmt *xsql_fresh_stmt(struct xsql_stmt *stmt);
 enum sched_rc xsql_step(struct sqlite3_stmt *stmt);
 enum sched_rc xsql_finalize(struct sqlite3_stmt *stmt);
+int xsql_changes(void);
 
 int64_t xsql_last_id(void);
 

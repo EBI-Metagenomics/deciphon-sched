@@ -200,8 +200,9 @@ enum sched_rc sched_job_remove(int64_t id)
 
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    enum sched_rc rc = xsql_step(st);
+    if (rc != SCHED_END) return error(rc, "remove job");
+    return xsql_changes() == 0 ? SCHED_NOTFOUND : SCHED_OK;
 }
 
 enum sched_rc job_set_run(int64_t id, int64_t exec_started)
@@ -239,12 +240,13 @@ enum sched_rc job_set_done(int64_t id, int64_t exec_ended)
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
-enum sched_rc job_delete(void)
+enum sched_rc job_wipe(void)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(JOB_DELETE));
     if (!st) return EFRESH;
 
-    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete job");
+    enum sched_rc rc = xsql_step(st);
+    return rc == SCHED_END ? SCHED_OK : error(rc, "wipe job");
 }
 
 static enum sched_job_state resolve_job_state(char const *state)

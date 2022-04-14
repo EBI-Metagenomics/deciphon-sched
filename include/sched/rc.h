@@ -11,6 +11,7 @@ enum sched_rc
     SCHED_EINVAL,
     SCHED_ENOMEM,
     SCHED_EPARSE,
+    SCHED_ECONSTRAINT,
 };
 
 #endif

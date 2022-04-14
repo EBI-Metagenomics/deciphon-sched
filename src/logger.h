@@ -12,6 +12,7 @@
 #define einval(msg) error(SCHED_EINVAL, msg)
 #define enomem(msg) error(SCHED_ENOMEM, msg)
 #define eparse(msg) error(SCHED_EPARSE, msg)
+#define econstraint(msg) error(SCHED_ECONSTRAINT, msg)
 
 enum sched_rc __logger_error(enum sched_rc rc, char const *ctx,
                              char const *msg);

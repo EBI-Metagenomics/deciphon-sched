@@ -146,8 +146,9 @@ enum sched_rc sched_hmm_remove(int64_t id)
 
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    enum sched_rc rc = xsql_step(st);
+    if (rc != SCHED_END) return error(rc, "remove hmm");
+    return xsql_changes() == 0 ? SCHED_NOTFOUND : SCHED_OK;
 }
 
 static enum sched_rc submit(struct sched_hmm *hmm)
@@ -184,12 +185,13 @@ enum sched_rc hmm_submit(void *hmm, int64_t job_id)
     return rc == SCHED_NOTFOUND ? submit(h) : rc;
 }
 
-enum sched_rc hmm_delete(void)
+enum sched_rc hmm_wipe(void)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(HMM_DELETE));
     if (!st) return EFRESH;
 
-    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete hmm");
+    enum sched_rc rc = xsql_step(st);
+    return rc == SCHED_END ? SCHED_OK : error(rc, "wipe hmm");
 }
 
 void hmm_to_db_filename(char *filename)

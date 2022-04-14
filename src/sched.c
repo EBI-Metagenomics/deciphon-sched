@@ -87,30 +87,30 @@ enum sched_rc sched_wipe(void)
         goto cleanup;
     }
 
-    rc = prod_delete();
+    rc = prod_wipe();
     if (rc) goto cleanup;
 
-    rc = seq_delete();
+    rc = seq_wipe();
     if (rc) goto cleanup;
 
-    rc = scan_delete();
+    rc = scan_wipe();
     if (rc) goto cleanup;
 
     struct sched_db db = {0};
     rc = sched_db_get_all(delete_db_file, &db, 0);
     if (rc) goto cleanup;
 
-    rc = db_delete();
+    rc = db_wipe();
     if (rc) goto cleanup;
 
     struct sched_hmm hmm = {0};
     rc = sched_hmm_get_all(delete_hmm_file, &hmm, 0);
     if (rc) goto cleanup;
 
-    rc = hmm_delete();
+    rc = hmm_wipe();
     if (rc) goto cleanup;
 
-    rc = job_delete();
+    rc = job_wipe();
     if (rc) goto cleanup;
 
     return xsql_end_transaction() ? efail("end wipe") : SCHED_OK;

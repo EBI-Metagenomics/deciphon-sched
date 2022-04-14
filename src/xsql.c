@@ -139,7 +139,7 @@ enum sched_rc xsql_step(struct sqlite3_stmt *stmt)
     int code = sqlite3_step(stmt);
     if (code == SQLITE_DONE) return SCHED_END;
     if (code == SQLITE_ROW) return SCHED_OK;
-    if (code == SQLITE_CONSTRAINT) return SCHED_EINVAL;
+    if (code == SQLITE_CONSTRAINT) return SCHED_ECONSTRAINT;
     return SCHED_EFAIL;
 }
 
@@ -147,5 +147,7 @@ enum sched_rc xsql_finalize(struct sqlite3_stmt *stmt)
 {
     return sqlite3_finalize(stmt) ? SCHED_EFAIL : SCHED_OK;
 }
+
+int xsql_changes(void) { return sqlite3_changes(sched); }
 
 int64_t xsql_last_id(void) { return sqlite3_last_insert_rowid(sched); }

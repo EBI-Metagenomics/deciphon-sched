@@ -185,16 +185,18 @@ enum sched_rc sched_db_remove(int64_t id)
 
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
-    if (xsql_step(st) != SCHED_END) return ESTEP;
-    return SCHED_OK;
+    enum sched_rc rc = xsql_step(st);
+    if (rc != SCHED_END) return error(rc, "remove db");
+    return xsql_changes() == 0 ? SCHED_NOTFOUND : SCHED_OK;
 }
 
-enum sched_rc db_delete(void)
+enum sched_rc db_wipe(void)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_DELETE));
     if (!st) return EFRESH;
 
-    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
+    enum sched_rc rc = xsql_step(st);
+    return rc == SCHED_END ? SCHED_OK : error(rc, "wipe db");
 }
 
 void db_to_hmm_filename(char *filename)

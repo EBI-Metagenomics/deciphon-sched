@@ -142,12 +142,13 @@ enum sched_rc scan_submit(void *scan, int64_t job_id)
     return rc;
 }
 
-enum sched_rc scan_delete(void)
+enum sched_rc scan_wipe(void)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(SCAN_DELETE));
     if (!st) return EFRESH;
 
-    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
+    enum sched_rc rc = xsql_step(st);
+    return rc == SCHED_END ? SCHED_OK : error(rc, "wipe scan");
 }
 
 static enum sched_rc scan_next(struct sched_scan *scan)

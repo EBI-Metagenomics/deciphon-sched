@@ -179,12 +179,13 @@ enum sched_rc prod_next(struct sched_prod *prod)
     return get_prod(prod);
 }
 
-enum sched_rc prod_delete(void)
+enum sched_rc prod_wipe(void)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_DELETE));
     if (!st) return EFRESH;
 
-    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
+    enum sched_rc rc = xsql_step(st);
+    return rc == SCHED_END ? SCHED_OK : error(rc, "wipe prod");
 }
 
 #define CLEANUP(X)                                                             \

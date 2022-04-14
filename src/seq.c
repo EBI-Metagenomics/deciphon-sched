@@ -37,12 +37,13 @@ enum sched_rc seq_submit(struct sched_seq *seq)
     return SCHED_OK;
 }
 
-enum sched_rc seq_delete(void)
+enum sched_rc seq_wipe(void)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(SEQ_DELETE));
     if (!st) return EFRESH;
 
-    return xsql_step(st) == SCHED_END ? SCHED_OK : efail("delete db");
+    enum sched_rc rc = xsql_step(st);
+    return rc == SCHED_END ? SCHED_OK : error(rc, "wipe seq");
 }
 
 static enum sched_rc next_seq_scan_id(int64_t scan_id, int64_t *seq_id)
