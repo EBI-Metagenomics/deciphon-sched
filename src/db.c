@@ -164,7 +164,7 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
 
     char hmm_filename[FILENAME_SIZE] = {0};
     strcpy(hmm_filename, filename);
-    db_to_hmm_filename(hmm_filename);
+    sched_db_to_hmm_filename(hmm_filename);
 
     struct sched_hmm hmm = {0};
     rc = sched_hmm_get_by_filename(&hmm, hmm_filename);
@@ -190,6 +190,14 @@ enum sched_rc sched_db_remove(int64_t id)
     return xsql_changes() == 0 ? SCHED_NOTFOUND : SCHED_OK;
 }
 
+void sched_db_to_hmm_filename(char *filename)
+{
+    size_t len = strlen(filename);
+    filename[len - 3] = 'h';
+    filename[len - 2] = 'm';
+    filename[len - 1] = 'm';
+}
+
 enum sched_rc db_wipe(void)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_DELETE));
@@ -197,12 +205,4 @@ enum sched_rc db_wipe(void)
 
     enum sched_rc rc = xsql_step(st);
     return rc == SCHED_END ? SCHED_OK : error(rc, "wipe db");
-}
-
-void db_to_hmm_filename(char *filename)
-{
-    size_t len = strlen(filename);
-    filename[len - 3] = 'h';
-    filename[len - 2] = 'm';
-    filename[len - 1] = 'm';
 }

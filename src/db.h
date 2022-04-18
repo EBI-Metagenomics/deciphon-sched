@@ -4,6 +4,5 @@
 #include "sched/rc.h"
 
 enum sched_rc db_wipe(void);
-void db_to_hmm_filename(char *filename);
 
 #endif

@@ -27,4 +27,6 @@ enum sched_rc sched_db_add(struct sched_db *, char const *filename);
 
 enum sched_rc sched_db_remove(int64_t id);
 
+void sched_db_to_hmm_filename(char *filename);
+
 #endif
