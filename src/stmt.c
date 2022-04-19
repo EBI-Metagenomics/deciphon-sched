@@ -92,7 +92,7 @@ enum sched_rc stmt_init(void)
         stmt[i].st = stmts[i];
         stmt[i].query = queries[i];
 
-        if (xsql_prepare(stmt + i)) return efail("prepare stmt");
+        if (xsql_prepare(stmt + i)) return error(SCHED_FAIL_PREPARE_STMT);
     }
     return SCHED_OK;
 }
@@ -106,5 +106,5 @@ void stmt_del(void)
     {
         rc |= xsql_finalize(stmt[i].st);
     }
-    if (rc) efail("finalize statements properly");
+    if (rc) error(SCHED_FAIL_FINALIZE_STMT);
 }

@@ -95,7 +95,7 @@ void test_sched_submit_hmm_nofile(void)
     EQ(sched_init(sched_path), SCHED_OK);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, nofile), SCHED_EINVAL);
+    EQ(sched_hmm_set_file(&hmm, nofile), SCHED_INVALID_FILE_NAME);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
@@ -120,7 +120,7 @@ void test_sched_submit_hmm_same_file(void)
 
     EQ(sched_hmm_set_file(&hmm, file1b), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_EINVAL);
+    EQ(sched_job_submit(&job, &hmm), SCHED_HMM_ALREADY_EXISTS);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
@@ -137,7 +137,7 @@ void test_sched_submit_hmm_wrong_extension(void)
     EQ(sched_init(sched_path), SCHED_OK);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file), SCHED_EINVAL);
+    EQ(sched_hmm_set_file(&hmm, file), SCHED_INVALID_FILE_NAME_EXT);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
@@ -197,7 +197,7 @@ void test_sched_add_db(void)
     EQ(sched_db_add(&db, file2_dcp), SCHED_OK);
     EQ(db.id, 2);
 
-    EQ(sched_db_add(&db, file3_dcp), SCHED_EINVAL);
+    EQ(sched_db_add(&db, file3_dcp), SCHED_ASSOC_HMM_NOT_FOUND);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
@@ -288,7 +288,7 @@ void test_sched_submit_and_fetch_scan_job()
     EQ(job.id, 3);
     EQ(sched_job_set_run(job.id), SCHED_OK);
 
-    EQ(sched_job_next_pend(&job), SCHED_NOTFOUND);
+    EQ(sched_job_next_pend(&job), SCHED_NOT_FOUND);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
@@ -347,7 +347,7 @@ void test_sched_submit_and_fetch_seq()
     EQ(seq.scan_id, 1);
     EQ(seq.name, "seq1");
     EQ(seq.data, "ACTTGCCG");
-    EQ(sched_seq_scan_next(&seq), SCHED_NOTFOUND);
+    EQ(sched_seq_scan_next(&seq), SCHED_NOT_FOUND);
 
     EQ(sched_cleanup(), SCHED_OK);
 }

@@ -27,12 +27,12 @@ static enum sched_rc select_db_i64(struct sched_db *db, int64_t by_value,
     if (xsql_bind_i64(st, 0, by_value)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_OK) return efail("get db");
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc != SCHED_OK) return ESTEP;
 
     db->id = xsql_get_i64(st, 0);
     db->xxh3 = xsql_get_i64(st, 1);
-    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return EGETTXT;
     db->hmm_id = xsql_get_i64(st, 3);
 
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
@@ -57,12 +57,12 @@ static enum sched_rc select_db_str(struct sched_db *db, char const *by_value,
     if (xsql_bind_str(st, 0, by_value)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_OK) return efail("get db");
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc != SCHED_OK) return ESTEP;
 
     db->id = xsql_get_i64(st, 0);
     db->xxh3 = xsql_get_i64(st, 1);
-    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return EGETTXT;
     db->hmm_id = xsql_get_i64(st, 3);
 
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
@@ -82,12 +82,12 @@ static enum sched_rc db_next(struct sched_db *db)
     if (xsql_bind_i64(st, 0, db->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     db->id = xsql_get_i64(st, 0);
     db->xxh3 = xsql_get_i64(st, 1);
-    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*db, filename))) return EGETTXT;
     db->hmm_id = xsql_get_i64(st, 3);
 
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
@@ -101,13 +101,13 @@ enum sched_rc sched_db_get_all(sched_db_set_func_t fn, struct sched_db *db,
     sched_db_init(db);
     while ((rc = db_next(db)) == SCHED_OK)
         fn(db, arg);
-    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
+    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
 }
 
 static enum sched_rc init_db(struct sched_db *db, char const *filename)
 {
     FILE *fp = fopen(filename, "rb");
-    if (!fp) return eio("fopen");
+    if (!fp) return error(SCHED_FAIL_OPEN_FILE);
 
     enum sched_rc rc = xfile_hash(fp, &db->xxh3);
     if (rc) goto cleanup;
@@ -132,8 +132,7 @@ static enum sched_rc add_db(char const *filename, struct sched_db *db)
     if (xsql_bind_i64(st, 2, db->hmm_id)) return EBIND;
 
     rc = xsql_step(st);
-    if (rc == SCHED_EINVAL) return einval("add db");
-    if (rc != SCHED_END) return efail("add db");
+    if (rc != SCHED_END) return ESTEP;
 
     db->id = xsql_last_id();
     return SCHED_OK;
@@ -147,14 +146,14 @@ static enum sched_rc has_db_by_filename(char const *filename)
 
 static enum sched_rc check_filename(char const *filename)
 {
-    if (!xfile_is_name(filename)) return einval("invalid db filename");
+    if (!xfile_is_name(filename)) return error(SCHED_INVALID_FILE_NAME);
 
     size_t len = strlen(filename);
-    if (len < 5) return einval("filename is too short");
+    if (len < 5) return error(SCHED_TOO_SHORT_FILE_NAME);
     if (strncmp(&filename[len - 4], ".dcp", 4))
-        return einval("invalid extension");
+        return error(SCHED_INVALID_FILE_NAME_EXT);
 
-    return len >= FILENAME_SIZE ? einval("filename is too long") : SCHED_OK;
+    return len >= FILENAME_SIZE ? error(SCHED_TOO_LONG_FILE_NAME) : SCHED_OK;
 }
 
 enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
@@ -168,14 +167,14 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
 
     struct sched_hmm hmm = {0};
     rc = sched_hmm_get_by_filename(&hmm, hmm_filename);
-    if (rc == SCHED_NOTFOUND) return einval("hmm not found");
+    if (rc == SCHED_NOT_FOUND) return error(SCHED_ASSOC_HMM_NOT_FOUND);
     if (rc) return rc;
 
     rc = has_db_by_filename(filename);
-    if (rc == SCHED_OK) return einval("database already exist");
+    if (rc == SCHED_OK) return error(SCHED_DB_ALREADY_EXISTS);
 
     db->hmm_id = hmm.id;
-    return rc == SCHED_NOTFOUND ? add_db(filename, db) : rc;
+    return rc == SCHED_NOT_FOUND ? add_db(filename, db) : rc;
 }
 
 enum sched_rc sched_db_remove(int64_t id)
@@ -186,8 +185,8 @@ enum sched_rc sched_db_remove(int64_t id)
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc != SCHED_END) return error(rc, "remove db");
-    return xsql_changes() == 0 ? SCHED_NOTFOUND : SCHED_OK;
+    if (rc != SCHED_END) return ESTEP;
+    return xsql_changes() == 0 ? SCHED_NOT_FOUND : SCHED_OK;
 }
 
 void sched_db_to_hmm_filename(char *filename)
@@ -204,5 +203,5 @@ enum sched_rc db_wipe(void)
     if (!st) return EFRESH;
 
     enum sched_rc rc = xsql_step(st);
-    return rc == SCHED_END ? SCHED_OK : error(rc, "wipe db");
+    return rc == SCHED_END ? SCHED_OK : ESTEP;
 }

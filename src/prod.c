@@ -57,18 +57,18 @@ enum sched_rc sched_prod_write_begin(struct sched_prod const *prod,
 #define Fs "%s" TAB
 #define Fg "%.17g" TAB
 
-    if (echo(Fd64, scan_id)) efail("write prod");
-    if (echo(Fd64, seq_id)) efail("write prod");
+    if (echo(Fd64, scan_id)) EWRITEFILE;
+    if (echo(Fd64, seq_id)) EWRITEFILE;
 
-    if (echo(Fs, profile_name)) efail("write prod");
-    if (echo(Fs, abc_name)) efail("write prod");
+    if (echo(Fs, profile_name)) EWRITEFILE;
+    if (echo(Fs, abc_name)) EWRITEFILE;
 
     /* Reference: https://stackoverflow.com/a/21162120 */
-    if (echo(Fg, alt_loglik)) efail("write prod");
-    if (echo(Fg, null_loglik)) efail("write prod");
+    if (echo(Fg, alt_loglik)) EWRITEFILE;
+    if (echo(Fg, null_loglik)) EWRITEFILE;
 
-    if (echo(Fs, profile_typeid)) efail("write prod");
-    if (echo(Fs, version)) efail("write prod");
+    if (echo(Fs, profile_typeid)) EWRITEFILE;
+    if (echo(Fs, version)) EWRITEFILE;
 
     return SCHED_OK;
 
@@ -103,13 +103,13 @@ enum sched_rc sched_prod_write_match(sched_prod_write_match_func_t *fn,
 
 enum sched_rc sched_prod_write_match_sep(unsigned thread_num)
 {
-    if (fputc(';', prod_file[thread_num].fp) == EOF) return eio("fputc");
+    if (fputc(';', prod_file[thread_num].fp) == EOF) return EWRITEFILE;
     return SCHED_OK;
 }
 
 enum sched_rc sched_prod_write_end(unsigned thread_num)
 {
-    if (fputc('\n', prod_file[thread_num].fp) == EOF) return eio("fputc");
+    if (fputc('\n', prod_file[thread_num].fp) == EOF) return EWRITEFILE;
     return SCHED_OK;
 }
 
@@ -121,25 +121,25 @@ static enum sched_rc get_prod(struct sched_prod *prod)
     if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_OK) return efail("get db");
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc != SCHED_OK) return ESTEP;
 
     int i = 0;
     prod->id = xsql_get_i64(st, i++);
     prod->scan_id = xsql_get_i64(st, i++);
     prod->seq_id = xsql_get_i64(st, i++);
 
-    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, profile_name))) return ECPYTXT;
-    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, abc_name))) return ECPYTXT;
+    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, profile_name))) return EGETTXT;
+    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, abc_name))) return EGETTXT;
 
     prod->alt_loglik = xsql_get_dbl(st, i++);
     prod->null_loglik = xsql_get_dbl(st, i++);
 
     if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, profile_typeid)))
-        return ECPYTXT;
-    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, version))) return ECPYTXT;
+        return EGETTXT;
+    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, version))) return EGETTXT;
 
-    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, match))) return ECPYTXT;
+    if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, match))) return EGETTXT;
 
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
@@ -153,7 +153,7 @@ enum sched_rc prod_scan_next(struct sched_prod *prod)
     if (xsql_bind_i64(st, 1, prod->scan_id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     prod->id = xsql_get_i64(st, 0);
@@ -170,7 +170,7 @@ enum sched_rc prod_next(struct sched_prod *prod)
     if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     prod->id = xsql_get_i64(st, 0);
@@ -185,7 +185,7 @@ enum sched_rc prod_wipe(void)
     if (!st) return EFRESH;
 
     enum sched_rc rc = xsql_step(st);
-    return rc == SCHED_END ? SCHED_OK : error(rc, "wipe prod");
+    return rc == SCHED_END ? SCHED_OK : ESTEP;
 }
 
 #define CLEANUP(X)                                                             \
@@ -197,9 +197,9 @@ enum sched_rc prod_wipe(void)
 
 static enum sched_rc expect_word(FILE *fp, char const *field)
 {
-    if (tok_next(&tok, fp)) return eparse("parse prods file");
-    if (tok_id(&tok) != TOK_WORD) return eparse("parse prods file");
-    if (strcmp(tok.value, field)) return eparse("parse prods file");
+    if (tok_next(&tok, fp)) return EPARSEFILE;
+    if (tok_id(&tok) != TOK_WORD) return EPARSEFILE;
+    if (strcmp(tok.value, field)) return EPARSEFILE;
     return SCHED_OK;
 }
 
@@ -216,23 +216,23 @@ static enum sched_rc parse_prod_file_header(FILE *fp)
     if ((rc = expect_word(fp, "version"))) return rc;
     if ((rc = expect_word(fp, "match"))) return rc;
 
-    if (tok_next(&tok, fp)) return eparse("parse prods file");
-    if (tok_id(&tok) != TOK_NL) return eparse("parse prods file");
+    if (tok_next(&tok, fp)) return EPARSEFILE;
+    if (tok_id(&tok) != TOK_NL) return EPARSEFILE;
     return rc;
 }
 
 enum sched_rc sched_prod_add_file(FILE *fp)
 {
     enum sched_rc rc = SCHED_OK;
-    if (xsql_begin_transaction()) CLEANUP(efail("submit prod"));
+    if (xsql_begin_transaction()) CLEANUP(EBEGINSTMT);
 
     if ((rc = parse_prod_file_header(fp))) goto cleanup;
 
     do
     {
         struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_INSERT));
-        if (!st) CLEANUP(efail("submit prod"));
-        if (tok_next(&tok, fp)) CLEANUP(eparse("parse prods file"));
+        if (!st) CLEANUP(error(SCHED_FAIL_GET_FRESH_STMT));
+        if (tok_next(&tok, fp)) CLEANUP(EPARSEFILE);
         if (tok_id(&tok) == TOK_EOF) break;
 
         for (int i = 0; i < (int)ARRAY_SIZE(col_type); i++)
@@ -240,35 +240,32 @@ enum sched_rc sched_prod_add_file(FILE *fp)
             if (col_type[i] == COL_TYPE_INT64)
             {
                 int64_t val = 0;
-                if (!to_int64(tok_value(&tok), &val))
-                    CLEANUP(eparse("parse prods file"));
-                if (xsql_bind_i64(st, i, val)) CLEANUP(efail("submit prod"));
+                if (!to_int64(tok_value(&tok), &val)) CLEANUP(EPARSEFILE);
+                if (xsql_bind_i64(st, i, val)) CLEANUP(EBIND);
             }
             else if (col_type[i] == COL_TYPE_DOUBLE)
             {
                 double val = 0;
-                if (!to_double(tok_value(&tok), &val))
-                    CLEANUP(eparse("parse prods file"));
-                if (xsql_bind_dbl(st, i, val)) CLEANUP(efail("submit prod"));
+                if (!to_double(tok_value(&tok), &val)) CLEANUP(EPARSEFILE);
+                if (xsql_bind_dbl(st, i, val)) CLEANUP(EBIND);
             }
             else if (col_type[i] == COL_TYPE_TEXT)
             {
                 struct xsql_txt txt = {tok_size(&tok), tok_value(&tok)};
-                if (xsql_bind_txt(st, i, txt)) CLEANUP(efail("submit prod"));
+                if (xsql_bind_txt(st, i, txt)) CLEANUP(EBIND);
             }
-            if (tok_next(&tok, fp)) CLEANUP(eparse("parse prods file"));
+            if (tok_next(&tok, fp)) CLEANUP(EPARSEFILE);
         }
         if (tok_id(&tok) != TOK_NL)
         {
-            rc = eparse("expected newline");
+            rc = EPARSEFILE;
             goto cleanup;
         }
         rc = xsql_step(st);
-        if (rc == SCHED_EINVAL) CLEANUP(einval("constraint violation"));
-        if (rc != SCHED_END) CLEANUP(efail("submit prod"));
+        if (rc != SCHED_END) CLEANUP(ESTEP);
     } while (true);
 
-    if (xsql_end_transaction()) CLEANUP(efail("submit prod"));
+    if (xsql_end_transaction()) CLEANUP(EENDSTMT);
     return SCHED_OK;
 
 cleanup:
@@ -284,23 +281,23 @@ enum sched_rc sched_prod_get_by_id(struct sched_prod *prod, int64_t id)
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_OK) efail("get prod");
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc != SCHED_OK) ESTEP;
 
     prod->id = xsql_get_i64(st, 0);
     prod->scan_id = xsql_get_i64(st, 1);
     prod->seq_id = xsql_get_i64(st, 2);
 
-    if (xsql_cpy_txt(st, 3, XSQL_TXT_OF(*prod, profile_name))) return ECPYTXT;
-    if (xsql_cpy_txt(st, 4, XSQL_TXT_OF(*prod, abc_name))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 3, XSQL_TXT_OF(*prod, profile_name))) return EGETTXT;
+    if (xsql_cpy_txt(st, 4, XSQL_TXT_OF(*prod, abc_name))) return EGETTXT;
 
     prod->alt_loglik = xsql_get_dbl(st, 5);
     prod->null_loglik = xsql_get_dbl(st, 6);
 
-    if (xsql_cpy_txt(st, 7, XSQL_TXT_OF(*prod, profile_typeid))) return ECPYTXT;
-    if (xsql_cpy_txt(st, 8, XSQL_TXT_OF(*prod, version))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 7, XSQL_TXT_OF(*prod, profile_typeid))) return EGETTXT;
+    if (xsql_cpy_txt(st, 8, XSQL_TXT_OF(*prod, version))) return EGETTXT;
 
-    if (xsql_cpy_txt(st, 9, XSQL_TXT_OF(*prod, match))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 9, XSQL_TXT_OF(*prod, match))) return EGETTXT;
 
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
@@ -337,7 +334,7 @@ enum sched_rc sched_prod_get_all(sched_prod_set_func_t fn,
     prod_init(prod);
     while ((rc = prod_next(prod)) == SCHED_OK)
         fn(prod, arg);
-    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
+    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
 }
 
 #undef CLEANUP

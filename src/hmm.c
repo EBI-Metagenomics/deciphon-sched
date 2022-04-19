@@ -18,12 +18,12 @@ static enum sched_rc select_hmm_i64(struct sched_hmm *hmm, int64_t by_value,
     if (xsql_bind_i64(st, 0, by_value)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_OK) return efail("get hmm");
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc != SCHED_OK) return ESTEP;
 
     hmm->id = xsql_get_i64(st, 0);
     hmm->xxh3 = xsql_get_i64(st, 1);
-    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*hmm, filename))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*hmm, filename))) return EGETTXT;
     hmm->job_id = xsql_get_i64(st, 3);
 
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
@@ -38,12 +38,12 @@ static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
     if (xsql_bind_str(st, 0, by_value)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
-    if (rc != SCHED_OK) return efail("get hmm");
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc != SCHED_OK) return ESTEP;
 
     hmm->id = xsql_get_i64(st, 0);
     hmm->xxh3 = xsql_get_i64(st, 1);
-    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*hmm, filename))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*hmm, filename))) return EGETTXT;
     hmm->job_id = xsql_get_i64(st, 3);
 
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
@@ -60,7 +60,7 @@ void sched_hmm_init(struct sched_hmm *hmm)
 static enum sched_rc hash_setup(struct sched_hmm *hmm)
 {
     FILE *fp = fopen(hmm->filename, "rb");
-    if (!fp) return eio("fopen");
+    if (!fp) return error(SCHED_FAIL_OPEN_FILE);
 
     enum sched_rc rc = xfile_hash(fp, &hmm->xxh3);
 
@@ -70,14 +70,14 @@ static enum sched_rc hash_setup(struct sched_hmm *hmm)
 
 static enum sched_rc check_filename(char const *filename)
 {
-    if (!xfile_is_name(filename)) return einval("invalid hmm filename");
+    if (!xfile_is_name(filename)) return error(SCHED_INVALID_FILE_NAME);
 
     size_t len = strlen(filename);
-    if (len < 5) return einval("filename is too short");
+    if (len < 5) return error(SCHED_TOO_SHORT_FILE_NAME);
     if (strncmp(&filename[len - 4], ".hmm", 4))
-        return einval("invalid extension");
+        return error(SCHED_INVALID_FILE_NAME_EXT);
 
-    return len >= FILENAME_SIZE ? einval("filename is too long") : SCHED_OK;
+    return len >= FILENAME_SIZE ? error(SCHED_TOO_LONG_FILE_NAME) : SCHED_OK;
 }
 
 enum sched_rc sched_hmm_set_file(struct sched_hmm *hmm, char const *filename)
@@ -117,12 +117,12 @@ static enum sched_rc hmm_next(struct sched_hmm *hmm)
     if (xsql_bind_i64(st, 0, hmm->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOTFOUND;
+    if (rc == SCHED_END) return SCHED_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     hmm->id = xsql_get_i64(st, 0);
     hmm->xxh3 = xsql_get_i64(st, 1);
-    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*hmm, filename))) return ECPYTXT;
+    if (xsql_cpy_txt(st, 2, XSQL_TXT_OF(*hmm, filename))) return EGETTXT;
     hmm->job_id = xsql_get_i64(st, 3);
 
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
@@ -136,7 +136,7 @@ enum sched_rc sched_hmm_get_all(sched_hmm_set_func_t fn, struct sched_hmm *hmm,
     sched_hmm_init(hmm);
     while ((rc = hmm_next(hmm)) == SCHED_OK)
         fn(hmm, arg);
-    return rc == SCHED_NOTFOUND ? SCHED_OK : rc;
+    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
 }
 
 enum sched_rc sched_hmm_remove(int64_t id)
@@ -147,8 +147,8 @@ enum sched_rc sched_hmm_remove(int64_t id)
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc != SCHED_END) return error(rc, "remove hmm");
-    return xsql_changes() == 0 ? SCHED_NOTFOUND : SCHED_OK;
+    if (rc != SCHED_END) return ESTEP;
+    return xsql_changes() == 0 ? SCHED_NOT_FOUND : SCHED_OK;
 }
 
 void sched_hmm_to_db_filename(char *filename)
@@ -182,15 +182,15 @@ static enum sched_rc has_hmm_by_xxh3(int64_t xxh3)
 enum sched_rc hmm_submit(void *hmm, int64_t job_id)
 {
     struct sched_hmm *h = hmm;
-    if (!h->filename[0]) return einval("file has not been set");
+    if (!h->filename[0]) return SCHED_FILE_NAME_NOT_SET;
     h->job_id = job_id;
 
     enum sched_rc rc = has_hmm_by_xxh3(h->xxh3);
-    if (rc == SCHED_OK) return einval("hmm already exists");
+    if (rc == SCHED_OK) return SCHED_HMM_ALREADY_EXISTS;
 
-    if (rc != SCHED_NOTFOUND) return rc;
+    if (rc != SCHED_NOT_FOUND) return rc;
 
-    return rc == SCHED_NOTFOUND ? submit(h) : rc;
+    return rc == SCHED_NOT_FOUND ? submit(h) : rc;
 }
 
 enum sched_rc hmm_wipe(void)
@@ -199,5 +199,5 @@ enum sched_rc hmm_wipe(void)
     if (!st) return EFRESH;
 
     enum sched_rc rc = xsql_step(st);
-    return rc == SCHED_END ? SCHED_OK : error(rc, "wipe hmm");
+    return rc == SCHED_END ? SCHED_OK : ESTEP;
 }

@@ -2,13 +2,16 @@
 #define XSTRCPY_H
 
 #include "compiler.h"
+#include "logger.h"
+#include "sched/rc.h"
 #include "strlcpy.h"
 #include <stdbool.h>
 #include <stddef.h>
 
-static inline bool xstrcpy(char *dst, char const *src, size_t dsize)
+static inline enum sched_rc xstrcpy(char *dst, char const *src, size_t dsize)
 {
-    return strlcpy(dst, src, dsize) < dsize;
+    return strlcpy(dst, src, dsize) < dsize ? SCHED_OK
+                                            : error(SCHED_NOT_ENOUGH_MEMORY);
 }
 
 #define XSTRCPY(ptr, member, src)                                              \

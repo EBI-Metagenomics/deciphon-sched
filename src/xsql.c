@@ -18,14 +18,16 @@ int xsql_version(void) { return sqlite3_libversion_number(); }
 enum sched_rc xsql_bind_dbl(struct sqlite3_stmt *stmt, int col, double val)
 {
     assert(col >= 0);
-    if (sqlite3_bind_double(stmt, col + 1, val)) return SCHED_EFAIL;
+    if (sqlite3_bind_double(stmt, col + 1, val))
+        return error(SCHED_FAIL_BIND_STMT);
     return SCHED_OK;
 }
 
 enum sched_rc xsql_bind_i64(struct sqlite3_stmt *stmt, int col, int64_t val)
 {
     assert(col >= 0);
-    if (sqlite3_bind_int64(stmt, col + 1, val)) return SCHED_EFAIL;
+    if (sqlite3_bind_int64(stmt, col + 1, val))
+        return error(SCHED_FAIL_BIND_STMT);
     return SCHED_OK;
 }
 
@@ -33,7 +35,7 @@ enum sched_rc xsql_bind_str(struct sqlite3_stmt *stmt, int col, char const *str)
 {
     assert(col >= 0);
     if (sqlite3_bind_text(stmt, col + 1, str, -1, SQLITE_TRANSIENT))
-        return SCHED_EFAIL;
+        return error(SCHED_FAIL_BIND_STMT);
     return SCHED_OK;
 }
 
@@ -43,7 +45,7 @@ enum sched_rc xsql_bind_txt(struct sqlite3_stmt *stmt, int col,
     assert(col >= 0);
     if (sqlite3_bind_text(stmt, col + 1, txt.str, (int)txt.len,
                           SQLITE_TRANSIENT))
-        return SCHED_EFAIL;
+        return error(SCHED_FAIL_BIND_STMT);
     return SCHED_OK;
 }
 
@@ -66,30 +68,31 @@ enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
                            struct xsql_txt txt)
 {
     char const *str = (char const *)sqlite3_column_text(stmt, col);
-    if (!str) return SCHED_EFAIL;
+    if (!str) return error(SCHED_FAIL_GET_COLUMN_TEXT);
     sqlite3_column_bytes(stmt, col);
-    return xstrcpy((char *)txt.str, str, txt.len + 1) ? SCHED_OK : SCHED_EFAIL;
+    return xstrcpy((char *)txt.str, str, txt.len + 1);
 }
 
 enum sched_rc xsql_open(char const *filepath)
 {
-    if (sqlite3_open(filepath, &sched)) return SCHED_EFAIL;
+    if (sqlite3_open(filepath, &sched)) return error(SCHED_FAIL_OPEN_FILE);
     if (xsql_exec("PRAGMA foreign_keys = ON;", 0, 0))
     {
         sqlite3_close(sched);
-        return SCHED_EFAIL;
+        return SCHED_FAIL_EXEC_STMT;
     }
     return SCHED_OK;
 }
 
 enum sched_rc xsql_close(void)
 {
-    return sqlite3_close(sched) ? SCHED_EFAIL : SCHED_OK;
+    return sqlite3_close(sched) ? error(SCHED_FAIL_CLOSE_SCHED_FILE) : SCHED_OK;
 }
 
 enum sched_rc xsql_exec(char const *sql, xsql_func_t fn, void *arg)
 {
-    return sqlite3_exec(sched, sql, fn, arg, 0) ? SCHED_EFAIL : SCHED_OK;
+    return sqlite3_exec(sched, sql, fn, arg, 0) ? error(SCHED_FAIL_EXEC_STMT)
+                                                : SCHED_OK;
 }
 
 enum sched_rc xsql_begin_transaction(void)
@@ -110,16 +113,13 @@ enum sched_rc xsql_rollback_transaction(void)
 enum sched_rc xsql_prepare(struct xsql_stmt *stmt)
 {
     return sqlite3_prepare_v2(sched, stmt->query, -1, &stmt->st, 0)
-               ? SCHED_EFAIL
+               ? error(SCHED_FAIL_PREPARE_STMT)
                : SCHED_OK;
 }
 
 static enum sched_rc reset(struct sqlite3_stmt *stmt)
 {
-    int code = sqlite3_reset(stmt);
-    if (code == SQLITE_CONSTRAINT) return SCHED_EINVAL;
-    if (code) return SCHED_EFAIL;
-    return SCHED_OK;
+    return sqlite3_reset(stmt) ? error(SCHED_FAIL_RESET_STMT) : SCHED_OK;
 }
 
 struct sqlite3_stmt *xsql_fresh_stmt(struct xsql_stmt *stmt)
@@ -139,13 +139,12 @@ enum sched_rc xsql_step(struct sqlite3_stmt *stmt)
     int code = sqlite3_step(stmt);
     if (code == SQLITE_DONE) return SCHED_END;
     if (code == SQLITE_ROW) return SCHED_OK;
-    if (code == SQLITE_CONSTRAINT) return SCHED_ECONSTRAINT;
-    return SCHED_EFAIL;
+    return error(SCHED_FAIL_EVAL_STMT);
 }
 
 enum sched_rc xsql_finalize(struct sqlite3_stmt *stmt)
 {
-    return sqlite3_finalize(stmt) ? SCHED_EFAIL : SCHED_OK;
+    return sqlite3_finalize(stmt) ? error(SCHED_FAIL_FINALIZE_STMT) : SCHED_OK;
 }
 
 int xsql_changes(void) { return sqlite3_changes(sched); }

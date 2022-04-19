@@ -25,11 +25,11 @@ static_assert(same_type(XXH64_hash_t, uint64_t), "XXH64_hash_t is uint64_t");
 
 enum sched_rc xfile_hash(FILE *restrict fp, int64_t *hash)
 {
-    int rc = SCHED_EFAIL;
+    int rc = SCHED_OK;
     XXH3_state_t *state = XXH3_createState();
     if (!state)
     {
-        rc = efail("failed to create state");
+        rc = error(SCHED_NOT_ENOUGH_MEMORY);
         goto cleanup;
     }
     XXH3_64bits_reset(state);
@@ -40,7 +40,7 @@ enum sched_rc xfile_hash(FILE *restrict fp, int64_t *hash)
     {
         if (n < BUFFSIZE && ferror(fp))
         {
-            rc = eio("fread");
+            rc = error(SCHED_FAIL_READ_FILE);
             goto cleanup;
         }
 
@@ -48,10 +48,9 @@ enum sched_rc xfile_hash(FILE *restrict fp, int64_t *hash)
     }
     if (ferror(fp))
     {
-        rc = eio("fread");
+        rc = error(SCHED_FAIL_READ_FILE);
         goto cleanup;
     }
-    rc = SCHED_OK;
 
     union
     {
@@ -91,7 +90,7 @@ enum sched_rc xfile_touch(char const *filepath)
     if (xfile_exists(filepath)) return SCHED_OK;
     int fd = open(filepath, O_RDWR | O_CREAT,
                   S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP);
-    if (fd == -1) return eio("open");
-    if (close(fd) == -1) return eio("close");
+    if (fd == -1) return error(SCHED_FAIL_OPEN_FILE);
+    if (close(fd) == -1) return error(SCHED_FAIL_CLOSE_FILE);
     return SCHED_OK;
 }
