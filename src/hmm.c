@@ -1,5 +1,5 @@
 #include "hmm.h"
-#include "logger.h"
+#include "error.h"
 #include "sched/hmm.h"
 #include "sched/rc.h"
 #include "stmt.h"

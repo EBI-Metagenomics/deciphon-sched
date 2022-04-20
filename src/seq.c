@@ -1,5 +1,5 @@
 #include "seq.h"
-#include "logger.h"
+#include "error.h"
 #include "sched/rc.h"
 #include "sched/seq.h"
 #include "stmt.h"

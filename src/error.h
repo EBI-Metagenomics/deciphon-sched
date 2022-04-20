@@ -1,14 +1,7 @@
-#ifndef LOGGER_H
-#define LOGGER_H
+#ifndef ERROR_H
+#define ERROR_H
 
 #include "compiler.h"
-#include "sched/logger.h"
-#include "sched/rc.h"
-
-enum sched_rc __logger_error(enum sched_rc rc, char const *ctx,
-                             char const *msg);
-
-#define __error(rc, msg) __logger_error(rc, LOCAL, msg)
 
 /* clang-format off */
 #define error(code)                                                                     \
@@ -74,7 +67,7 @@ enum sched_rc __logger_error(enum sched_rc rc, char const *ctx,
         ? __error(code, "failed to end sql transaction")                                \
     : code == SCHED_FAIL_ROLLBACK_TRANSACTION                                           \
         ? __error(code, "failed to rollback sql transaction")                           \
-    : __error(code, "Unknown error")
+    : __error(code, "Not an error")
 /* clang-format on */
 
 #define EFRESH error(SCHED_FAIL_GET_FRESH_STMT)
@@ -88,5 +81,9 @@ enum sched_rc __logger_error(enum sched_rc rc, char const *ctx,
 
 #define EWRITEFILE error(SCHED_FAIL_WRITE_FILE)
 #define EPARSEFILE error(SCHED_FAIL_PARSE_FILE)
+
+#define __error(rc, msg) __error_print(rc, LOCAL, msg)
+
+enum sched_rc __error_print(enum sched_rc rc, char const *ctx, char const *msg);
 
 #endif

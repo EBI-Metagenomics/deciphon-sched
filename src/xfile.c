@@ -1,5 +1,5 @@
 #include "xfile.h"
-#include "logger.h"
+#include "error.h"
 #include "sched/limits.h"
 #include "strlcpy.h"
 #include "xxhash/xxhash.h"

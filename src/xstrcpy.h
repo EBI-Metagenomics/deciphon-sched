@@ -2,7 +2,7 @@
 #define XSTRCPY_H
 
 #include "compiler.h"
-#include "logger.h"
+#include "error.h"
 #include "sched/rc.h"
 #include "strlcpy.h"
 #include <stdbool.h>

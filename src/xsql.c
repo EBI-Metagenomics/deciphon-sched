@@ -1,5 +1,5 @@
 #include "xsql.h"
-#include "logger.h"
+#include "error.h"
 #include "sched/rc.h"
 #include "sqlite3/sqlite3.h"
 #include "xstrcpy.h"

@@ -1,6 +1,6 @@
 #include "stmt.h"
 #include "compiler.h"
-#include "logger.h"
+#include "error.h"
 #include "sched.h"
 #include "sched/sched.h"
 #include "xsql.h"

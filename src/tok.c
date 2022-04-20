@@ -1,6 +1,6 @@
 #include "tok.h"
 #include "compiler.h"
-#include "logger.h"
+#include "error.h"
 #include "sched/rc.h"
 #include <assert.h>
 #include <stdlib.h>

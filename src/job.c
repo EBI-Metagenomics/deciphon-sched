@@ -1,7 +1,7 @@
 #include "job.h"
 #include "bug.h"
+#include "error.h"
 #include "hmm.h"
-#include "logger.h"
 #include "scan.h"
 #include "sched/job.h"
 #include "sched/rc.h"

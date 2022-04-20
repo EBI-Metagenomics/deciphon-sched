@@ -1,5 +1,5 @@
 #include "prod.h"
-#include "logger.h"
+#include "error.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
 #include "stmt.h"
