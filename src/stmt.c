@@ -101,10 +101,6 @@ struct xsql_stmt *stmt_get(int idx) { return stmt + idx; }
 
 void stmt_del(void)
 {
-    enum sched_rc rc = SCHED_OK;
     for (unsigned i = 0; i < ARRAY_SIZE(stmt); ++i)
-    {
-        rc |= xsql_finalize(stmt[i].st);
-    }
-    if (rc) error(SCHED_FAIL_FINALIZE_STMT);
+        xsql_finalize(stmt[i].st);
 }

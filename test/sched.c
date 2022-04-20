@@ -226,15 +226,15 @@ void test_sched_submit_scan(void)
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
-    sched_scan_add_seq(&scan, "seq0", "ACAAGCAG");
-    sched_scan_add_seq(&scan, "seq1", "ACTTGCCG");
+    sched_scan_add_seq("seq0", "ACAAGCAG");
+    sched_scan_add_seq("seq1", "ACTTGCCG");
 
     sched_job_init(&job, SCHED_SCAN);
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
 
     sched_scan_init(&scan, db.id, true, true);
-    sched_scan_add_seq(&scan, "seq0_2", "XXGG");
-    sched_scan_add_seq(&scan, "seq1_2", "YXYX");
+    sched_scan_add_seq("seq0_2", "XXGG");
+    sched_scan_add_seq("seq1_2", "YXYX");
 
     sched_job_init(&job, SCHED_SCAN);
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
@@ -267,15 +267,15 @@ void test_sched_submit_and_fetch_scan_job()
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
-    sched_scan_add_seq(&scan, "seq0", "ACAAGCAG");
-    sched_scan_add_seq(&scan, "seq1", "ACTTGCCG");
+    sched_scan_add_seq("seq0", "ACAAGCAG");
+    sched_scan_add_seq("seq1", "ACTTGCCG");
 
     sched_job_init(&job, SCHED_SCAN);
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
 
     sched_scan_init(&scan, db.id, true, true);
-    sched_scan_add_seq(&scan, "seq0_2", "XXGG");
-    sched_scan_add_seq(&scan, "seq1_2", "YXYX");
+    sched_scan_add_seq("seq0_2", "XXGG");
+    sched_scan_add_seq("seq1_2", "YXYX");
 
     sched_job_init(&job, SCHED_SCAN);
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
@@ -318,15 +318,15 @@ void test_sched_submit_and_fetch_seq()
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
-    sched_scan_add_seq(&scan, "seq0", "ACAAGCAG");
-    sched_scan_add_seq(&scan, "seq1", "ACTTGCCG");
+    sched_scan_add_seq("seq0", "ACAAGCAG");
+    sched_scan_add_seq("seq1", "ACTTGCCG");
 
     sched_job_init(&job, SCHED_SCAN);
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
 
     sched_scan_init(&scan, db.id, true, true);
-    sched_scan_add_seq(&scan, "seq0_2", "XXGG");
-    sched_scan_add_seq(&scan, "seq1_2", "YXYX");
+    sched_scan_add_seq("seq0_2", "XXGG");
+    sched_scan_add_seq("seq1_2", "YXYX");
 
     sched_job_init(&job, SCHED_SCAN);
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
@@ -377,15 +377,15 @@ void test_sched_wipe(void)
     EQ(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
-    sched_scan_add_seq(&scan, "seq0", "ACAAGCAG");
-    sched_scan_add_seq(&scan, "seq1", "ACTTGCCG");
+    sched_scan_add_seq("seq0", "ACAAGCAG");
+    sched_scan_add_seq("seq1", "ACTTGCCG");
 
     sched_job_init(&job, SCHED_SCAN);
     EQ(sched_job_submit(&job, &scan), SCHED_OK);
 
     sched_scan_init(&scan, db.id, true, true);
-    sched_scan_add_seq(&scan, "seq0_2", "XXGG");
-    sched_scan_add_seq(&scan, "seq1_2", "YXYX");
+    sched_scan_add_seq("seq0_2", "XXGG");
+    sched_scan_add_seq("seq1_2", "YXYX");
 
     sched_job_init(&job, SCHED_SCAN);
     EQ(sched_job_submit(&job, &scan), SCHED_OK);

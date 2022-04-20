@@ -1,6 +1,7 @@
 #include "scan.h"
 #include "error.h"
 #include "prod.h"
+#include "sched/db.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
 #include "sched/scan.h"
@@ -117,10 +118,15 @@ static enum sched_rc submit(struct sched_scan *scan)
     return SCHED_OK;
 }
 
-void sched_scan_add_seq(struct sched_scan *scan, char const *name,
-                        char const *data)
+void sched_scan_add_seq(char const *name, char const *data)
 {
-    seq_queue_add(scan->id, name, data);
+    seq_queue_add(name, data);
+}
+
+static enum sched_rc db_exists(int64_t db_id)
+{
+    struct sched_db db = {0};
+    return sched_db_get_by_id(&db, db_id);
 }
 
 enum sched_rc scan_submit(void *scan, int64_t job_id)
@@ -128,7 +134,10 @@ enum sched_rc scan_submit(void *scan, int64_t job_id)
     struct sched_scan *s = scan;
     s->job_id = job_id;
 
-    enum sched_rc rc = submit(s);
+    enum sched_rc rc = db_exists(s->db_id);
+    if (rc) return rc;
+
+    rc = submit(s);
     if (rc) return rc;
 
     for (unsigned i = 0; i < seq_queue_size(); ++i)

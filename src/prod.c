@@ -2,6 +2,8 @@
 #include "error.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
+#include "sched/scan.h"
+#include "sched/seq.h"
 #include "stmt.h"
 #include "to.h"
 #include "tok.h"
@@ -221,6 +223,18 @@ static enum sched_rc parse_prod_file_header(FILE *fp)
     return rc;
 }
 
+static enum sched_rc scan_exists(int64_t scan_id)
+{
+    struct sched_scan scan = {0};
+    return sched_scan_get_by_id(&scan, scan_id);
+}
+
+static enum sched_rc seq_exists(int64_t seq_id)
+{
+    struct sched_seq seq = {0};
+    return sched_seq_get_by_id(&seq, seq_id);
+}
+
 enum sched_rc sched_prod_add_file(FILE *fp)
 {
     enum sched_rc rc = SCHED_OK;
@@ -242,6 +256,16 @@ enum sched_rc sched_prod_add_file(FILE *fp)
                 int64_t val = 0;
                 if (!to_int64(tok_value(&tok), &val)) CLEANUP(EPARSEFILE);
                 if (xsql_bind_i64(st, i, val)) CLEANUP(EBIND);
+                if (i == 0)
+                {
+                    rc = scan_exists(val);
+                    if (rc) goto cleanup;
+                }
+                else if (i == 1)
+                {
+                    rc = seq_exists(val);
+                    if (rc) goto cleanup;
+                }
             }
             else if (col_type[i] == COL_TYPE_DOUBLE)
             {

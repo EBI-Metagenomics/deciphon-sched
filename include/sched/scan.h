@@ -35,8 +35,7 @@ enum sched_rc sched_scan_get_prods(int64_t job_id, sched_prod_set_func_t,
 enum sched_rc sched_scan_get_by_id(struct sched_scan *, int64_t scan_id);
 enum sched_rc sched_scan_get_by_job_id(struct sched_scan *, int64_t job_id);
 
-void sched_scan_add_seq(struct sched_scan *, char const *name,
-                        char const *data);
+void sched_scan_add_seq(char const *name, char const *data);
 
 enum sched_rc sched_scan_get_all(sched_scan_set_func_t, struct sched_scan *,
                                  void *arg);

@@ -124,28 +124,27 @@ static enum sched_rc reset(struct sqlite3_stmt *stmt)
 
 struct sqlite3_stmt *xsql_fresh_stmt(struct xsql_stmt *stmt)
 {
-    int code = sqlite3_reset(stmt->st);
-    if (code == SQLITE_CONSTRAINT)
+    if (sqlite3_reset(stmt->st))
     {
         if (sqlite3_finalize(stmt->st)) return 0;
         if (sqlite3_prepare_v2(sched, stmt->query, -1, &stmt->st, 0)) return 0;
         return reset(stmt->st) ? 0 : stmt->st;
     }
-    return code ? 0 : stmt->st;
+    return stmt->st;
 }
+#include <stdio.h>
 
 enum sched_rc xsql_step(struct sqlite3_stmt *stmt)
 {
     int code = sqlite3_step(stmt);
     if (code == SQLITE_DONE) return SCHED_END;
     if (code == SQLITE_ROW) return SCHED_OK;
+    puts(sqlite3_errmsg(sched));
+    fflush(stdout);
     return error(SCHED_FAIL_EVAL_STMT);
 }
 
-enum sched_rc xsql_finalize(struct sqlite3_stmt *stmt)
-{
-    return sqlite3_finalize(stmt) ? error(SCHED_FAIL_FINALIZE_STMT) : SCHED_OK;
-}
+void xsql_finalize(struct sqlite3_stmt *stmt) { sqlite3_finalize(stmt); }
 
 int xsql_changes(void) { return sqlite3_changes(sched); }
 

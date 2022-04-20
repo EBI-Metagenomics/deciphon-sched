@@ -37,7 +37,6 @@ static char const strings[][40] = {
     [SCHED_FAIL_GET_COLUMN_TEXT] = "failed to get column text",
     [SCHED_FAIL_EXEC_STMT] = "failed to execute sql statement",
     [SCHED_FAIL_PREPARE_STMT] = "failed to prepare sql statement",
-    [SCHED_FAIL_FINALIZE_STMT] = "failed to finalize sql statement",
     [SCHED_FAIL_RESET_STMT] = "failed to reset sql statement",
     [SCHED_FAIL_OPEN_SCHED_FILE] = "failed to open sched file",
     [SCHED_FAIL_CLOSE_SCHED_FILE] = "failed to close sched file",
