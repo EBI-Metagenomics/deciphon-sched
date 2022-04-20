@@ -121,7 +121,7 @@ static enum sched_rc get_prod(struct sched_prod *prod)
     if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_PROD_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     int i = 0;
@@ -153,7 +153,7 @@ enum sched_rc prod_scan_next(struct sched_prod *prod)
     if (xsql_bind_i64(st, 1, prod->scan_id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_PROD_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     prod->id = xsql_get_i64(st, 0);
@@ -170,7 +170,7 @@ enum sched_rc prod_next(struct sched_prod *prod)
     if (xsql_bind_i64(st, 0, prod->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_PROD_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     prod->id = xsql_get_i64(st, 0);
@@ -281,7 +281,7 @@ enum sched_rc sched_prod_get_by_id(struct sched_prod *prod, int64_t id)
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_PROD_NOT_FOUND;
     if (rc != SCHED_OK) ESTEP;
 
     prod->id = xsql_get_i64(st, 0);
@@ -334,7 +334,7 @@ enum sched_rc sched_prod_get_all(sched_prod_set_func_t fn,
     prod_init(prod);
     while ((rc = prod_next(prod)) == SCHED_OK)
         fn(prod, arg);
-    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
+    return rc == SCHED_PROD_NOT_FOUND ? SCHED_OK : rc;
 }
 
 #undef CLEANUP

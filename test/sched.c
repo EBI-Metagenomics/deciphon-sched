@@ -288,7 +288,7 @@ void test_sched_submit_and_fetch_scan_job()
     EQ(job.id, 3);
     EQ(sched_job_set_run(job.id), SCHED_OK);
 
-    EQ(sched_job_next_pend(&job), SCHED_NOT_FOUND);
+    EQ(sched_job_next_pend(&job), SCHED_JOB_NOT_FOUND);
 
     EQ(sched_cleanup(), SCHED_OK);
 }
@@ -347,7 +347,7 @@ void test_sched_submit_and_fetch_seq()
     EQ(seq.scan_id, 1);
     EQ(seq.name, "seq1");
     EQ(seq.data, "ACTTGCCG");
-    EQ(sched_seq_scan_next(&seq), SCHED_NOT_FOUND);
+    EQ(sched_seq_scan_next(&seq), SCHED_SEQ_NOT_FOUND);
 
     EQ(sched_cleanup(), SCHED_OK);
 }

@@ -55,7 +55,7 @@ static enum sched_rc next_seq_scan_id(int64_t scan_id, int64_t *seq_id)
     if (xsql_bind_i64(st, 1, scan_id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_SEQ_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
     *seq_id = xsql_get_i64(st, 0);
 
@@ -70,7 +70,7 @@ static enum sched_rc next_seq_id(int64_t *seq_id)
     if (xsql_bind_i64(st, 0, *seq_id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_SEQ_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
     *seq_id = xsql_get_i64(st, 0);
 
@@ -85,7 +85,7 @@ enum sched_rc sched_seq_get_by_id(struct sched_seq *seq, int64_t id)
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_SEQ_NOT_FOUND;
     if (rc != SCHED_OK) ESTEP;
 
     seq->id = xsql_get_i64(st, 0);
@@ -100,7 +100,7 @@ enum sched_rc sched_seq_get_by_id(struct sched_seq *seq, int64_t id)
 enum sched_rc sched_seq_scan_next(struct sched_seq *seq)
 {
     enum sched_rc rc = next_seq_scan_id(seq->scan_id, &seq->id);
-    if (rc == SCHED_NOT_FOUND) return SCHED_NOT_FOUND;
+    if (rc == SCHED_SEQ_NOT_FOUND) return SCHED_SEQ_NOT_FOUND;
     if (rc != SCHED_OK) return rc;
     return sched_seq_get_by_id(seq, seq->id);
 }
@@ -108,7 +108,7 @@ enum sched_rc sched_seq_scan_next(struct sched_seq *seq)
 static enum sched_rc next_seq(struct sched_seq *seq)
 {
     enum sched_rc rc = next_seq_id(&seq->id);
-    if (rc == SCHED_NOT_FOUND) return SCHED_NOT_FOUND;
+    if (rc == SCHED_SEQ_NOT_FOUND) return SCHED_SEQ_NOT_FOUND;
     if (rc != SCHED_OK) return rc;
     return sched_seq_get_by_id(seq, seq->id);
 }
@@ -121,5 +121,5 @@ enum sched_rc sched_seq_get_all(sched_seq_set_func_t fn, struct sched_seq *seq,
     seq_init(seq);
     while ((rc = next_seq(seq)) == SCHED_OK)
         fn(seq, arg);
-    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
+    return rc == SCHED_SEQ_NOT_FOUND ? SCHED_OK : rc;
 }

@@ -18,7 +18,7 @@ static enum sched_rc select_hmm_i64(struct sched_hmm *hmm, int64_t by_value,
     if (xsql_bind_i64(st, 0, by_value)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_HMM_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     hmm->id = xsql_get_i64(st, 0);
@@ -38,7 +38,7 @@ static enum sched_rc select_hmm_str(struct sched_hmm *hmm, char const *by_value,
     if (xsql_bind_str(st, 0, by_value)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_HMM_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     hmm->id = xsql_get_i64(st, 0);
@@ -117,7 +117,7 @@ static enum sched_rc hmm_next(struct sched_hmm *hmm)
     if (xsql_bind_i64(st, 0, hmm->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_HMM_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     hmm->id = xsql_get_i64(st, 0);
@@ -136,7 +136,7 @@ enum sched_rc sched_hmm_get_all(sched_hmm_set_func_t fn, struct sched_hmm *hmm,
     sched_hmm_init(hmm);
     while ((rc = hmm_next(hmm)) == SCHED_OK)
         fn(hmm, arg);
-    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
+    return rc == SCHED_HMM_NOT_FOUND ? SCHED_OK : rc;
 }
 
 enum sched_rc sched_hmm_remove(int64_t id)
@@ -148,7 +148,7 @@ enum sched_rc sched_hmm_remove(int64_t id)
 
     enum sched_rc rc = xsql_step(st);
     if (rc != SCHED_END) return ESTEP;
-    return xsql_changes() == 0 ? SCHED_NOT_FOUND : SCHED_OK;
+    return xsql_changes() == 0 ? SCHED_HMM_NOT_FOUND : SCHED_OK;
 }
 
 void sched_hmm_to_db_filename(char *filename)
@@ -188,9 +188,9 @@ enum sched_rc hmm_submit(void *hmm, int64_t job_id)
     enum sched_rc rc = has_hmm_by_xxh3(h->xxh3);
     if (rc == SCHED_OK) return SCHED_HMM_ALREADY_EXISTS;
 
-    if (rc != SCHED_NOT_FOUND) return rc;
+    if (rc != SCHED_HMM_NOT_FOUND) return rc;
 
-    return rc == SCHED_NOT_FOUND ? submit(h) : rc;
+    return rc == SCHED_HMM_NOT_FOUND ? submit(h) : rc;
 }
 
 enum sched_rc hmm_wipe(void)

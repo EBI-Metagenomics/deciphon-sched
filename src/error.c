@@ -9,7 +9,12 @@
 static char const strings[][40] = {
     [SCHED_OK] = NOT_AN_ERROR,
     [SCHED_END] = NOT_AN_ERROR,
-    [SCHED_NOT_FOUND] = NOT_AN_ERROR,
+    [SCHED_HMM_NOT_FOUND] = "hmm not found",
+    [SCHED_SCAN_NOT_FOUND] = "scan not found",
+    [SCHED_DB_NOT_FOUND] = "database not found",
+    [SCHED_JOB_NOT_FOUND] = "job not found",
+    [SCHED_PROD_NOT_FOUND] = "product not found",
+    [SCHED_SEQ_NOT_FOUND] = "sequence not found",
     [SCHED_NOT_ENOUGH_MEMORY] = "not enough memory",
     [SCHED_FAIL_PARSE_FILE] = "failed to parse file",
     [SCHED_FAIL_OPEN_FILE] = "failed to open file",

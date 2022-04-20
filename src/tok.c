@@ -26,14 +26,14 @@ enum sched_rc tok_next(struct tok *tok, FILE *restrict fd)
     {
         enum sched_rc rc =
             next_line(fd, MEMBER_SIZE(tok->line, data), tok->line.data);
-        if (rc && rc == SCHED_NOT_FOUND)
+        if (rc && rc == SCHED_END)
         {
             tok->value = NULL;
             tok->id = TOK_EOF;
             tok->line.data[0] = '\0';
             return SCHED_OK;
         }
-        if (rc && rc != SCHED_NOT_FOUND) return error(SCHED_FAIL_READ_FILE);
+        if (rc && rc != SCHED_END) return error(SCHED_FAIL_READ_FILE);
         tok->value = strtok_r(tok->line.data, DELIM, &tok->line.ctx);
         tok->line.number++;
     }
@@ -58,7 +58,7 @@ static enum sched_rc next_line(FILE *restrict fd, unsigned size, char *line)
     assert(size > 0);
     if (!fgets(line, (int)(size - 1), fd))
     {
-        if (feof(fd)) return SCHED_NOT_FOUND;
+        if (feof(fd)) return SCHED_END;
 
         return error(SCHED_FAIL_READ_FILE);
     }

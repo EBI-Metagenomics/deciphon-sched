@@ -61,7 +61,7 @@ enum sched_rc sched_job_get_by_id(struct sched_job *job, int64_t id)
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_JOB_NOT_FOUND;
     if (rc != SCHED_OK) ESTEP;
 
     if ((rc = set_job(job, st))) return rc;
@@ -77,7 +77,7 @@ static enum sched_rc job_next(struct sched_job *job)
     if (xsql_bind_i64(st, 0, job->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_JOB_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     if ((rc = set_job(job, st))) return rc;
@@ -93,7 +93,7 @@ enum sched_rc sched_job_get_all(sched_job_set_func_t fn, struct sched_job *job,
     job_init(job);
     while ((rc = job_next(job)) == SCHED_OK)
         fn(job, arg);
-    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
+    return rc == SCHED_JOB_NOT_FOUND ? SCHED_OK : rc;
 }
 
 static enum sched_rc next_pend_job_id(int64_t *id)
@@ -102,7 +102,7 @@ static enum sched_rc next_pend_job_id(int64_t *id)
     if (!st) return EFRESH;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_JOB_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
     *id = xsql_get_i64(st, 0);
 
@@ -113,7 +113,7 @@ static enum sched_rc next_pend_job_id(int64_t *id)
 enum sched_rc sched_job_next_pend(struct sched_job *job)
 {
     enum sched_rc rc = next_pend_job_id(&job->id);
-    if (rc == SCHED_NOT_FOUND) return SCHED_NOT_FOUND;
+    if (rc == SCHED_JOB_NOT_FOUND) return SCHED_JOB_NOT_FOUND;
     if (rc != SCHED_OK) ESTEP;
     return sched_job_get_by_id(job, job->id);
 }
@@ -202,7 +202,7 @@ enum sched_rc sched_job_remove(int64_t id)
 
     enum sched_rc rc = xsql_step(st);
     if (rc != SCHED_END) return ESTEP;
-    return xsql_changes() == 0 ? SCHED_NOT_FOUND : SCHED_OK;
+    return xsql_changes() == 0 ? SCHED_JOB_NOT_FOUND : SCHED_OK;
 }
 
 enum sched_rc job_set_run(int64_t id, int64_t exec_started)
@@ -271,7 +271,7 @@ enum sched_rc sched_job_state(int64_t id, enum sched_job_state *state)
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_JOB_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     char job_state[JOB_STATE_SIZE] = {0};

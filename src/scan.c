@@ -45,7 +45,7 @@ enum sched_rc sched_scan_get_seqs(int64_t scan_id, sched_seq_set_func_t fn,
     {
         fn(seq, arg);
     }
-    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
+    return rc == SCHED_SCAN_NOT_FOUND ? SCHED_OK : rc;
 }
 
 enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
@@ -60,7 +60,7 @@ enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
     {
         fn(prod, arg);
     }
-    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
+    return rc == SCHED_SCAN_NOT_FOUND ? SCHED_OK : rc;
 }
 
 static enum sched_rc set_scan(struct sched_scan *scan, struct sqlite3_stmt *st)
@@ -84,7 +84,7 @@ static enum sched_rc get_scan(struct sched_scan *scan, enum stmt stmt,
     if (xsql_bind_i64(st, 0, id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_SCAN_NOT_FOUND;
     if (rc != SCHED_OK) ESTEP;
 
     if ((rc = set_scan(scan, st))) return rc;
@@ -159,7 +159,7 @@ static enum sched_rc scan_next(struct sched_scan *scan)
     if (xsql_bind_i64(st, 0, scan->id)) return EBIND;
 
     enum sched_rc rc = xsql_step(st);
-    if (rc == SCHED_END) return SCHED_NOT_FOUND;
+    if (rc == SCHED_END) return SCHED_SCAN_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
     if ((rc = set_scan(scan, st))) return rc;
@@ -175,5 +175,5 @@ enum sched_rc sched_scan_get_all(sched_scan_set_func_t fn,
     scan_init(scan);
     while ((rc = scan_next(scan)) == SCHED_OK)
         fn(scan, arg);
-    return rc == SCHED_NOT_FOUND ? SCHED_OK : rc;
+    return rc == SCHED_SCAN_NOT_FOUND ? SCHED_OK : rc;
 }
