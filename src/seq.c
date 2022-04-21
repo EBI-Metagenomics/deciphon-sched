@@ -6,21 +6,18 @@
 #include "xsql.h"
 #include "xstrcpy.h"
 
-void seq_init(struct sched_seq *seq)
+void sched_seq_init(struct sched_seq *seq, int64_t seq_id, int64_t scan_id,
+                    char const *name, char const *data)
 {
-    seq->id = 0;
-    seq->scan_id = 0;
-    seq->name[0] = 0;
-    seq->data[0] = 0;
-}
-
-void sched_seq_init(struct sched_seq *seq, int64_t scan_id, char const *name,
-                    char const *data)
-{
-    seq_init(seq);
+    seq->id = seq_id;
     seq->scan_id = scan_id;
     XSTRCPY(seq, name, name);
     XSTRCPY(seq, data, data);
+}
+
+static void seq_init(struct sched_seq *seq)
+{
+    sched_seq_init(seq, 0, 0, "", "");
 }
 
 enum sched_rc seq_submit(struct sched_seq *seq)

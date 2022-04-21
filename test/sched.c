@@ -336,7 +336,7 @@ void test_sched_submit_and_fetch_seq()
 
     EQ(sched_scan_get_by_job_id(&scan, job.id), SCHED_OK);
 
-    sched_seq_init(&seq, scan.id, "", "");
+    sched_seq_init(&seq, 0, scan.id, "", "");
     EQ(sched_seq_scan_next(&seq), SCHED_OK);
     EQ(seq.id, 1);
     EQ(seq.scan_id, 1);

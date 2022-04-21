@@ -12,7 +12,7 @@ void seq_queue_init(void) { queue.curr = 0; }
 
 void seq_queue_add(char const *name, char const *data)
 {
-    sched_seq_init(queue.seq + queue.curr++, 0, name, data);
+    sched_seq_init(queue.seq + queue.curr++, 0, 0, name, data);
 }
 
 unsigned seq_queue_size(void) { return queue.curr; }
