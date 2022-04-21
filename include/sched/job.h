@@ -48,7 +48,7 @@ enum sched_rc sched_job_set_done(int64_t id);
 
 enum sched_rc sched_job_submit(struct sched_job *, void *actual_job);
 
-enum sched_rc sched_job_add_progress(int64_t id, int progress);
+enum sched_rc sched_job_increment_progress(int64_t id, int progress);
 
 enum sched_rc sched_job_remove(int64_t id);
 

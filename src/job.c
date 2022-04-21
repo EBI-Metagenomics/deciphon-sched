@@ -181,9 +181,9 @@ cleanup:
     return rc;
 }
 
-enum sched_rc sched_job_add_progress(int64_t id, int progress)
+enum sched_rc sched_job_increment_progress(int64_t id, int progress)
 {
-    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(JOB_ADD_PROGRESS));
+    struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(JOB_INC_PROGRESS));
     if (!st) return EFRESH;
 
     if (xsql_bind_i64(st, 0, progress)) return EBIND;
