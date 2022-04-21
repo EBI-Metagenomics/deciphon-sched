@@ -17,6 +17,7 @@ enum stmt
     DB_GET_BY_ID,
     DB_GET_BY_XXH3,
     DB_GET_BY_FILENAME,
+    DB_GET_BY_HMM_ID,
     DB_GET_NEXT,
     DB_DELETE_BY_ID,
     DB_DELETE,

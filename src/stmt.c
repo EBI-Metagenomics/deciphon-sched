@@ -25,8 +25,9 @@ static char const *const queries[] =
     [DB_INSERT] = "INSERT INTO db (xxh3, filename, hmm_id) VALUES (?, ?, ?);",
 
     [DB_GET_BY_ID]       = "SELECT * FROM db WHERE       id = ?;",
-    [DB_GET_BY_XXH3]     = "SELECT * FROM db WHERE    xxh3 = ?; ",
+    [DB_GET_BY_XXH3]     = "SELECT * FROM db WHERE     xxh3 = ?;",
     [DB_GET_BY_FILENAME] = "SELECT * FROM db WHERE filename = ?;",
+    [DB_GET_BY_HMM_ID]   = "SELECT * FROM db WHERE   hmm_id = ?;",
     [DB_GET_NEXT]        = "SELECT * FROM db WHERE id > ? ORDER BY id ASC LIMIT 1;",
 
     [DB_DELETE_BY_ID] = "DELETE FROM db WHERE id = ?;",

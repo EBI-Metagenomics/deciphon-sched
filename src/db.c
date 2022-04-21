@@ -74,6 +74,11 @@ enum sched_rc sched_db_get_by_filename(struct sched_db *db,
     return select_db_str(db, filename, DB_GET_BY_FILENAME);
 }
 
+enum sched_rc sched_db_get_by_hmm_id(struct sched_db *db, int64_t hmm_id)
+{
+    return select_db_i64(db, hmm_id, DB_GET_BY_HMM_ID);
+}
+
 static enum sched_rc db_next(struct sched_db *db)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(DB_GET_NEXT));
