@@ -46,7 +46,7 @@ enum sched_rc sched_scan_get_seqs(int64_t scan_id, sched_seq_set_func_t fn,
     {
         fn(seq, arg);
     }
-    return rc == SCHED_SCAN_NOT_FOUND ? SCHED_OK : rc;
+    return rc == SCHED_SEQ_NOT_FOUND ? SCHED_OK : rc;
 }
 
 enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
@@ -61,7 +61,7 @@ enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
     {
         fn(prod, arg);
     }
-    return rc == SCHED_SCAN_NOT_FOUND ? SCHED_OK : rc;
+    return rc == SCHED_PROD_NOT_FOUND ? SCHED_OK : rc;
 }
 
 static enum sched_rc set_scan(struct sched_scan *scan, struct sqlite3_stmt *st)
