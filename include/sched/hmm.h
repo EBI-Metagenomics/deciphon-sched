@@ -28,6 +28,4 @@ enum sched_rc sched_hmm_get_all(sched_hmm_set_func_t, struct sched_hmm *,
 
 enum sched_rc sched_hmm_remove(int64_t id);
 
-void sched_hmm_to_db_filename(char *filename);
-
 #endif

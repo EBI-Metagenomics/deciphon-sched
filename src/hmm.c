@@ -151,14 +151,6 @@ enum sched_rc sched_hmm_remove(int64_t id)
     return xsql_changes() == 0 ? SCHED_HMM_NOT_FOUND : SCHED_OK;
 }
 
-void sched_hmm_to_db_filename(char *filename)
-{
-    size_t len = strlen(filename);
-    filename[len - 3] = 'd';
-    filename[len - 2] = 'c';
-    filename[len - 1] = 'p';
-}
-
 static enum sched_rc submit(struct sched_hmm *hmm)
 {
     struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(HMM_INSERT));

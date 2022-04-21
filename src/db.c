@@ -156,6 +156,14 @@ static enum sched_rc check_filename(char const *filename)
     return len >= FILENAME_SIZE ? error(SCHED_TOO_LONG_FILE_NAME) : SCHED_OK;
 }
 
+static void db_to_hmm_filename(char *filename)
+{
+    size_t len = strlen(filename);
+    filename[len - 3] = 'h';
+    filename[len - 2] = 'm';
+    filename[len - 1] = 'm';
+}
+
 enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
 {
     enum sched_rc rc = check_filename(filename);
@@ -163,7 +171,7 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
 
     char hmm_filename[FILENAME_SIZE] = {0};
     strcpy(hmm_filename, filename);
-    sched_db_to_hmm_filename(hmm_filename);
+    db_to_hmm_filename(hmm_filename);
 
     struct sched_hmm hmm = {0};
     rc = sched_hmm_get_by_filename(&hmm, hmm_filename);
@@ -187,14 +195,6 @@ enum sched_rc sched_db_remove(int64_t id)
     enum sched_rc rc = xsql_step(st);
     if (rc != SCHED_END) return ESTEP;
     return xsql_changes() == 0 ? SCHED_DB_NOT_FOUND : SCHED_OK;
-}
-
-void sched_db_to_hmm_filename(char *filename)
-{
-    size_t len = strlen(filename);
-    filename[len - 3] = 'h';
-    filename[len - 2] = 'm';
-    filename[len - 1] = 'm';
 }
 
 enum sched_rc db_wipe(void)
