@@ -1,7 +1,7 @@
 #include "xfile.h"
+#include "c_toolbelt/c_toolbelt.h"
 #include "error.h"
 #include "sched/limits.h"
-#include "strlcpy.h"
 #include "xxhash/xxhash.h"
 #include <assert.h>
 #include <fcntl.h>
@@ -73,7 +73,7 @@ static char *glibc_basename(const char *filename)
 static void xfile_basename(char *filename, char const *path)
 {
     char *p = glibc_basename(path);
-    strlcpy(filename, p, FILENAME_SIZE);
+    ctb_strlcpy(filename, p, FILENAME_SIZE);
 }
 
 bool xfile_is_name(char const *filename)

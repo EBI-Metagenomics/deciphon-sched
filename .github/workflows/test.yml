@@ -16,19 +16,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Check for sudo
-        shell: bash
-        run: |
-          if type sudo >/dev/null 2>&1; then SUDO="sudo"; else SUDO=""; fi
-          echo "SUDO=$SUDO" >> $GITHUB_ENV
-
       - name: Configure CMake
         if: runner.os == 'Linux'
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_SANITIZER='Address;Undefined' -DENABLE_ALL_WARNINGS=ON -DERROR_ON_WARNING=ON
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_SANITIZER='Address;Undefined' -DENABLE_ALL_WARNINGS=ON
 
       - name: Configure CMake
         if: runner.os == 'macOS'
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_ALL_WARNINGS=ON -DERROR_ON_WARNING=ON
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_ALL_WARNINGS=ON
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
@@ -36,8 +30,3 @@ jobs:
       - name: Test
         working-directory: ${{github.workspace}}/build
         run: ctest -C ${{env.BUILD_TYPE}}
-
-      - name: Install
-        working-directory: ${{github.workspace}}/build
-        shell: bash
-        run: $SUDO cmake --build . --target install --config ${{env.BUILD_TYPE}}
