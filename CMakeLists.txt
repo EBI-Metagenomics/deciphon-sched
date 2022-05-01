@@ -44,6 +44,9 @@ add_library(
 add_library(SCHED::sched ALIAS sched)
 set_property(TARGET sched PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+add_library(headers INTERFACE)
+add_library(SCHED::headers ALIAS headers)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   include(CheckIPOSupported)
   check_ipo_supported()
@@ -56,6 +59,10 @@ target_include_directories(
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+target_include_directories(
+  headers INTERFACE $<INSTALL_INTERFACE:include>
+                    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 target_link_libraries(sched PUBLIC Threads::Threads)
 target_link_libraries(sched PUBLIC C_TOOLBELT::c_toolbelt)

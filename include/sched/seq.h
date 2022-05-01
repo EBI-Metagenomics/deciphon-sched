@@ -1,16 +1,8 @@
 #ifndef SCHED_SEQ_H
 #define SCHED_SEQ_H
 
-#include "sched/limits.h"
+#include "sched/structs.h"
 #include <stdint.h>
-
-struct sched_seq
-{
-    int64_t id;
-    int64_t scan_id;
-    char name[SEQ_NAME_SIZE];
-    char data[SEQ_SIZE];
-};
 
 typedef void(sched_seq_set_func_t)(struct sched_seq *, void *arg);
 

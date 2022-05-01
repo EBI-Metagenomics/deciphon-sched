@@ -1,16 +1,8 @@
 #ifndef SCHED_DB_H
 #define SCHED_DB_H
 
-#include "sched/limits.h"
+#include "sched/structs.h"
 #include <stdint.h>
-
-struct sched_db
-{
-    int64_t id;
-    int64_t xxh3;
-    char filename[FILENAME_SIZE];
-    int64_t hmm_id;
-};
 
 typedef void(sched_db_set_func_t)(struct sched_db *, void *arg);
 

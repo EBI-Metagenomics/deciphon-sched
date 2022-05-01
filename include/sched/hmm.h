@@ -1,16 +1,8 @@
 #ifndef SCHED_HMM_H
 #define SCHED_HMM_H
 
-#include "sched/limits.h"
+#include "sched/structs.h"
 #include <stdint.h>
-
-struct sched_hmm
-{
-    int64_t id;
-    int64_t xxh3;
-    char filename[FILENAME_SIZE];
-    int64_t job_id;
-};
 
 typedef void(sched_hmm_set_func_t)(struct sched_hmm *, void *arg);
 

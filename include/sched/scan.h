@@ -7,17 +7,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-struct sched_scan
-{
-    int64_t id;
-    int64_t db_id;
-
-    int multi_hits;
-    int hmmer3_compat;
-
-    int64_t job_id;
-};
-
 struct sched_prod;
 struct sched_seq;
 

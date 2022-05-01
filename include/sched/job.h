@@ -1,37 +1,9 @@
 #ifndef SCHED_JOB_H
 #define SCHED_JOB_H
 
-#include "sched/limits.h"
+#include "sched/structs.h"
 #include <stdbool.h>
 #include <stdint.h>
-
-enum sched_job_type
-{
-    SCHED_SCAN,
-    SCHED_HMM
-};
-
-enum sched_job_state
-{
-    SCHED_PEND,
-    SCHED_RUN,
-    SCHED_DONE,
-    SCHED_FAIL
-};
-
-struct sched_job
-{
-    int64_t id;
-    int type;
-
-    char state[JOB_STATE_SIZE];
-    int progress;
-    char error[JOB_ERROR_SIZE];
-
-    int64_t submission;
-    int64_t exec_started;
-    int64_t exec_ended;
-};
 
 typedef void(sched_job_set_func_t)(struct sched_job *, void *arg);
 

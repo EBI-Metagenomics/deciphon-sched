@@ -1,28 +1,9 @@
 #ifndef SCHED_PROD_H
 #define SCHED_PROD_H
 
-#include "sched/limits.h"
+#include "sched/structs.h"
 #include <stdint.h>
 #include <stdio.h>
-
-struct sched_prod
-{
-    int64_t id;
-
-    int64_t scan_id;
-    int64_t seq_id;
-
-    char profile_name[PROFILE_NAME_SIZE];
-    char abc_name[ABC_NAME_SIZE];
-
-    double alt_loglik;
-    double null_loglik;
-
-    char profile_typeid[PROFILE_TYPEID_SIZE];
-    char version[VERSION_SIZE];
-
-    char match[MATCH_SIZE];
-};
 
 typedef int(sched_prod_write_match_func_t)(FILE *fp, void const *match);
 typedef void(sched_prod_set_func_t)(struct sched_prod *, void *arg);
