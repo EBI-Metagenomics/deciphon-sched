@@ -274,8 +274,9 @@ enum sched_rc sched_job_state(int64_t id, enum sched_job_state *state)
     if (rc == SCHED_END) return SCHED_JOB_NOT_FOUND;
     if (rc != SCHED_OK) return ESTEP;
 
-    char job_state[JOB_STATE_SIZE] = {0};
-    rc = xsql_cpy_txt(st, 0, (struct xsql_txt){JOB_STATE_SIZE, job_state});
+    char job_state[SCHED_JOB_STATE_SIZE] = {0};
+    rc =
+        xsql_cpy_txt(st, 0, (struct xsql_txt){SCHED_JOB_STATE_SIZE, job_state});
     if (rc) EGETTXT;
     *state = resolve_job_state(job_state);
 

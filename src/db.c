@@ -158,7 +158,8 @@ static enum sched_rc check_filename(char const *filename)
     if (strncmp(&filename[len - 4], ".dcp", 4))
         return error(SCHED_INVALID_FILE_NAME_EXT);
 
-    return len >= FILENAME_SIZE ? error(SCHED_TOO_LONG_FILE_NAME) : SCHED_OK;
+    return len >= SCHED_FILENAME_SIZE ? error(SCHED_TOO_LONG_FILE_NAME)
+                                      : SCHED_OK;
 }
 
 static void db_to_hmm_filename(char *filename)
@@ -174,7 +175,7 @@ enum sched_rc sched_db_add(struct sched_db *db, char const *filename)
     enum sched_rc rc = check_filename(filename);
     if (rc) return rc;
 
-    char hmm_filename[FILENAME_SIZE] = {0};
+    char hmm_filename[SCHED_FILENAME_SIZE] = {0};
     strcpy(hmm_filename, filename);
     db_to_hmm_filename(hmm_filename);
 

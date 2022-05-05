@@ -19,7 +19,7 @@ struct sched_hmm
 {
     int64_t id;
     int64_t xxh3;
-    char filename[FILENAME_SIZE];
+    char filename[SCHED_FILENAME_SIZE];
     int64_t job_id;
 };
 
@@ -27,7 +27,7 @@ struct sched_db
 {
     int64_t id;
     int64_t xxh3;
-    char filename[FILENAME_SIZE];
+    char filename[SCHED_FILENAME_SIZE];
     int64_t hmm_id;
 };
 
@@ -38,16 +38,16 @@ struct sched_prod
     int64_t scan_id;
     int64_t seq_id;
 
-    char profile_name[PROFILE_NAME_SIZE];
-    char abc_name[ABC_NAME_SIZE];
+    char profile_name[SCHED_PROFILE_NAME_SIZE];
+    char abc_name[SCHED_ABC_NAME_SIZE];
 
     double alt_loglik;
     double null_loglik;
 
-    char profile_typeid[PROFILE_TYPEID_SIZE];
-    char version[VERSION_SIZE];
+    char profile_typeid[SCHED_PROFILE_TYPEID_SIZE];
+    char version[SCHED_VERSION_SIZE];
 
-    char match[MATCH_SIZE];
+    char match[SCHED_MATCH_SIZE];
 };
 
 enum sched_job_type
@@ -69,9 +69,9 @@ struct sched_job
     int64_t id;
     int type;
 
-    char state[JOB_STATE_SIZE];
+    char state[SCHED_JOB_STATE_SIZE];
     int progress;
-    char error[JOB_ERROR_SIZE];
+    char error[SCHED_JOB_ERROR_SIZE];
 
     int64_t submission;
     int64_t exec_started;
@@ -82,8 +82,8 @@ struct sched_seq
 {
     int64_t id;
     int64_t scan_id;
-    char name[SEQ_NAME_SIZE];
-    char data[SEQ_SIZE];
+    char name[SCHED_SEQ_NAME_SIZE];
+    char data[SCHED_SEQ_SIZE];
 };
 
 #endif

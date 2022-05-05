@@ -23,7 +23,7 @@ enum
                  COL_TYPE_TEXT,  COL_TYPE_TEXT,   COL_TYPE_TEXT};
 
 static TOK_DECLARE(tok);
-static struct xfile_tmp prod_file[MAX_NUM_THREADS] = {0};
+static struct xfile_tmp prod_file[SCHED_MAX_NUM_THREADS] = {0};
 
 static void prod_init(struct sched_prod *prod)
 {

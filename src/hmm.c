@@ -77,7 +77,8 @@ static enum sched_rc check_filename(char const *filename)
     if (strncmp(&filename[len - 4], ".hmm", 4))
         return error(SCHED_INVALID_FILE_NAME_EXT);
 
-    return len >= FILENAME_SIZE ? error(SCHED_TOO_LONG_FILE_NAME) : SCHED_OK;
+    return len >= SCHED_FILENAME_SIZE ? error(SCHED_TOO_LONG_FILE_NAME)
+                                      : SCHED_OK;
 }
 
 enum sched_rc sched_hmm_set_file(struct sched_hmm *hmm, char const *filename)

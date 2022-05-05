@@ -5,7 +5,7 @@
 struct seq_queue
 {
     unsigned curr;
-    struct sched_seq seq[NUM_SEQS_PER_JOB];
+    struct sched_seq seq[SCHED_NUM_SEQS_PER_JOB];
 } queue = {0};
 
 void seq_queue_init(void) { queue.curr = 0; }
