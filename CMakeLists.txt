@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.3 FATAL_ERROR)
 
 project(
   sched
-  VERSION 0.4.0
+  VERSION 0.4.1
   LANGUAGES C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -92,7 +92,7 @@ set(CMAKE_CONFIG_FILE ${CMAKE_CURRENT_BINARY_DIR}/sched-config.cmake)
 configure_package_config_file(sched-config.cmake.in ${CMAKE_CONFIG_FILE}
                               INSTALL_DESTINATION lib/cmake/sched)
 
-install(DIRECTORY include/sched DESTINATION include/sched)
+install(DIRECTORY include/sched/ DESTINATION include/sched)
 
 install(FILES ${CMAKE_CONFIG_FILE} DESTINATION lib/cmake/sched)
 
