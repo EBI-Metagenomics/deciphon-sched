@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.3 FATAL_ERROR)
 
 project(
   sched
-  VERSION 0.4.1
+  VERSION 0.4.2
   LANGUAGES C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -19,7 +19,7 @@ add_custom_command(
           ${CMAKE_CURRENT_SOURCE_DIR}/src/schema.sql
   VERBATIM)
 
-cpmaddpackage(NAME c_toolbelt VERSION 0.2.0 GITHUB_REPOSITORY horta/c-toolbelt)
+cpmaddpackage(NAME c_toolbelt VERSION 0.2.1 GITHUB_REPOSITORY horta/c-toolbelt)
 find_package(Threads REQUIRED)
 
 add_library(
@@ -50,7 +50,7 @@ add_library(SCHED::headers ALIAS headers)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   include(CheckIPOSupported)
   check_ipo_supported()
-  set_target_properties(sched PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+  set_target_properties(sched PROPERTIES INTERPROCEDURAL_OPTIMIZATION ON)
 endif()
 
 target_include_directories(
@@ -69,6 +69,7 @@ target_link_libraries(sched PUBLIC C_TOOLBELT::c_toolbelt)
 target_link_libraries(sched PUBLIC ${CMAKE_DL_LIBS})
 set_target_properties(sched PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(sched PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
+set_target_properties(sched PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_features(sched PRIVATE c_std_11)
 
 target_compile_definitions(sched PRIVATE XXH_STATIC_LINKING_ONLY)
