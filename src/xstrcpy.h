@@ -1,8 +1,8 @@
 #ifndef XSTRCPY_H
 #define XSTRCPY_H
 
-#include "c_toolbelt/c_toolbelt.h"
 #include "compiler.h"
+#include "ctb/ctb.h"
 #include "error.h"
 #include "sched/rc.h"
 #include <stdbool.h>

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.3 FATAL_ERROR)
 
 project(
   sched
-  VERSION 0.4.2
+  VERSION 0.4.3
   LANGUAGES C)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -19,7 +19,7 @@ add_custom_command(
           ${CMAKE_CURRENT_SOURCE_DIR}/src/schema.sql
   VERBATIM)
 
-cpmaddpackage(NAME c_toolbelt VERSION 0.2.1 GITHUB_REPOSITORY horta/c-toolbelt)
+cpmaddpackage(NAME c_toolbelt VERSION 0.9.0 GITHUB_REPOSITORY horta/c-toolbelt)
 find_package(Threads REQUIRED)
 
 add_library(
@@ -65,7 +65,7 @@ target_include_directories(
                     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 target_link_libraries(sched PUBLIC Threads::Threads)
-target_link_libraries(sched PUBLIC C_TOOLBELT::c_toolbelt)
+target_link_libraries(sched PUBLIC C_TOOLBELT::ctb)
 target_link_libraries(sched PUBLIC ${CMAKE_DL_LIBS})
 set_target_properties(sched PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(sched PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
