@@ -2,8 +2,24 @@ cmake_minimum_required(VERSION 3.16.3 FATAL_ERROR)
 
 project(
   sched
-  VERSION 0.4.4
+  VERSION 0.4.5
   LANGUAGES C)
+
+set(SCHED_MAIN_PROJECT OFF)
+if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+  set(SCHED_MAIN_PROJECT ON)
+endif()
+
+if(SCHED_MAIN_PROJECT)
+  set(SCHED_BUILD_TESTS_DEFAULT ON)
+else()
+  set(SCHED_BUILD_TESTS_DEFAULT OFF)
+endif()
+
+option(SCHED_BUILD_TESTS "Build the unit tests" ${SCHED_BUILD_TESTS_DEFAULT})
+
+message(STATUS "SCHED_MAIN_PROJECT: " ${SCHED_MAIN_PROJECT})
+message(STATUS "SCHED_BUILD_TESTS: " ${SCHED_BUILD_TESTS})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -19,7 +35,7 @@ add_custom_command(
           ${CMAKE_CURRENT_SOURCE_DIR}/src/schema.sql
   VERBATIM)
 
-cpmaddpackage(NAME c_toolbelt VERSION 0.9.0 GITHUB_REPOSITORY horta/c-toolbelt)
+cpmaddpackage("gh:horta/c-toolbelt@0.9.2")
 find_package(Threads REQUIRED)
 
 add_library(
@@ -101,8 +117,10 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/README.md
               ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md
         DESTINATION share/docs/sched)
 
-enable_testing()
-add_subdirectory(test)
+if(SCHED_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(test)
+endif()
 
 set(CPACK_PACKAGE_NAME sched)
 set(CPACK_PACKAGE_VENDOR "Danilo Horta")
