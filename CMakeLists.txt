@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.3 FATAL_ERROR)
 
 project(
   sched
-  VERSION 0.4.5
+  VERSION 0.4.6
   LANGUAGES C)
 
 set(SCHED_MAIN_PROJECT OFF)
@@ -35,7 +35,7 @@ add_custom_command(
           ${CMAKE_CURRENT_SOURCE_DIR}/src/schema.sql
   VERBATIM)
 
-cpmaddpackage("gh:horta/c-toolbelt@0.9.2")
+cpmaddpackage("gh:horta/c-toolbelt@0.10.0")
 find_package(Threads REQUIRED)
 
 add_library(
