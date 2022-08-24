@@ -2,6 +2,4 @@
 
 include(CMakeFindDependencyMacro)
 
-find_dependency(c_toolbelt)
 include("${CMAKE_CURRENT_LIST_DIR}/sched-targets.cmake")
-check_required_components(c_toolbelt)

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16.3 FATAL_ERROR)
 
 project(
   sched
-  VERSION 0.4.6
+  VERSION 0.4.7
   LANGUAGES C)
 
 set(SCHED_MAIN_PROJECT OFF)
@@ -25,7 +25,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(cmake/compiler-options.cmake)
 include(cmake/sanitizers.cmake)
-include(cmake/CPM.cmake)
 
 add_custom_command(
   OUTPUT schema.c
@@ -35,7 +34,6 @@ add_custom_command(
           ${CMAKE_CURRENT_SOURCE_DIR}/src/schema.sql
   VERBATIM)
 
-cpmaddpackage("gh:horta/c-toolbelt@0.10.0")
 find_package(Threads REQUIRED)
 
 add_library(
@@ -56,7 +54,8 @@ add_library(
   src/to.c
   src/tok.c
   src/xfile.c
-  src/xsql.c)
+  src/xsql.c
+  src/zc.c)
 add_library(SCHED::sched ALIAS sched)
 set_property(TARGET sched PROPERTY POSITION_INDEPENDENT_CODE ON)
 
@@ -81,7 +80,6 @@ target_include_directories(
                     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 target_link_libraries(sched PUBLIC Threads::Threads)
-target_link_libraries(sched PUBLIC C_TOOLBELT::ctb)
 target_link_libraries(sched PUBLIC ${CMAKE_DL_LIBS})
 set_target_properties(sched PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(sched PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
