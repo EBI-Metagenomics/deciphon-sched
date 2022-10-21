@@ -11,7 +11,7 @@ typedef void(sched_prod_set_func_t)(struct sched_prod *, void *arg);
 void sched_prod_init(struct sched_prod *, int64_t scan_id);
 enum sched_rc sched_prod_get_by_id(struct sched_prod *, int64_t id);
 enum sched_rc sched_prod_add(struct sched_prod *);
-enum sched_rc sched_prod_add_file(FILE *fp);
+enum sched_rc sched_prod_add_file(char const *filename);
 
 enum sched_rc sched_prod_write_begin(struct sched_prod const *,
                                      unsigned file_num);

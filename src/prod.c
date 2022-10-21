@@ -235,65 +235,16 @@ static enum sched_rc seq_exists(int64_t seq_id)
     return sched_seq_get_by_id(&seq, seq_id);
 }
 
-enum sched_rc sched_prod_add_file(FILE *fp)
+static enum sched_rc prod_add_file(FILE *fp);
+
+enum sched_rc sched_prod_add_file(char const *filename)
 {
-    enum sched_rc rc = SCHED_OK;
-    if (xsql_begin_transaction()) CLEANUP(EBEGINSTMT);
+    FILE *fp = fopen(filename, "rb");
+    if (!fp) return error(SCHED_FAIL_OPEN_FILE);
 
-    if ((rc = parse_prod_file_header(fp))) goto cleanup;
+    enum sched_rc rc = prod_add_file(fp);
 
-    do
-    {
-        struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_INSERT));
-        if (!st) CLEANUP(error(SCHED_FAIL_GET_FRESH_STMT));
-        if (tok_next(&tok, fp)) CLEANUP(EPARSEFILE);
-        if (tok_id(&tok) == TOK_EOF) break;
-
-        for (int i = 0; i < (int)ARRAY_SIZE(col_type); i++)
-        {
-            if (col_type[i] == COL_TYPE_INT64)
-            {
-                int64_t val = 0;
-                if (!to_int64(tok_value(&tok), &val)) CLEANUP(EPARSEFILE);
-                if (xsql_bind_i64(st, i, val)) CLEANUP(EBIND);
-                if (i == 0)
-                {
-                    rc = scan_exists(val);
-                    if (rc) goto cleanup;
-                }
-                else if (i == 1)
-                {
-                    rc = seq_exists(val);
-                    if (rc) goto cleanup;
-                }
-            }
-            else if (col_type[i] == COL_TYPE_DOUBLE)
-            {
-                double val = 0;
-                if (!to_double(tok_value(&tok), &val)) CLEANUP(EPARSEFILE);
-                if (xsql_bind_dbl(st, i, val)) CLEANUP(EBIND);
-            }
-            else if (col_type[i] == COL_TYPE_TEXT)
-            {
-                struct xsql_txt txt = {tok_size(&tok), tok_value(&tok)};
-                if (xsql_bind_txt(st, i, txt)) CLEANUP(EBIND);
-            }
-            if (tok_next(&tok, fp)) CLEANUP(EPARSEFILE);
-        }
-        if (tok_id(&tok) != TOK_NL)
-        {
-            rc = EPARSEFILE;
-            goto cleanup;
-        }
-        rc = xsql_step(st);
-        if (rc != SCHED_END) CLEANUP(ESTEP);
-    } while (true);
-
-    if (xsql_end_transaction()) CLEANUP(EENDSTMT);
-    return SCHED_OK;
-
-cleanup:
-    xsql_rollback_transaction();
+    fclose(fp);
     return rc;
 }
 
@@ -359,6 +310,68 @@ enum sched_rc sched_prod_get_all(sched_prod_set_func_t fn,
     while ((rc = prod_next(prod)) == SCHED_OK)
         fn(prod, arg);
     return rc == SCHED_PROD_NOT_FOUND ? SCHED_OK : rc;
+}
+
+static enum sched_rc prod_add_file(FILE *fp)
+{
+    enum sched_rc rc = SCHED_OK;
+    if (xsql_begin_transaction()) CLEANUP(EBEGINSTMT);
+
+    if ((rc = parse_prod_file_header(fp))) goto cleanup;
+
+    do
+    {
+        struct sqlite3_stmt *st = xsql_fresh_stmt(stmt_get(PROD_INSERT));
+        if (!st) CLEANUP(error(SCHED_FAIL_GET_FRESH_STMT));
+        if (tok_next(&tok, fp)) CLEANUP(EPARSEFILE);
+        if (tok_id(&tok) == TOK_EOF) break;
+
+        for (int i = 0; i < (int)ARRAY_SIZE(col_type); i++)
+        {
+            if (col_type[i] == COL_TYPE_INT64)
+            {
+                int64_t val = 0;
+                if (!to_int64(tok_value(&tok), &val)) CLEANUP(EPARSEFILE);
+                if (xsql_bind_i64(st, i, val)) CLEANUP(EBIND);
+                if (i == 0)
+                {
+                    rc = scan_exists(val);
+                    if (rc) goto cleanup;
+                }
+                else if (i == 1)
+                {
+                    rc = seq_exists(val);
+                    if (rc) goto cleanup;
+                }
+            }
+            else if (col_type[i] == COL_TYPE_DOUBLE)
+            {
+                double val = 0;
+                if (!to_double(tok_value(&tok), &val)) CLEANUP(EPARSEFILE);
+                if (xsql_bind_dbl(st, i, val)) CLEANUP(EBIND);
+            }
+            else if (col_type[i] == COL_TYPE_TEXT)
+            {
+                struct xsql_txt txt = {tok_size(&tok), tok_value(&tok)};
+                if (xsql_bind_txt(st, i, txt)) CLEANUP(EBIND);
+            }
+            if (tok_next(&tok, fp)) CLEANUP(EPARSEFILE);
+        }
+        if (tok_id(&tok) != TOK_NL)
+        {
+            rc = EPARSEFILE;
+            goto cleanup;
+        }
+        rc = xsql_step(st);
+        if (rc != SCHED_END) CLEANUP(ESTEP);
+    } while (true);
+
+    if (xsql_end_transaction()) CLEANUP(EENDSTMT);
+    return SCHED_OK;
+
+cleanup:
+    xsql_rollback_transaction();
+    return rc;
 }
 
 #undef CLEANUP
