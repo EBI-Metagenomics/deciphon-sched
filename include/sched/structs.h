@@ -43,6 +43,7 @@ struct sched_prod
 
     double alt_loglik;
     double null_loglik;
+    double evalue_log;
 
     char profile_typeid[SCHED_PROFILE_TYPEID_SIZE];
     char version[SCHED_VERSION_SIZE];

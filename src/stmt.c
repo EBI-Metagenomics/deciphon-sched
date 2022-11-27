@@ -61,7 +61,7 @@ static char const *const queries[] =
     [SCAN_DELETE] = "DELETE FROM scan;",
 
     /* --- PROD queries --- */
-    [PROD_INSERT] = "INSERT INTO prod (scan_id, seq_id, profile_name, abc_name, alt_loglik, null_loglik, profile_typeid, version, match) "
+    [PROD_INSERT] = "INSERT INTO prod (scan_id, seq_id, profile_name, abc_name, alt_loglik, null_loglik, evalue_log, profile_typeid, version, match) "
                     "VALUES           (      ?,      ?,            ?,        ?,          ?,           ?,              ?,       ?,     ?);",
 
     [PROD_GET]           = "SELECT  * FROM prod WHERE id = ?;",

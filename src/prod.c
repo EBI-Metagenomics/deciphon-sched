@@ -37,6 +37,7 @@ static void prod_init(struct sched_prod *prod)
 
     prod->alt_loglik = 0.;
     prod->null_loglik = 0.;
+    prod->evalue_log = 0.;
 
     prod->profile_typeid[0] = 0;
     prod->version[0] = 0;
@@ -68,6 +69,7 @@ enum sched_rc sched_prod_write_begin(struct sched_prod const *prod,
     /* Reference: https://stackoverflow.com/a/21162120 */
     if (echo(Fg, alt_loglik)) EWRITEFILE;
     if (echo(Fg, null_loglik)) EWRITEFILE;
+    if (echo(Fg, evalue_log)) EWRITEFILE;
 
     if (echo(Fs, profile_typeid)) EWRITEFILE;
     if (echo(Fs, version)) EWRITEFILE;
@@ -136,6 +138,7 @@ static enum sched_rc get_prod(struct sched_prod *prod)
 
     prod->alt_loglik = xsql_get_dbl(st, i++);
     prod->null_loglik = xsql_get_dbl(st, i++);
+    prod->evalue_log = xsql_get_dbl(st, i++);
 
     if (xsql_cpy_txt(st, i++, XSQL_TXT_OF(*prod, profile_typeid)))
         return EGETTXT;
@@ -214,6 +217,7 @@ static enum sched_rc parse_prod_file_header(FILE *fp)
     if ((rc = expect_word(fp, "abc_name"))) return rc;
     if ((rc = expect_word(fp, "alt_loglik"))) return rc;
     if ((rc = expect_word(fp, "null_loglik"))) return rc;
+    if ((rc = expect_word(fp, "evalue_log"))) return rc;
     if ((rc = expect_word(fp, "profile_typeid"))) return rc;
     if ((rc = expect_word(fp, "version"))) return rc;
     if ((rc = expect_word(fp, "match"))) return rc;
@@ -268,11 +272,12 @@ enum sched_rc sched_prod_get_by_id(struct sched_prod *prod, int64_t id)
 
     prod->alt_loglik = xsql_get_dbl(st, 5);
     prod->null_loglik = xsql_get_dbl(st, 6);
+    prod->evalue_log = xsql_get_dbl(st, 7);
 
-    if (xsql_cpy_txt(st, 7, XSQL_TXT_OF(*prod, profile_typeid))) return EGETTXT;
-    if (xsql_cpy_txt(st, 8, XSQL_TXT_OF(*prod, version))) return EGETTXT;
+    if (xsql_cpy_txt(st, 8, XSQL_TXT_OF(*prod, profile_typeid))) return EGETTXT;
+    if (xsql_cpy_txt(st, 9, XSQL_TXT_OF(*prod, version))) return EGETTXT;
 
-    if (xsql_cpy_txt(st, 9, XSQL_TXT_OF(*prod, match))) return EGETTXT;
+    if (xsql_cpy_txt(st, 10, XSQL_TXT_OF(*prod, match))) return EGETTXT;
 
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
@@ -290,11 +295,12 @@ enum sched_rc sched_prod_add(struct sched_prod *prod)
 
     if (xsql_bind_dbl(st, 4, prod->alt_loglik)) return EBIND;
     if (xsql_bind_dbl(st, 5, prod->null_loglik)) return EBIND;
+    if (xsql_bind_dbl(st, 6, prod->evalue_log)) return EBIND;
 
-    if (xsql_bind_str(st, 6, prod->profile_typeid)) return EBIND;
-    if (xsql_bind_str(st, 7, prod->version)) return EBIND;
+    if (xsql_bind_str(st, 7, prod->profile_typeid)) return EBIND;
+    if (xsql_bind_str(st, 8, prod->version)) return EBIND;
 
-    if (xsql_bind_str(st, 8, prod->match)) return EBIND;
+    if (xsql_bind_str(st, 9, prod->match)) return EBIND;
 
     if (xsql_step(st) != SCHED_END) return ESTEP;
     prod->id = xsql_last_id();

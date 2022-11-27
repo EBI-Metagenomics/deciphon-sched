@@ -60,6 +60,7 @@ CREATE TABLE prod (
 
     alt_loglik REAL NOT NULL,
     null_loglik REAL NOT NULL,
+    evalue_log REAL NOT NULL,
 
     profile_typeid TEXT NOT NULL,
     version TEXT NOT NULL,
