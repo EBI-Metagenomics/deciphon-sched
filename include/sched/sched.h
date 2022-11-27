@@ -9,6 +9,7 @@
 #include "sched/job.h"
 #include "sched/limits.h"
 #include "sched/prod.h"
+#include "sched/prodset.h"
 #include "sched/rc.h"
 #include "sched/scan.h"
 #include "sched/seq.h"

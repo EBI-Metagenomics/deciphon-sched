@@ -23,4 +23,4 @@ function(sched_add_test name srcs)
   target_compile_definitions(${name} PUBLIC "TMPDIR=\"${TMPDIR}\"")
 endfunction()
 
-sched_add_test(test_sched sched.c)
+sched_add_test(test_sched "sched.c;fs.c")

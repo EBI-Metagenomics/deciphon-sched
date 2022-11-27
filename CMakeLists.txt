@@ -41,12 +41,14 @@ add_library(
   schema.c
   src/db.c
   src/error.c
+  src/fs.c
   src/hmm.c
   src/hmmer.c
   src/hmmer_filename.c
   src/job.c
   src/ltoa.c
   src/prod.c
+  src/prodset.c
   src/scan.c
   src/sched.c
   src/sched_health.c
@@ -54,6 +56,7 @@ add_library(
   src/seq_queue.c
   src/sqlite3/sqlite3.c
   src/stmt.c
+  src/strlcat.c
   src/strlcpy.c
   src/strtok_r.c
   src/to.c

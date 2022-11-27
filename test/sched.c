@@ -1,4 +1,5 @@
 #include "sched/sched.h"
+#include "fs.h"
 #include "hope.h"
 
 struct sched_hmm hmm = {0};
@@ -20,6 +21,7 @@ static void test_submit_scan(void);
 static void test_submit_and_fetch_scan_job(void);
 static void test_submit_and_fetch_seq(void);
 static void test_submit_prod(void);
+static void test_submit_prodset(void);
 static void test_wipe(void);
 
 int main(void)
@@ -35,6 +37,7 @@ int main(void)
     test_submit_and_fetch_scan_job();
     test_submit_and_fetch_seq();
     test_submit_prod();
+    test_submit_prodset();
     test_wipe();
     return hope_status();
 }
@@ -456,6 +459,88 @@ static void test_submit_prod(void)
     eq(sched_cleanup(), SCHED_OK);
 }
 
+static void file_write(char const *path, char const *str);
+
+static void test_submit_prodset(void)
+{
+    char const sched_path[] = TMPDIR "/submit_and_fetch_seq.sched";
+    char const file_hmm[] = "submit_and_fetch_seq.hmm";
+    char const file_dcp[] = "submit_and_fetch_seq.dcp";
+    // char const prod_path[] = TESTDIR "/prod.tsv";
+
+    remove(sched_path);
+    create_file(file_hmm, 0);
+    create_file(file_dcp, 0);
+
+    eq(sched_init(sched_path), SCHED_OK);
+
+    sched_db_init(&db);
+    sched_hmm_init(&hmm);
+
+    eq(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    sched_job_init(&job, SCHED_HMM);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(job.id, 1);
+    eq(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_set_done(job.id), SCHED_OK);
+    eq(sched_db_add(&db, file_dcp), SCHED_OK);
+    eq(db.id, 1);
+
+    sched_scan_init(&scan, db.id, true, false);
+    sched_scan_add_seq("seq0", "ACAAGCAG");
+    sched_scan_add_seq("seq1", "ACTTGCCG");
+
+    sched_job_init(&job, SCHED_SCAN);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
+
+    sched_scan_init(&scan, db.id, true, true);
+    sched_scan_add_seq("seq0_2", "XXGG");
+    sched_scan_add_seq("seq1_2", "YXYX");
+
+    sched_job_init(&job, SCHED_SCAN);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
+
+    eq(sched_job_next_pend(&job), SCHED_OK);
+    eq(job.id, 2);
+
+    eq(sched_scan_get_by_job_id(&scan, job.id), SCHED_OK);
+
+    sched_seq_init(&seq, 0, scan.id, "", "");
+    eq(sched_seq_scan_next(&seq), SCHED_OK);
+    eq(seq.id, 1);
+    eq(seq.scan_id, 1);
+    eq(seq.name, "seq0");
+    eq(seq.data, "ACAAGCAG");
+    eq(sched_seq_scan_next(&seq), SCHED_OK);
+    eq(seq.id, 2);
+    eq(seq.scan_id, 1);
+    eq(seq.name, "seq1");
+    eq(seq.data, "ACTTGCCG");
+    eq(sched_seq_scan_next(&seq), SCHED_SEQ_NOT_FOUND);
+
+    char dir[256] = {0};
+    eq(fs_mkdtemp(sizeof dir, dir), 0);
+
+    char prod_path[256] = {0};
+    strcpy(prod_path, dir);
+    strcat(prod_path, "/prod.tsv");
+
+    char hmmer_path0[256] = {0};
+    strcpy(hmmer_path0, dir);
+    strcat(hmmer_path0, "/hmmer_1_1_PF00742.20.h3r");
+
+    char hmmer_path1[256] = {0};
+    strcpy(hmmer_path1, dir);
+    strcat(hmmer_path1, "/hmmer_1_2_PF00696.29.h3r");
+
+    eq(fs_copy(prod_path, TESTDIR "/prod.tsv"), 0);
+    file_write(hmmer_path0, "content0");
+    file_write(hmmer_path1, "content1");
+
+    sched_prodset_add(dir);
+    eq(sched_cleanup(), SCHED_OK);
+}
+
 static void test_wipe(void)
 {
     char const sched_path[] = TMPDIR "/wipe.sched";
@@ -496,4 +581,11 @@ static void test_wipe(void)
 
     eq(sched_wipe(), SCHED_OK);
     eq(sched_cleanup(), SCHED_OK);
+}
+
+static void file_write(char const *path, char const *str)
+{
+    FILE *fp = fopen(path, "wb");
+    eq(fwrite(str, 1, strlen(str), fp), strlen(str));
+    fclose(fp);
 }

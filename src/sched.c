@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 
-char sched_filepath[SCHED_PATH_SIZE] = {0};
+char sched_filepath[FILENAME_MAX] = {0};
 
 enum sched_rc emerge_sched(char const *filepath);
 enum sched_rc is_empty(char const *filepath, bool *empty);

@@ -15,6 +15,13 @@
 
 enum
 {
+    COL_SCAN_ID = 0,
+    COL_SEQ_ID = 1,
+    COL_PROFILE_NAME = 2,
+};
+
+enum
+{
     COL_TYPE_INT,
     COL_TYPE_INT64,
     COL_TYPE_DOUBLE,
@@ -25,7 +32,6 @@ enum
                 COL_TYPE_TEXT};
 
 static TOK_DECLARE(tok);
-static struct xfile_tmp prod_file[SCHED_MAX_NUM_THREADS] = {0};
 
 static void prod_init(struct sched_prod *prod)
 {
@@ -175,15 +181,29 @@ static enum sched_rc seq_exists(int64_t seq_id)
     return sched_seq_get_by_id(&seq, seq_id);
 }
 
-static enum sched_rc prod_add_file(FILE *fp);
+static int callb(struct sched_prod const *prod, void *arg)
+{
+    (void)prod;
+    (void)arg;
+    return 0;
+}
 
 enum sched_rc sched_prod_add_file(char const *filename)
 {
+    enum sched_rc rc = SCHED_OK;
+
     FILE *fp = fopen(filename, "rb");
     if (!fp) return error(SCHED_FAIL_OPEN_FILE);
 
-    enum sched_rc rc = prod_add_file(fp);
+    if (xsql_begin_transaction()) CLEANUP(EBEGINSTMT);
+    if ((rc = sched_prod_add_transaction(fp, &callb, NULL))) goto cleanup;
+    if (xsql_end_transaction()) CLEANUP(EENDSTMT);
 
+    fclose(fp);
+    return SCHED_OK;
+
+cleanup:
+    xsql_rollback_transaction();
     fclose(fp);
     return rc;
 }
@@ -262,10 +282,11 @@ enum sched_rc sched_prod_get_all(void (*callb)(struct sched_prod *,
     return rc == SCHED_PROD_NOT_FOUND ? SCHED_OK : rc;
 }
 
-static enum sched_rc prod_add_file(FILE *fp)
+enum sched_rc sched_prod_add_transaction(FILE *fp, prod_add_cb *callb,
+                                         void *arg)
 {
     enum sched_rc rc = SCHED_OK;
-    if (xsql_begin_transaction()) CLEANUP(EBEGINSTMT);
+    static struct sched_prod prod = {0};
 
     if ((rc = parse_prod_file_header(fp))) goto cleanup;
 
@@ -283,15 +304,17 @@ static enum sched_rc prod_add_file(FILE *fp)
                 int64_t val = 0;
                 if (!to_int64(tok_value(&tok), &val)) CLEANUP(EPARSEFILE);
                 if (xsql_bind_i64(st, i, val)) CLEANUP(EBIND);
-                if (i == 0)
+                if (i == COL_SCAN_ID)
                 {
                     rc = scan_exists(val);
                     if (rc) goto cleanup;
+                    prod.scan_id = val;
                 }
-                else if (i == 1)
+                else if (i == COL_SEQ_ID)
                 {
                     rc = seq_exists(val);
                     if (rc) goto cleanup;
+                    prod.seq_id = val;
                 }
             }
             else if (col_type[i] == COL_TYPE_DOUBLE)
@@ -304,6 +327,12 @@ static enum sched_rc prod_add_file(FILE *fp)
             {
                 struct xsql_txt txt = {tok_size(&tok), tok_value(&tok)};
                 if (xsql_bind_txt(st, i, txt)) CLEANUP(EBIND);
+                if (i == COL_PROFILE_NAME)
+                {
+                    if (txt.len >= SCHED_PROFILE_NAME_SIZE)
+                        CLEANUP(SCHED_TOO_LONG_PROFNAME);
+                    memcpy(prod.profile_name, txt.str, txt.len + 1);
+                }
             }
             if (tok_next(&tok, fp)) CLEANUP(EPARSEFILE);
         }
@@ -314,13 +343,15 @@ static enum sched_rc prod_add_file(FILE *fp)
         }
         rc = xsql_step(st);
         if (rc != SCHED_END) CLEANUP(ESTEP);
+        prod.id = xsql_last_id();
+
+        if ((rc = (*callb)(&prod, arg))) goto cleanup;
+
     } while (true);
 
-    if (xsql_end_transaction()) CLEANUP(EENDSTMT);
     return SCHED_OK;
 
 cleanup:
-    xsql_rollback_transaction();
     return rc;
 }
 
