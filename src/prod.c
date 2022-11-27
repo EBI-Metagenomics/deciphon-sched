@@ -256,6 +256,7 @@ enum sched_rc sched_prod_get_all(void (*callb)(struct sched_prod *,
         rc = sched_hmmer_get_by_prod_id(hmmer, prod->id);
         if (rc) return rc;
         (*callb)(prod, hmmer, arg);
+        free((void *)hmmer->data);
     }
 
     return rc == SCHED_PROD_NOT_FOUND ? SCHED_OK : rc;

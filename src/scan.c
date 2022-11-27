@@ -66,6 +66,7 @@ enum sched_rc sched_scan_get_prods(int64_t scan_id,
         rc = sched_hmmer_get_by_prod_id(hmmer, prod->id);
         if (rc) return rc;
         (*callb)(prod, hmmer, arg);
+        free((void *)hmmer->data);
     }
     return rc == SCHED_PROD_NOT_FOUND ? SCHED_OK : rc;
 }
