@@ -5,6 +5,7 @@
 #include "xstrcpy.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 static_assert(SQLITE_VERSION_NUMBER >= XSQL_REQUIRED_VERSION,
               "Minimum sqlite requirement.");
@@ -43,8 +44,16 @@ enum sched_rc xsql_bind_txt(struct sqlite3_stmt *stmt, int col,
                             struct xsql_txt txt)
 {
     assert(col >= 0);
-    if (sqlite3_bind_text(stmt, col + 1, txt.str, (int)txt.len,
-                          SQLITE_TRANSIENT))
+    if (sqlite3_bind_text(stmt, col + 1, txt.str, txt.len, SQLITE_TRANSIENT))
+        return error(SCHED_FAIL_BIND_STMT);
+    return SCHED_OK;
+}
+
+enum sched_rc xsql_bind_blob(struct sqlite3_stmt *stmt, int col,
+                             struct xsql_blob blob)
+{
+    assert(col >= 0);
+    if (sqlite3_bind_blob(stmt, col + 1, blob.data, blob.len, SQLITE_TRANSIENT))
         return error(SCHED_FAIL_BIND_STMT);
     return SCHED_OK;
 }
@@ -71,6 +80,20 @@ enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
     if (!str) return error(SCHED_FAIL_GET_COLUMN_TEXT);
     sqlite3_column_bytes(stmt, col);
     return xstrcpy((char *)txt.str, str, txt.len + 1);
+}
+
+enum sched_rc xsql_cpy_blob(struct sqlite3_stmt *stmt, int col,
+                            struct xsql_blob *blob)
+{
+    unsigned char const *data = sqlite3_column_blob(stmt, col);
+    if (!data) return error(SCHED_FAIL_GET_COLUMN_BLOB);
+    blob->len = sqlite3_column_bytes(stmt, col);
+
+    void *ptr = malloc(blob->len);
+    if (!ptr) return error(SCHED_NOT_ENOUGH_MEMORY);
+    memcpy(ptr, data, blob->len);
+    blob->data = ptr;
+    return 0;
 }
 
 enum sched_rc xsql_open(char const *filepath)

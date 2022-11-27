@@ -42,6 +42,7 @@ add_library(
   src/db.c
   src/error.c
   src/hmm.c
+  src/hmmer.c
   src/job.c
   src/prod.c
   src/scan.c

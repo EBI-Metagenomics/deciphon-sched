@@ -62,7 +62,7 @@ static char const *const queries[] =
 
     /* --- PROD queries --- */
     [PROD_INSERT] = "INSERT INTO prod (scan_id, seq_id, profile_name, abc_name, alt_loglik, null_loglik, evalue_log, profile_typeid, version, match) "
-                    "VALUES           (      ?,      ?,            ?,        ?,          ?,           ?,              ?,       ?,     ?);",
+                    "VALUES           (      ?,      ?,            ?,        ?,          ?,           ?,          ?,              ?,       ?,     ?);",
 
     [PROD_GET]           = "SELECT  * FROM prod WHERE id = ?;",
     [PROD_GET_NEXT]      = "SELECT id FROM prod WHERE id > ? ORDER BY id ASC LIMIT 1;",
@@ -78,8 +78,17 @@ static char const *const queries[] =
     [SEQ_GET_SCAN_NEXT] = "SELECT id                             FROM seq WHERE id > ? AND scan_id = ? ORDER BY id ASC LIMIT 1;",
 
     [SEQ_DELETE] = "DELETE FROM seq;",
+
+    /* --- HMMER queries --- */
+    [HMMER_INSERT] = "INSERT INTO hmmer (data, prod_id) VALUES (?, ?);",
+
+    [HMMER_GET_BY_ID]      = "SELECT  * FROM hmmer WHERE      id = ?;",
+    [HMMER_GET_BY_PROD_ID] = "SELECT  * FROM hmmer WHERE prod_id = ?;",
+
+    [HMMER_DELETE_BY_ID] = "DELETE FROM hmmer WHERE id = ?;",
+    [HMMER_DELETE] =       "DELETE FROM hmmer;",
 };
-static_assert(ARRAY_SIZE(queries) == SEQ_DELETE + 1, "Cover all enum cases");
+static_assert(ARRAY_SIZE(queries) == HMMER_DELETE + 1, "Cover all enum cases");
 /* clang-format on */
 
 static struct sqlite3_stmt *stmts[ARRAY_SIZE(queries)] = {0};

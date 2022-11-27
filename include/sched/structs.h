@@ -87,4 +87,12 @@ struct sched_seq
     char data[SCHED_SEQ_SIZE];
 };
 
+struct sched_hmmer
+{
+    int64_t id;
+    int len;
+    unsigned char const *data;
+    int64_t prod_id;
+};
+
 #endif

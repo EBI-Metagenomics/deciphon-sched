@@ -10,6 +10,7 @@ enum sched_rc __error_print(enum sched_rc rc, char const *ctx, char const *msg);
 #define EFRESH error(SCHED_FAIL_GET_FRESH_STMT)
 #define ESTEP error(SCHED_FAIL_EVAL_STMT)
 #define EGETTXT error(SCHED_FAIL_GET_COLUMN_TEXT)
+#define EGETBLOB error(SCHED_FAIL_GET_COLUMN_BLOB)
 #define EBIND error(SCHED_FAIL_BIND_STMT)
 #define EEXEC error(SCHED_FAIL_EXEC_STMT)
 #define EBEGINSTMT error(SCHED_FAIL_BEGIN_TRANSACTION)

@@ -47,6 +47,11 @@ enum stmt
     SEQ_GET_NEXT,
     SEQ_GET_SCAN_NEXT,
     SEQ_DELETE,
+    HMMER_INSERT,
+    HMMER_GET_BY_ID,
+    HMMER_GET_BY_PROD_ID,
+    HMMER_DELETE_BY_ID,
+    HMMER_DELETE,
 };
 
 struct sqlite3_stmt;

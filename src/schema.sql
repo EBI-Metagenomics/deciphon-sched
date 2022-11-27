@@ -70,6 +70,12 @@ CREATE TABLE prod (
     UNIQUE(scan_id, seq_id, profile_name)
 );
 
+CREATE TABLE hmmer (
+    id INTEGER PRIMARY KEY UNIQUE NOT NULL,
+    data BLOB NOT NULL,
+    prod_id INTEGER REFERENCES prod (id) NOT NULL
+);
+
 COMMIT TRANSACTION;
 
 PRAGMA foreign_keys = ON;

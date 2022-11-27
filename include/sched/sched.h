@@ -4,6 +4,7 @@
 #include "sched/db.h"
 #include "sched/error.h"
 #include "sched/hmm.h"
+#include "sched/hmmer.h"
 #include "sched/job.h"
 #include "sched/limits.h"
 #include "sched/prod.h"

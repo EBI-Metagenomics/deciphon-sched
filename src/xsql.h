@@ -13,8 +13,14 @@ struct sqlite3_stmt;
 
 struct xsql_txt
 {
-    unsigned len;
+    int len;
     char const *str;
+};
+
+struct xsql_blob
+{
+    int len;
+    unsigned char const *data;
 };
 
 struct xsql_stmt
@@ -24,7 +30,10 @@ struct xsql_stmt
 };
 
 #define XSQL_TXT_OF(var, member)                                               \
-    (struct xsql_txt) { ARRAY_SIZE_OF((var), member) - 1, (var).member }
+    (struct xsql_txt)                                                          \
+    {                                                                          \
+        ARRAY_SIZE_OF((var), member) - 1, (var).member                         \
+    }
 
 bool xsql_is_thread_safe(void);
 int xsql_version(void);
@@ -35,12 +44,16 @@ enum sched_rc xsql_bind_str(struct sqlite3_stmt *stmt, int col,
                             char const *str);
 enum sched_rc xsql_bind_txt(struct sqlite3_stmt *stmt, int col,
                             struct xsql_txt txt);
+enum sched_rc xsql_bind_blob(struct sqlite3_stmt *stmt, int col,
+                             struct xsql_blob blob);
 
 int xsql_get_int(struct sqlite3_stmt *stmt, int col);
 int64_t xsql_get_i64(struct sqlite3_stmt *stmt, int col);
 double xsql_get_dbl(struct sqlite3_stmt *stmt, int col);
 enum sched_rc xsql_cpy_txt(struct sqlite3_stmt *stmt, int col,
                            struct xsql_txt txt);
+enum sched_rc xsql_cpy_blob(struct sqlite3_stmt *stmt, int col,
+                            struct xsql_blob *);
 
 enum sched_rc xsql_open(char const *filepath);
 enum sched_rc xsql_close(void);
