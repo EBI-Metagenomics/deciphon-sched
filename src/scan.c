@@ -2,6 +2,7 @@
 #include "error.h"
 #include "prod.h"
 #include "sched/db.h"
+#include "sched/hmmer.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
 #include "sched/scan.h"
@@ -49,8 +50,11 @@ enum sched_rc sched_scan_get_seqs(int64_t scan_id, sched_seq_set_func_t fn,
     return rc == SCHED_SEQ_NOT_FOUND ? SCHED_OK : rc;
 }
 
-enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
-                                   struct sched_prod *prod, void *arg)
+enum sched_rc sched_scan_get_prods(int64_t scan_id,
+                                   void (*callb)(struct sched_prod *,
+                                                 struct sched_hmmer *, void *),
+                                   struct sched_prod *prod,
+                                   struct sched_hmmer *hmmer, void *arg)
 {
     struct sched_scan scan = {0};
     enum sched_rc rc = sched_scan_get_by_id(&scan, scan_id);
@@ -59,7 +63,9 @@ enum sched_rc sched_scan_get_prods(int64_t scan_id, sched_prod_set_func_t fn,
     sched_prod_init(prod, scan_id);
     while ((rc = prod_scan_next(prod)) == SCHED_OK)
     {
-        fn(prod, arg);
+        rc = sched_hmmer_get_by_prod_id(hmmer, prod->id);
+        if (rc) return rc;
+        (*callb)(prod, hmmer, arg);
     }
     return rc == SCHED_PROD_NOT_FOUND ? SCHED_OK : rc;
 }

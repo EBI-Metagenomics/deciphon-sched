@@ -45,28 +45,28 @@ static void test_hmmer_filename(void)
 
     struct sched_hmmer_filename x = {1, 2, "profname"};
     sched_hmmer_filename_setup(&x, filename);
-    EQ(filename, "hmmer_1_2_profname.h3r");
+    eq(filename, "hmmer_1_2_profname.h3r");
 
-    EQ(sched_hmmer_filename_parse(&x, "hmmer_1_2_profname.h3r"), 0);
-    EQ(x.scan_id, 1);
-    EQ(x.seq_id, 2);
-    EQ(x.profile_name, "profname");
+    eq(sched_hmmer_filename_parse(&x, "hmmer_1_2_profname.h3r"), 0);
+    eq(x.scan_id, 1);
+    eq(x.seq_id, 2);
+    eq(x.profile_name, "profname");
 }
 
 static void test_reopen()
 {
     remove(TMPDIR "/reopen.sched");
-    EQ(sched_init(TMPDIR "/reopen.sched"), SCHED_OK);
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_init(TMPDIR "/reopen.sched"), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 
-    EQ(sched_init(TMPDIR "/reopen.sched"), SCHED_OK);
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_init(TMPDIR "/reopen.sched"), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 }
 
 static void create_file(char const *path, int seed)
 {
     FILE *fp = fopen(path, "wb");
-    NOTNULL(fp);
+    notnull(fp);
     char const data[] = {
         0x64, 0x29, 0x20, 0x4e, 0x4f, 0x0a, 0x20, 0x20, 0x20,
         0x20, 0x69, 0x74, 0x73, 0x20, 0x49, 0x4e, 0x4f, 0x54,
@@ -74,8 +74,8 @@ static void create_file(char const *path, int seed)
         0x74, 0x20, 0x49, 0x4e, 0x4f, 0x54, 0x20, 0x4e, 0x20,
         0x20, 0x73, 0x74, 0x61, 0x20, 0x43, 0x48, 0x45, (char)seed,
     };
-    EQ(fwrite(data, sizeof data, 1, fp), 1);
-    EQ(fclose(fp), 0);
+    eq(fwrite(data, sizeof data, 1, fp), 1);
+    eq(fclose(fp), 0);
 }
 
 static void test_submit_hmm(void)
@@ -89,18 +89,18 @@ static void test_submit_hmm(void)
 
     remove(sched_path);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file1), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file1), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
 
-    EQ(sched_hmm_set_file(&hmm, file2), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file2), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
 
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 }
 
 static void test_submit_hmm_nofile(void)
@@ -112,12 +112,12 @@ static void test_submit_hmm_nofile(void)
 
     remove(sched_path);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, nofile), SCHED_INVALID_FILE_NAME);
+    eq(sched_hmm_set_file(&hmm, nofile), SCHED_INVALID_FILE_NAME);
 
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 }
 
 static void test_submit_hmm_same_file(void)
@@ -131,18 +131,18 @@ static void test_submit_hmm_same_file(void)
 
     remove(sched_path);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file1a), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file1a), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
 
-    EQ(sched_hmm_set_file(&hmm, file1b), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file1b), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_HMM_ALREADY_EXISTS);
+    eq(sched_job_submit(&job, &hmm), SCHED_HMM_ALREADY_EXISTS);
 
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 }
 
 static void test_submit_hmm_wrong_extension(void)
@@ -154,12 +154,12 @@ static void test_submit_hmm_wrong_extension(void)
 
     remove(sched_path);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file), SCHED_INVALID_FILE_NAME_EXT);
+    eq(sched_hmm_set_file(&hmm, file), SCHED_INVALID_FILE_NAME_EXT);
 
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 }
 
 static void test_add_db(void)
@@ -194,32 +194,32 @@ static void test_add_db(void)
 
     remove(sched_path);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file1a_hmm), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file1a_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
-    EQ(sched_job_set_run(job.id), SCHED_OK);
-    EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file1a_dcp), SCHED_OK);
-    EQ(db.id, 1);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_set_done(job.id), SCHED_OK);
+    eq(sched_db_add(&db, file1a_dcp), SCHED_OK);
+    eq(db.id, 1);
 
-    EQ(sched_hmm_set_file(&hmm, file1b_hmm), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file1b_hmm), SCHED_OK);
 
-    EQ(sched_hmm_set_file(&hmm, file2_hmm), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file2_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
-    EQ(sched_job_set_run(job.id), SCHED_OK);
-    EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file2_dcp), SCHED_OK);
-    EQ(db.id, 2);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_set_done(job.id), SCHED_OK);
+    eq(sched_db_add(&db, file2_dcp), SCHED_OK);
+    eq(db.id, 2);
 
-    EQ(sched_db_add(&db, file3_dcp), SCHED_ASSOC_HMM_NOT_FOUND);
+    eq(sched_db_add(&db, file3_dcp), SCHED_ASSOC_HMM_NOT_FOUND);
 
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 }
 
 static void test_submit_scan(void)
@@ -232,34 +232,34 @@ static void test_submit_scan(void)
     create_file(file_dcp, 1);
     remove(sched_path);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
-    EQ(sched_job_set_run(job.id), SCHED_OK);
-    EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file_dcp), SCHED_OK);
-    EQ(db.id, 1);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_set_done(job.id), SCHED_OK);
+    eq(sched_db_add(&db, file_dcp), SCHED_OK);
+    eq(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
     sched_scan_add_seq("seq0", "ACAAGCAG");
     sched_scan_add_seq("seq1", "ACTTGCCG");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
     sched_scan_init(&scan, db.id, true, true);
     sched_scan_add_seq("seq0_2", "XXGG");
     sched_scan_add_seq("seq1_2", "YXYX");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 }
 
 static void test_submit_and_fetch_scan_job()
@@ -272,45 +272,45 @@ static void test_submit_and_fetch_scan_job()
     create_file(file_hmm, 0);
     create_file(file_dcp, 0);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
-    EQ(job.id, 1);
-    EQ(sched_job_set_run(job.id), SCHED_OK);
-    EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file_dcp), SCHED_OK);
-    EQ(db.id, 1);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(job.id, 1);
+    eq(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_set_done(job.id), SCHED_OK);
+    eq(sched_db_add(&db, file_dcp), SCHED_OK);
+    eq(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
     sched_scan_add_seq("seq0", "ACAAGCAG");
     sched_scan_add_seq("seq1", "ACTTGCCG");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
     sched_scan_init(&scan, db.id, true, true);
     sched_scan_add_seq("seq0_2", "XXGG");
     sched_scan_add_seq("seq1_2", "YXYX");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
-    EQ(sched_job_next_pend(&job), SCHED_OK);
-    EQ(job.id, 2);
-    EQ(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_next_pend(&job), SCHED_OK);
+    eq(job.id, 2);
+    eq(sched_job_set_run(job.id), SCHED_OK);
 
-    EQ(sched_job_next_pend(&job), SCHED_OK);
-    EQ(job.id, 3);
-    EQ(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_next_pend(&job), SCHED_OK);
+    eq(job.id, 3);
+    eq(sched_job_set_run(job.id), SCHED_OK);
 
-    EQ(sched_job_next_pend(&job), SCHED_JOB_NOT_FOUND);
+    eq(sched_job_next_pend(&job), SCHED_JOB_NOT_FOUND);
 
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 }
 
 static void test_submit_and_fetch_seq()
@@ -323,53 +323,62 @@ static void test_submit_and_fetch_seq()
     create_file(file_hmm, 0);
     create_file(file_dcp, 0);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
-    EQ(job.id, 1);
-    EQ(sched_job_set_run(job.id), SCHED_OK);
-    EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file_dcp), SCHED_OK);
-    EQ(db.id, 1);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(job.id, 1);
+    eq(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_set_done(job.id), SCHED_OK);
+    eq(sched_db_add(&db, file_dcp), SCHED_OK);
+    eq(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
     sched_scan_add_seq("seq0", "ACAAGCAG");
     sched_scan_add_seq("seq1", "ACTTGCCG");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
     sched_scan_init(&scan, db.id, true, true);
     sched_scan_add_seq("seq0_2", "XXGG");
     sched_scan_add_seq("seq1_2", "YXYX");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
-    EQ(sched_job_next_pend(&job), SCHED_OK);
-    EQ(job.id, 2);
+    eq(sched_job_next_pend(&job), SCHED_OK);
+    eq(job.id, 2);
 
-    EQ(sched_scan_get_by_job_id(&scan, job.id), SCHED_OK);
+    eq(sched_scan_get_by_job_id(&scan, job.id), SCHED_OK);
 
     sched_seq_init(&seq, 0, scan.id, "", "");
-    EQ(sched_seq_scan_next(&seq), SCHED_OK);
-    EQ(seq.id, 1);
-    EQ(seq.scan_id, 1);
-    EQ(seq.name, "seq0");
-    EQ(seq.data, "ACAAGCAG");
-    EQ(sched_seq_scan_next(&seq), SCHED_OK);
-    EQ(seq.id, 2);
-    EQ(seq.scan_id, 1);
-    EQ(seq.name, "seq1");
-    EQ(seq.data, "ACTTGCCG");
-    EQ(sched_seq_scan_next(&seq), SCHED_SEQ_NOT_FOUND);
+    eq(sched_seq_scan_next(&seq), SCHED_OK);
+    eq(seq.id, 1);
+    eq(seq.scan_id, 1);
+    eq(seq.name, "seq0");
+    eq(seq.data, "ACAAGCAG");
+    eq(sched_seq_scan_next(&seq), SCHED_OK);
+    eq(seq.id, 2);
+    eq(seq.scan_id, 1);
+    eq(seq.name, "seq1");
+    eq(seq.data, "ACTTGCCG");
+    eq(sched_seq_scan_next(&seq), SCHED_SEQ_NOT_FOUND);
 
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
+}
+
+static void callb(struct sched_prod *prod, struct sched_hmmer *hmmer, void *arg)
+{
+    (void)arg;
+    static double evalue_logs[] = {-196.11220625901211, 0};
+    static int lens[] = {5, 5};
+    close(evalue_logs[prod->id - 1], prod->evalue_log);
+    eq(lens[prod->id - 1], hmmer->len);
 }
 
 static void test_submit_prod(void)
@@ -383,60 +392,68 @@ static void test_submit_prod(void)
     create_file(file_hmm, 0);
     create_file(file_dcp, 0);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
-    EQ(job.id, 1);
-    EQ(sched_job_set_run(job.id), SCHED_OK);
-    EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file_dcp), SCHED_OK);
-    EQ(db.id, 1);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(job.id, 1);
+    eq(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_set_done(job.id), SCHED_OK);
+    eq(sched_db_add(&db, file_dcp), SCHED_OK);
+    eq(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
     sched_scan_add_seq("seq0", "ACAAGCAG");
     sched_scan_add_seq("seq1", "ACTTGCCG");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
     sched_scan_init(&scan, db.id, true, true);
     sched_scan_add_seq("seq0_2", "XXGG");
     sched_scan_add_seq("seq1_2", "YXYX");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
-    EQ(sched_job_next_pend(&job), SCHED_OK);
-    EQ(job.id, 2);
+    eq(sched_job_next_pend(&job), SCHED_OK);
+    eq(job.id, 2);
 
-    EQ(sched_scan_get_by_job_id(&scan, job.id), SCHED_OK);
+    eq(sched_scan_get_by_job_id(&scan, job.id), SCHED_OK);
 
     sched_seq_init(&seq, 0, scan.id, "", "");
-    EQ(sched_seq_scan_next(&seq), SCHED_OK);
-    EQ(seq.id, 1);
-    EQ(seq.scan_id, 1);
-    EQ(seq.name, "seq0");
-    EQ(seq.data, "ACAAGCAG");
-    EQ(sched_seq_scan_next(&seq), SCHED_OK);
-    EQ(seq.id, 2);
-    EQ(seq.scan_id, 1);
-    EQ(seq.name, "seq1");
-    EQ(seq.data, "ACTTGCCG");
-    EQ(sched_seq_scan_next(&seq), SCHED_SEQ_NOT_FOUND);
+    eq(sched_seq_scan_next(&seq), SCHED_OK);
+    eq(seq.id, 1);
+    eq(seq.scan_id, 1);
+    eq(seq.name, "seq0");
+    eq(seq.data, "ACAAGCAG");
+    eq(sched_seq_scan_next(&seq), SCHED_OK);
+    eq(seq.id, 2);
+    eq(seq.scan_id, 1);
+    eq(seq.name, "seq1");
+    eq(seq.data, "ACTTGCCG");
+    eq(sched_seq_scan_next(&seq), SCHED_SEQ_NOT_FOUND);
 
-    sched_prod_init(&prod, 1);
-    EQ(sched_prod_add_file(prod_path), 0);
+    eq(sched_prod_add_file(prod_path), 0);
 
-    sched_hmmer_init(&hmmer, prod.id);
-    char const hello[] = "hello";
-    EQ(sched_hmmer_add(&hmmer, 5, (unsigned char const *)hello), 0);
+    sched_hmmer_init(&hmmer, 1);
+    eq(sched_hmmer_add(&hmmer, 5, (unsigned char const *)"hello"), 0);
+    eq(hmmer.id, 1);
 
-    EQ(sched_cleanup(), SCHED_OK);
+    sched_prod_init(&prod, 0);
+    sched_hmmer_init(&hmmer, 0);
+    eq(sched_prod_get_all(&callb, &prod, &hmmer, NULL), SCHED_HMMER_NOT_FOUND);
+
+    sched_hmmer_init(&hmmer, 2);
+    eq(sched_hmmer_add(&hmmer, 5, (unsigned char const *)"hello"), 0);
+    eq(hmmer.id, 2);
+    eq(sched_prod_get_all(&callb, &prod, &hmmer, NULL), 0);
+
+    eq(sched_cleanup(), SCHED_OK);
 }
 
 static void test_wipe(void)
@@ -449,34 +466,34 @@ static void test_wipe(void)
     create_file(file_hmm, 0);
     create_file(file_dcp, 0);
 
-    EQ(sched_init(sched_path), SCHED_OK);
+    eq(sched_init(sched_path), SCHED_OK);
 
     sched_db_init(&db);
     sched_hmm_init(&hmm);
 
-    EQ(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
+    eq(sched_hmm_set_file(&hmm, file_hmm), SCHED_OK);
     sched_job_init(&job, SCHED_HMM);
-    EQ(sched_job_submit(&job, &hmm), SCHED_OK);
-    EQ(job.id, 1);
-    EQ(sched_job_set_run(job.id), SCHED_OK);
-    EQ(sched_job_set_done(job.id), SCHED_OK);
-    EQ(sched_db_add(&db, file_dcp), SCHED_OK);
-    EQ(db.id, 1);
+    eq(sched_job_submit(&job, &hmm), SCHED_OK);
+    eq(job.id, 1);
+    eq(sched_job_set_run(job.id), SCHED_OK);
+    eq(sched_job_set_done(job.id), SCHED_OK);
+    eq(sched_db_add(&db, file_dcp), SCHED_OK);
+    eq(db.id, 1);
 
     sched_scan_init(&scan, db.id, true, false);
     sched_scan_add_seq("seq0", "ACAAGCAG");
     sched_scan_add_seq("seq1", "ACTTGCCG");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
     sched_scan_init(&scan, db.id, true, true);
     sched_scan_add_seq("seq0_2", "XXGG");
     sched_scan_add_seq("seq1_2", "YXYX");
 
     sched_job_init(&job, SCHED_SCAN);
-    EQ(sched_job_submit(&job, &scan), SCHED_OK);
+    eq(sched_job_submit(&job, &scan), SCHED_OK);
 
-    EQ(sched_wipe(), SCHED_OK);
-    EQ(sched_cleanup(), SCHED_OK);
+    eq(sched_wipe(), SCHED_OK);
+    eq(sched_cleanup(), SCHED_OK);
 }

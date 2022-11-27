@@ -1,5 +1,6 @@
 #include "prod.h"
 #include "error.h"
+#include "sched/hmmer.h"
 #include "sched/prod.h"
 #include "sched/rc.h"
 #include "sched/scan.h"
@@ -50,72 +51,6 @@ void sched_prod_init(struct sched_prod *prod, int64_t scan_id)
 {
     prod_init(prod);
     prod->scan_id = scan_id;
-}
-
-enum sched_rc sched_prod_write_begin(struct sched_prod const *prod,
-                                     unsigned thread_num)
-{
-#define TAB "\t"
-#define echo(fmt, var) fprintf(prod_file[thread_num].fp, fmt, prod->var) < 0
-#define Fd64 "%" PRId64 TAB
-#define Fs "%s" TAB
-#define Fg "%.17g" TAB
-
-    if (echo(Fd64, scan_id)) EWRITEFILE;
-    if (echo(Fd64, seq_id)) EWRITEFILE;
-
-    if (echo(Fs, profile_name)) EWRITEFILE;
-    if (echo(Fs, abc_name)) EWRITEFILE;
-
-    /* Reference: https://stackoverflow.com/a/21162120 */
-    if (echo(Fg, alt_loglik)) EWRITEFILE;
-    if (echo(Fg, null_loglik)) EWRITEFILE;
-    if (echo(Fg, evalue_log)) EWRITEFILE;
-
-    if (echo(Fs, profile_typeid)) EWRITEFILE;
-    if (echo(Fs, version)) EWRITEFILE;
-
-    return SCHED_OK;
-
-#undef Fg
-#undef Fs
-#undef Fd64
-#undef echo
-#undef TAB
-}
-
-/* Output example
- *             ___________________________
- *             |   match0   |   match1   |
- *             ---------------------------
- * Output----->| CG,M1,CGA,K;CG,M4,CGA,K |
- *             ---|-|---|--|--------------
- * -----------   /  |   |  \    ---------------
- * | matched |__/   |   |   \___| most likely |
- * | letters |      |   |       | amino acid  |
- * -----------      |   |       ---------------
- *      -------------   ---------------
- *      | hmm state |   | most likely |
- *      -------------   | codon       |
- *                      ---------------
- */
-
-enum sched_rc sched_prod_write_match(sched_prod_write_match_func_t *fn,
-                                     void const *match, unsigned thread_num)
-{
-    return fn(prod_file[thread_num].fp, match);
-}
-
-enum sched_rc sched_prod_write_match_sep(unsigned thread_num)
-{
-    if (fputc(';', prod_file[thread_num].fp) == EOF) return EWRITEFILE;
-    return SCHED_OK;
-}
-
-enum sched_rc sched_prod_write_end(unsigned thread_num)
-{
-    if (fputc('\n', prod_file[thread_num].fp) == EOF) return EWRITEFILE;
-    return SCHED_OK;
 }
 
 static enum sched_rc get_prod(struct sched_prod *prod)
@@ -308,14 +243,21 @@ enum sched_rc sched_prod_add(struct sched_prod *prod)
     return SCHED_OK;
 }
 
-enum sched_rc sched_prod_get_all(sched_prod_set_func_t fn,
-                                 struct sched_prod *prod, void *arg)
+enum sched_rc sched_prod_get_all(void (*callb)(struct sched_prod *,
+                                               struct sched_hmmer *, void *),
+                                 struct sched_prod *prod,
+                                 struct sched_hmmer *hmmer, void *arg)
 {
     enum sched_rc rc = SCHED_OK;
 
     prod_init(prod);
     while ((rc = prod_next(prod)) == SCHED_OK)
-        fn(prod, arg);
+    {
+        rc = sched_hmmer_get_by_prod_id(hmmer, prod->id);
+        if (rc) return rc;
+        (*callb)(prod, hmmer, arg);
+    }
+
     return rc == SCHED_PROD_NOT_FOUND ? SCHED_OK : rc;
 }
 

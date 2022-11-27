@@ -25,6 +25,22 @@ inline static void __hope_print_newline(void)
 
 #define __HOPE_REL_TOL(x) _Generic((x), float : 5e-05, double : 1e-09)
 
+static inline void __hope_close2(double actual, double desired, double rel_tol,
+                                 double abs_tol, char const *file, int line)
+{
+    double a = actual;
+    double d = desired;
+    if (__hope_close(a, d, rel_tol, abs_tol))
+    {
+        __hope_print_context(file, line);
+        fprintf(stderr, " Items are not close:\n");
+        fprintf(stderr, "  ACTUAL : %.11f\n", (double)a);
+        fprintf(stderr, "  DESIRED: %.11f\n", (double)d);
+        __hope_print_newline();
+        ++__hope_errors;
+    }
+}
+
 #define __MAKE_EQ(S, T, F)                                                     \
     static void __hope_eq_##S(T a, T d, char const *file, int line)            \
     {                                                                          \

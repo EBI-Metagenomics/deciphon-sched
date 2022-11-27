@@ -18,8 +18,11 @@ void sched_scan_init(struct sched_scan *, int64_t db_id, bool multi_hits,
 enum sched_rc sched_scan_get_seqs(int64_t job_id, sched_seq_set_func_t,
                                   struct sched_seq *seq, void *arg);
 
-enum sched_rc sched_scan_get_prods(int64_t job_id, sched_prod_set_func_t,
-                                   struct sched_prod *prod, void *arg);
+enum sched_rc sched_scan_get_prods(int64_t job_id,
+                                   void (*callb)(struct sched_prod *,
+                                                 struct sched_hmmer *, void *),
+                                   struct sched_prod *, struct sched_hmmer *,
+                                   void *arg);
 
 enum sched_rc sched_scan_get_by_id(struct sched_scan *, int64_t scan_id);
 enum sched_rc sched_scan_get_by_job_id(struct sched_scan *, int64_t job_id);
