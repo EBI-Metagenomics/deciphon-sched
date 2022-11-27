@@ -18,9 +18,10 @@ enum
     COL_TYPE_INT64,
     COL_TYPE_DOUBLE,
     COL_TYPE_TEXT
-} col_type[9] = {COL_TYPE_INT64, COL_TYPE_INT64,  COL_TYPE_TEXT,
-                 COL_TYPE_TEXT,  COL_TYPE_DOUBLE, COL_TYPE_DOUBLE,
-                 COL_TYPE_TEXT,  COL_TYPE_TEXT,   COL_TYPE_TEXT};
+} col_type[] = {COL_TYPE_INT64,  COL_TYPE_INT64,  COL_TYPE_TEXT,
+                COL_TYPE_TEXT,   COL_TYPE_DOUBLE, COL_TYPE_DOUBLE,
+                COL_TYPE_DOUBLE, COL_TYPE_TEXT,   COL_TYPE_TEXT,
+                COL_TYPE_TEXT};
 
 static TOK_DECLARE(tok);
 static struct xfile_tmp prod_file[SCHED_MAX_NUM_THREADS] = {0};

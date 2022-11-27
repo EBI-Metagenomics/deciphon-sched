@@ -1,3 +1,9 @@
+set(testdir "${CMAKE_CURRENT_BINARY_DIR}")
+
+set(SRC ${CMAKE_CURRENT_SOURCE_DIR})
+file(CREATE_LINK "${SRC}/prod.tsv" "${testdir}/prod.tsv" COPY_ON_ERROR)
+add_compile_definitions(TESTDIR="${testdir}")
+
 function(sched_add_test name srcs)
   add_executable(${name} ${srcs})
   target_link_libraries(${name} PRIVATE sched)
@@ -5,7 +11,7 @@ function(sched_add_test name srcs)
   target_compile_features(${name} PRIVATE c_std_11)
   add_test(NAME ${name} COMMAND ${name})
 
-  set(TMPDIR "${CMAKE_CURRENT_BINARY_DIR}/${name}.tmp")
+  set(TMPDIR "${testdir}/${name}.tmp")
   add_custom_command(
     TARGET ${name}
     PRE_BUILD

@@ -95,4 +95,11 @@ struct sched_hmmer
     int64_t prod_id;
 };
 
+struct sched_hmmer_filename
+{
+    int64_t scan_id;
+    int64_t seq_id;
+    char profile_name[SCHED_PROFILE_NAME_SIZE];
+};
+
 #endif

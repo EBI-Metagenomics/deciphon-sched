@@ -28,12 +28,12 @@ static enum sched_rc select_hmmer_i64(struct sched_hmmer *hmmer,
     return xsql_step(st) != SCHED_END ? ESTEP : SCHED_OK;
 }
 
-void sched_hmmer_init(struct sched_hmmer *hmmer)
+void sched_hmmer_init(struct sched_hmmer *hmmer, int64_t prod_id)
 {
     hmmer->id = 0;
     hmmer->len = 0;
     hmmer->data = 0;
-    hmmer->prod_id = 0;
+    hmmer->prod_id = prod_id;
 }
 
 enum sched_rc sched_hmmer_get_by_id(struct sched_hmmer *hmmer, int64_t id)

@@ -4,6 +4,7 @@
 #include "db.h"
 #include "error.h"
 #include "hmm.h"
+#include "hmmer.h"
 #include "job.h"
 #include "prod.h"
 #include "scan.h"
@@ -90,6 +91,9 @@ enum sched_rc sched_wipe(void)
         rc = error(SCHED_FAIL_BEGIN_TRANSACTION);
         goto cleanup;
     }
+
+    rc = hmmer_wipe();
+    if (rc) goto cleanup;
 
     rc = prod_wipe();
     if (rc) goto cleanup;

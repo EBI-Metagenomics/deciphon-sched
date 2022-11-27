@@ -43,7 +43,9 @@ add_library(
   src/error.c
   src/hmm.c
   src/hmmer.c
+  src/hmmer_filename.c
   src/job.c
+  src/ltoa.c
   src/prod.c
   src/scan.c
   src/sched.c
@@ -52,6 +54,8 @@ add_library(
   src/seq_queue.c
   src/sqlite3/sqlite3.c
   src/stmt.c
+  src/strlcpy.c
+  src/strtok_r.c
   src/to.c
   src/tok.c
   src/xfile.c
